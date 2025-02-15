@@ -1,0 +1,99 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-6">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遭遇</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <!-- 側邊欄 -->
+    <div id="sidebar">
+        <div class="sidebar-menu">
+            <a href="character.html"><button>角色</button></a>
+        </div>
+    </div>
+
+    <!-- 側邊欄開關按鈕 -->
+    <button id="sidebar-toggle" onclick="toggleSidebar()">=</button>
+
+    <!-- 主要內容區域 -->
+    <div class="main-content">
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+
+        // 載入頁面後抽選敵人，並跳轉到battle
+        window.onload = function() {
+            getPartyData(); // 載入隊伍資料
+            initializeTeam(); // 隊伍初始化
+            encounterEnemy(); // 抽選敵人
+            window.location.href = 'battle.html';
+        };
+
+    
+        // 敵人資料庫
+        const enemies = [
+            { name: "盜賊", Str: 8, Dex: 14, Con: 5 },
+            { name: "哥布林", Str: 6, Dex: 10, Con: 3 },
+            { name: "獸人", Str: 12, Dex: 7, Con: 7 },
+            { name: "狼人", Str: 15, Dex: 18, Con: 10 },
+            { name: "吸血鬼", Str: 20, Dex: 20, Con: 12 },
+            { name: "巨魔", Str: 18, Dex: 5, Con: 20 },
+            { name: "野狼", Str: 7, Dex: 16, Con: 8 },
+            { name: "食人花", Str: 10, Dex: 8, Con: 6 },
+            { name: "小狐狸", Str: 4, Dex: 20, Con: 1 },
+            { name: "巨形蜘蛛", Str: 14, Dex: 12, Con: 15 }
+        ];
+
+        // 抽選敵人（同一種類，數量隨機，機率分佈：1個40%，2個30%，3個20%，4個10%）
+        function encounterEnemy() {
+            // 隨機選擇一種敵人
+            let randomIndex = Math.floor(Math.random() * enemies.length);
+            let selectedEnemy = enemies[randomIndex];
+
+            // 使用加權隨機決定敵人數量
+            let randomValue = Math.random();
+            let enemyCount;
+
+            if (randomValue < 0.4) {
+                enemyCount = 1; // 40%
+            } else if (randomValue < 0.7) {
+                enemyCount = 2; // 30%
+            } else if (randomValue < 0.9) {
+                enemyCount = 3; // 20%
+            } else {
+                enemyCount = 4; // 10%
+            }
+
+            // 建立敵人陣列（所有敵人都是相同種類）
+            let enemiesEncountered = [];
+            for (let i = 0; i < enemyCount; i++) {
+                enemiesEncountered.push({
+                    name: selectedEnemy.name,
+                    Str: selectedEnemy.Str,
+                    Dex: selectedEnemy.Dex,
+                    Con: selectedEnemy.Con,
+                    HP: selectedEnemy.Con // 初始 HP = Con
+                });
+            }
+
+            // 儲存敵人資訊到 localStorage
+            localStorage.setItem("enemyCount", enemyCount);
+            localStorage.setItem("enemies", JSON.stringify(enemiesEncountered));
+
+
+            // 跳轉到戰鬥頁面
+            window.location.href = "battle.html";
+        }
+
+    </script>
+
+</body>
+</html>

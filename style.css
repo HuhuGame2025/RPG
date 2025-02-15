@@ -1,0 +1,213 @@
+﻿/* styles.css */
+
+body{
+    color: #ccc; /* 文字顏色 */
+    margin: 20px;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+}
+
+h1{
+    font-size: 36px;
+    color: white;
+}
+
+.strong {
+    font-size: 24px;
+    color: white;
+}
+
+p{
+
+}
+
+.menu{
+    display: flex;
+    flex-direction: column;
+}
+
+a{
+    text-decoration: none; /* 移除超連結底線 */
+
+}
+
+button {
+    background-color: #222;
+    color: #ccc;
+    font-size: 20px;
+    border: none;
+    padding: 5px 15px;
+    margin: 10px 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    text-align: center;
+}
+
+button:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+.exit-button {
+    margin-top: 50px;
+    padding: 5px 50px;
+}
+
+hr {
+    border: 1px solid #666;
+    margin: 30px 0;
+}
+
+/* 主要頁面內容的空間 */
+.main-content {
+    margin-top: 60px;
+    padding: 0px;
+    width: 60%;
+    min-width: 400px; /* 避免過窄 */
+    max-width: 600px; /* 可設定最大寬度 */
+    margin-left: auto;
+    margin-right: auto; /* 讓內容置中 */
+}
+
+@media (max-width: 768px) { /* 當螢幕小於 768px 時 */
+    .main-content {
+        width: 100%; /* 手機版寬度擴展至 90% */
+        min-width: 100%;
+        max-width: none;
+    }
+}
+
+
+.container {
+    margin: 20px 0;
+}
+
+/* 側邊欄樣式 */
+#sidebar {
+    height: 100%;
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: -300px; /* 初始隱藏 */
+    background-color: #222;
+    padding: 20px;
+    color: #ccc;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    transition: 0.3s; /* 漸變動畫 */
+}
+
+/* 側邊欄內部 */
+#sidebar .sidebar-menu {
+    margin-top: 50px;
+    max-width: 250px;
+}
+
+/* 側邊欄按鈕 */
+#sidebar button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #222;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#sidebar button:hover {
+    background-color: #444;
+}
+
+/* 側邊欄開關按鈕 */
+#sidebar-toggle {
+    position: fixed;
+    left: 0;
+    top: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0,0,0,0);
+    padding: 10px;
+    cursor: pointer;
+    z-index: 100;
+    border-radius: 5px;
+    transform: translateY(-50%);
+    text-align: center;
+}
+
+#sidebar-toggle:hover {
+    background-color: #444;
+}
+
+/* 地點選單 */
+.location-menu button{
+    width: 90px;
+    height: 90px;
+}
+
+/* 價目表 */
+.columns-container {
+    display: flex;
+    flex-wrap: wrap; /* 如果內容過長，允許換行 */
+    gap: 20px; /* 設定欄之間的間距 */
+    margin: 20px 0;
+}
+
+.columns-item {
+    flex: 1; /* 佔滿剩餘空間 */
+    margin: auto 0; /* 垂直置中 */
+}
+
+.columns-item h3 {
+    color: white;
+    margin: 0 0 10px 0;
+}
+
+.columns-price {
+    flex: 0 0 80px; /* 每個項目的寬度 */
+    margin: auto auto auto 0;
+}
+
+
+
+/* 創建角色頁面 */
+input{
+    font-size: 20px;
+    margin: 5px 0;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.hide {
+    display: none; /* 初始隱藏所有傭兵 */
+}
+
+.note {
+    color: #666;
+}
+
+/* 選擇敵人 */
+.enemy-container button {
+    background-color: #000;
+    width: 100%;
+    text-align: left;
+}
+
+.enemy-container button:hover {
+    background-color: #600000;
+    color: #fff;
+}
+
+.enemy-container .selected {
+    background-color: #600000;
+    color: #fff;
+}
+
+.red {
+    color: red; /* 受到攻擊後的 HP 變成紅字 */
+}
+
+.black {
+    color: #000; /* 敵人旁邊的「鎖定目標」文字 */
+}
+
