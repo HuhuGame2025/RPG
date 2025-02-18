@@ -1,0 +1,173 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-6">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遭遇</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <!-- 側邊欄 -->
+    <div id="sidebar">
+        <div class="sidebar-menu">
+            <a href="character.html"><button>角色</button></a>
+        </div>
+    </div>
+
+    <!-- 側邊欄開關按鈕 -->
+    <button id="sidebar-toggle" onclick="toggleSidebar()">=</button>
+
+    <!-- 主要內容區域 -->
+    <div class="main-content">
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+
+        // 載入頁面後執行
+        window.onload = function() {
+            getPartyData(); // 載入隊伍資料
+            initializeTeam(); // 隊伍初始化
+            rollSituation(); // 抽選遇敵方式
+            rollEnemy(); // 抽選敵人
+            window.location.href = 'battle.html'; // 跳轉到戰鬥頁面
+        };
+
+        // 出戰隊伍初始化
+        function initializeTeam() {
+            // 讀取隊伍資料
+            const playerStr = parseInt(localStorage.getItem("playerStr"));
+            const playerDex = parseInt(localStorage.getItem("playerDex"));
+            const playerName = (localStorage.getItem("playerName"));
+            let playerHP = parseInt(localStorage.getItem("playerHP"));
+
+            let teamMember = []; // 出戰隊伍
+
+            // 讀取同伴資料
+            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+    
+            // 將所有人加入出戰隊伍
+            teamMember = [{ name: playerName, id: "player", HPid: "playerHP", HP: playerHP, str: playerStr, dex: playerDex }];
+            hiredCompanions.forEach((companion, index) => {
+                teamMember.push({ name: companion.name, id: `companion${index + 1}`, HPid: `companion${index + 1}-HP`, HP: companion.HP, str: companion.Str, dex: companion.Dex });
+            });
+
+            // 移除死亡的角色（避免進戰鬥後再次顯示死亡訊息）
+            teamMember = teamMember.filter(member => member.HP > 0); // 移除死亡角色，只保留HP大於0的角色
+
+            // 儲存到 localStorage
+            localStorage.setItem("teamMember", JSON.stringify(teamMember));
+
+            // 所有按鈕取消隱藏
+            localStorage.removeItem('player-btn-hidden');
+            localStorage.removeItem('companion1-btn-hidden');
+            localStorage.removeItem('companion2-btn-hidden');
+            localStorage.removeItem('companion3-btn-hidden');
+            localStorage.removeItem('team-btn-hidden');
+
+            return teamMember; // 回傳隊伍陣列
+        }
+
+
+        // 抽選遇敵方式
+        function rollSituation() {
+            let randomValue = Math.random();
+            let situation;
+
+            // 先讀取上次的遇敵方式
+            situation = parseInt(localStorage.getItem("situation"));
+            // 如果上次被跟蹤了，這次有很高的機率被偷襲
+            if (situation === 5) {
+                  if (randomValue < 0.8) {
+                    situation = 3; // 80% 被偷襲（敵人先攻）
+                } else if (randomValue < 0.9) {
+                    situation = 5; // 10% 被跟蹤（再繼續探索會被偷襲）
+                } else {
+                    situation = 1; // 10% 平安無事
+                }
+            // 如果上次沒被跟蹤，使用加權隨機決定遇敵方式
+            } else {
+                if (randomValue < 0.2) {
+                    situation = 1; // 20% 平安無事
+                } else if (randomValue < 0.7) {
+                    situation = 2; // 40% 一般遇敵（我方先攻）
+                } else if (randomValue < 0.8) {
+                    situation = 3; // 10% 被偷襲（敵人先攻）
+                } else if (randomValue < 0.9) {
+                    situation = 4; // 10% 發現無防備的敵人（我方第一回合攻擊、逃跑100%成功）
+                } else {
+                    situation = 5; // 10% 被跟蹤（再繼續探索會被偷襲）
+                //} else {
+                //    situation = 6; // 10% 觸發陷阱（每位我方進行敏捷檢定，失敗的被陷阱困住，出現掙脫按紐，以力量掙脫成功後才能行動）
+                }
+            }
+
+            // 儲存到 localStorage
+            localStorage.setItem("situation", situation);
+        }
+
+        // 敵人資料庫
+        const enemies = [
+            { name: "盜賊", type: "人形", Con: 10, Str: 10, Dex: 10, loot:"匕首", money:50 },
+            { name: "哥布林", type: "人形", Con: 6, Str: 6, Dex: 14, loot:"棍棒", money:20 },
+            { name: "獸人", type: "人形", Con: 14, Str: 12, Dex: 8, loot:"戰斧", money:50 },
+            { name: "狼人", type: "人形", Con: 12, Str: 14, Dex: 10, loot:"", money:10 },
+            { name: "吸血鬼", type: "人形", Con: 10 , Str: 12, Dex: 14, loot:"", money:100 },
+            { name: "巨魔", type: "人形", Con: 20, Str: 16, Dex: 6, loot:"狼皮", money:5 },
+            { name: "野狼", type: "野獸", Con: 8, Str: 10, Dex: 12, loot:"狼皮", money:0 },
+            { name: "食人花", type: "野獸", Con: 8, Str: 12, Dex: 4, loot:"食人花種子", money:0 },
+            { name: "小狐狸", type: "野獸", Con: 3, Str: 4, Dex: 14, loot:"狐狸皮", money:0 },
+            { name: "巨型蜘蛛", type: "野獸", Con: 16, Str: 14, Dex: 12, loot:"蜘蛛絲", money:0 }
+        ];
+
+        // 抽選敵人（同一種類，數量隨機，機率分佈：1個40%，2個30%，3個20%，4個10%）
+        function rollEnemy() {
+            // 隨機選擇一種敵人
+            let randomIndex = Math.floor(Math.random() * enemies.length);
+            let selectedEnemy = enemies[randomIndex];
+
+            // 使用加權隨機決定敵人數量
+            let randomValue = Math.random();
+            let enemyCount;
+
+            if (randomValue < 0.5) {
+                enemyCount = 1; // 50%
+            } else if (randomValue < 0.85) {
+                enemyCount = 2; // 35%
+            } else if (randomValue < 0.95) {
+                enemyCount = 3; // 10%
+            } else {
+                enemyCount = 4; // 5%
+            }
+
+            // 建立敵人陣列（所有敵人都是相同種類）
+            let enemiesEncountered = [];
+            for (let i = 0; i < enemyCount; i++) {
+                enemiesEncountered.push({
+                    name: selectedEnemy.name,
+                    type: selectedEnemy.type,
+                    Str: selectedEnemy.Str,
+                    Dex: selectedEnemy.Dex,
+                    Con: selectedEnemy.Con,
+                    loot: selectedEnemy.loot,
+                    money: selectedEnemy.money,
+                    MaxHP: selectedEnemy.Con*2, // MaxHP
+                    HP: selectedEnemy.Con*2, // 初始 HP
+                });
+            }
+
+            // 儲存敵人資訊到 localStorage
+            localStorage.setItem("enemyCount", enemyCount);
+            localStorage.setItem("enemies", JSON.stringify(enemiesEncountered));
+        }
+
+
+    </script>
+
+</body>
+</html>

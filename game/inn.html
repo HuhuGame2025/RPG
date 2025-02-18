@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅館</title>
+    <style>
+        body {
+            background-color: #000; /* 背景顏色 */
+        }
+
+    </style>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <!-- 側邊欄 -->
+    <div id="sidebar">
+        <div class="sidebar-menu">
+            <a href="character.html"><button>角色</button></a>
+            <a href="quest.html"><button>任務</button></a>
+            <a href="index.html"><button>回首頁</button></a>
+        </div>
+    </div>
+
+    <!-- 側邊欄開關按鈕 -->
+    <button id="sidebar-toggle" onclick="toggleSidebar()">=</button>
+
+    <!-- 主要內容區域 -->
+    <div class="main-content">
+        <h1>旅館</h1>
+        <p>你走進了旅館，這裡提供便宜而舒適的房間。</p>
+        <p>目前金錢： $<span id="playerMoney"></span></p>
+        <hr>
+
+            <!-- 顯示隊伍資料 -->
+            <div>
+                <!-- 主角 -->
+                <div id="player">
+                    <div class="column-container item">
+                        <div class="column">
+                            <h3 id="playerName"></h3>
+                            HP　<span id="playerHP"></span> / <span id="playerMaxHP"></span>
+                        </div>
+                        <div class="column">
+                            <span id="player-action" class="battle-text"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 同伴 -->
+                <div id="companion1" class="hide">
+                    <div class="column-container item">
+                        <div class="column">
+                            <h3 id="companion1-name"></h3>
+                            HP　<span id="companion1-HP"></span> / <span id="companion1-MaxHP"></span>
+                        </div>
+                        <div class="column">
+                            <span id="companion1-action" class="battle-text"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="companion2" class="hide">
+                    <div class="column-container item">
+                        <div class="column">
+                            <h3 id="companion2-name"></h3>
+                            HP　<span id="companion2-HP"></span> / <span id="companion2-MaxHP"></span>
+                        </div>
+                        <div class="column">
+                            <span id="companion2-action" class="battle-text"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="companion3" class="hide">
+                    <div class="column-container item">
+                        <div class="column">
+                            <h3 id="companion3-name"></h3>
+                            HP　<span id="companion3-HP"></span> / <span id="companion3-MaxHP"></span>
+                        </div>
+                        <div class="column">
+                            <span id="companion3-action" class="battle-text"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+         <!-- 選單 -->
+        <div class="menu">
+            <button onclick="stay()">住宿 - $20</button>
+            <button class="exit-button" onclick="goBack()">離開</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // 畫面載入時
+        window.onload = function() {
+            getPartyData(); // 讀取隊伍資料
+            getPlayerMoney(); // 讀取資金
+            showText('player'); // 顯示健康程度
+            showText('companion1');
+            showText('companion2');
+            showText('companion3');
+        };
+
+        // 顯示文本
+        const texts = {
+            good: "精力充沛",
+            dead: "體力透支，無法繼續冒險",
+            bad: "還能勉強再撐一下",
+            okay: "目前還有體力",
+        };
+
+        // 顯示健康程度
+        function showText(member) {
+            // 讀取隊伍資訊
+            if (member === 'player') {
+                memberHP = localStorage.getItem("playerHP");
+                memberMaxHP = localStorage.getItem("playerMaxHP");
+            } else if (member.startsWith("companion")) {
+                let compIndex = parseInt(member.replace("companion", "")) - 1;
+                let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+                if (hiredCompanions[compIndex]) {
+                    memberHP = hiredCompanions[compIndex].HP;
+                    memberMaxHP = hiredCompanions[compIndex].MaxHP;
+                }
+            }
+
+            // 顯示文本
+            let actionElement = document.getElementById(`${member}-action`);
+            if (!actionElement) {
+                console.warn(`找不到ID為 ${member}-action 的元素`);
+                return;
+            }
+
+            if (memberHP === memberMaxHP) {
+                actionElement.textContent = texts.good; // 滿血
+            } else if (memberHP <= 0) {
+                actionElement.textContent = texts.dead; // 死亡
+            } else if (memberHP <= memberMaxHP * 0.5) {
+                actionElement.textContent = texts.bad; // 重傷
+            } else {
+                actionElement.textContent = texts.okay; // 輕傷
+            }
+        }
+
+        // 住宿
+        function stay() {
+            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+            // 如果資金有$20以上
+            if (playerMoney >= 20) {
+                playerMoney -= 20;
+                localStorage.setItem("playerMoney", playerMoney);
+                document.getElementById('playerMoney').textContent = playerMoney;
+                resetHP();
+            } else {
+                alert("金錢不足");
+            }
+
+            // 重置拚酒量遊戲
+            localStorage.removeItem("drinkingStart");
+            localStorage.removeItem("drinkingResults");
+            localStorage.removeItem("drinkingEnd");
+
+            location.reload(); // 重新加載頁面
+        }
+    </script>
+
+</body>
+</html>

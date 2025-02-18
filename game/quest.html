@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任務</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        body {
+            background-color: #000;
+
+        }
+        
+
+
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <h1>任務</h1>
+        <hr>
+
+        <!-- 任務列表 -->
+        <div id="quest-list"></div>
+
+        <!-- 兼職列表 -->
+        <div id="task-list"></div>
+
+        <button class="button" onclick="goBack()">返回</button>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+    
+        // 頁面載入時
+        window.onload = function() {
+            getTakenQuests() // 讀取任務
+        };
+
+        // 讀取任務和兼職
+        function getTakenQuests() {
+            // 顯示兼職
+            const taskList = document.getElementById("task-list");
+            taskList.innerHTML = "";
+
+            let takenTasks = JSON.parse(localStorage.getItem("takenTasks")) || [];
+
+            takenTasks.forEach(task => {
+                let taskDiv = document.createElement("div");
+                taskDiv.classList.add("task");
+                                     
+                taskDiv.innerHTML = `
+                    <div class="item">
+                        <h3>${task.name}</h3>
+                        ${task.description}
+                        <p>報酬： $${task.price}</p>
+                    </div>
+                    <hr>
+                `;
+                taskList.appendChild(taskDiv);
+            });
+
+            // 顯示任務
+            const questList = document.getElementById("quest-list");
+            questList.innerHTML = "";
+
+            let takenQuests = JSON.parse(localStorage.getItem("takenQuests")) || [];
+
+            takenQuests.forEach(quest => {
+                let questDiv = document.createElement("div");
+                questDiv.classList.add("quest");
+                                       
+                questDiv.innerHTML = `
+                    <div class="item">
+                        <h3>${quest.name}</h3>
+                        ${quest.description}
+                        <p>報酬： $${quest.price}</p>
+                    </div>
+                    <hr>
+                `;
+                questList.appendChild(questDiv);
+            });
+        }
+
+    </script>
+
+</body>
+</html>
