@@ -1,0 +1,171 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>創建角色</title>
+    <style>
+        body {
+            background-color: #000; /* 背景顏色 */
+        }
+
+    </style>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  
+    <div class="main-content">
+        <h1>創建角色</h1>
+        <p>這是即將踏上冒險的主角。</p>
+        <hr>
+
+        <!-- 角色名稱 -->
+        <div class="container">
+            <label for="name">角色名稱：</label>
+            <input type="text" id="name" placeholder="輸入角色名稱" required>
+        </div>
+        <hr>
+
+        <!-- 屬性調整區域 -->
+        <div class="stat-container">
+            <label for="con">🫀 體質：</label>
+            <button onclick="adjustStat('con', -1)">-</button>
+            <span id="con" class="stat-value">5</span>
+            <button onclick="adjustStat('con', 1)">+</button>
+            <span class="note" id="con-description"></span> <!-- 顯示描述 -->
+        </div>
+
+        <div class="stat-container">
+            <label for="str">⚔️ 力量：</label>
+            <button onclick="adjustStat('str', -1)">-</button>
+            <span id="str" class="stat-value">5</span>
+            <button onclick="adjustStat('str', 1)">+</button>
+            <span class="note" id="str-description"></span> <!-- 顯示描述 -->
+        </div>
+
+        <div class="stat-container">
+            <label for="dex">🏃 敏捷：</label>
+            <button onclick="adjustStat('dex', -1)">-</button>
+            <span id="dex" class="stat-value">5</span>
+            <button onclick="adjustStat('dex', 1)">+</button>
+            <span class="note" id="dex-description"></span> <!-- 顯示描述 -->
+        </div>
+
+
+        <!-- 顯示剩餘可分配點數 -->
+        <p>剩餘可分配點數：<span id="remainingPoints">15</span></p>
+
+        <!-- 創建角色按鈕 -->
+        <div class="menu">
+            <button class="exit-button" onclick="createCharacter()">開始新的旅程</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // 當前的屬性值
+        let stats = {
+            str: 5,
+            dex: 5,
+            con: 5
+        };
+
+        // 剩餘可分配點數
+        let remainingPoints = 15;
+
+        // 設定最大和最小值
+        const MIN_STAT = 5;
+        const MAX_STAT = 15;
+        const TOTAL_MAX = 30;
+
+        // 設定屬性描述函數
+        function getStatDescription(stat, value) {
+            let description = "";
+            switch (stat) {
+                case "con":
+                    if (value < 8) {
+                        description = "弱不禁風";
+                    } else if (value >= 8 && value <= 12) {
+                        description = "普通";
+                    } else {
+                        description = "體格強壯";
+                    }
+                    break;
+                case "str":
+                    if (value < 8) {
+                        description = "手無縛雞之力";
+                    } else if (value >= 8 && value <= 12) {
+                        description = "中等";
+                    } else {
+                        description = "孔武有力";
+                    }
+                    break;
+                case "dex":
+                    if (value < 8) {
+                        description = "動作笨拙";
+                    } else if (value >= 8 && value <= 12) {
+                        description = "靈活";
+                    } else {
+                        description = "健步如飛";
+                    }
+                    break;
+
+            }
+            return description;
+        }
+
+        // 調整屬性值的函數
+        function adjustStat(stat, delta) {
+            // 檢查新值是否符合限制
+            const newValue = stats[stat] + delta;
+
+            // 計算總和
+            const total = stats.str + stats.dex + stats.con;
+
+            // 檢查新值是否在範圍內，且總和不超過30
+            if (newValue >= MIN_STAT && newValue <= MAX_STAT && total + delta <= TOTAL_MAX) {
+                stats[stat] = newValue;
+                document.getElementById(stat).textContent = newValue;
+                document.getElementById(stat + "-description").textContent = getStatDescription(stat, newValue);
+                remainingPoints -= delta;
+                document.getElementById("remainingPoints").textContent = remainingPoints;
+            }
+        }
+
+        // 創建角色的函數
+        function createCharacter() {
+            // 取得玩家的輸入資料
+            const name = document.getElementById("name").value;
+
+            // 確認角色資料是否填寫
+            if (name === "") {
+                alert("請輸入角色名稱");
+                return;
+            }
+
+            // 清除舊的遊戲資料
+            localStorage.clear();
+
+            // 儲存角色資料至 localStorage
+            localStorage.setItem("playerName", name);
+            localStorage.setItem("playerType", "冒險者");
+            localStorage.setItem("playerCon", stats.con);
+            localStorage.setItem("playerStr", stats.str);
+            localStorage.setItem("playerDex", stats.dex);
+            localStorage.setItem("playerHP", stats.con*2);
+            localStorage.setItem("playerMaxHP", stats.con*2);
+            localStorage.setItem("playerMoney", 1000); // 起始資金
+            localStorage.setItem("playerFame", 0); // 名聲
+
+            // 導向主遊戲頁面
+            window.location.href = "map.html"; // 假設這是遊戲主頁面的名稱
+        }
+
+        // 初始化頁面顯示描述
+        document.getElementById("con-description").textContent = getStatDescription("con", stats.con);
+        document.getElementById("str-description").textContent = getStatDescription("str", stats.str);
+        document.getElementById("dex-description").textContent = getStatDescription("dex", stats.dex);
+
+    </script>
+</body>
+</html>
