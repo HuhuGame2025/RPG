@@ -1,0 +1,120 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物品</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            background-color: #000;
+
+        }
+        
+
+
+    </style>
+</head>
+<body>
+    <div class="main-content">
+        <h1>物品</h1>
+        <p class="note">點擊物品可查看詳細資訊</p>
+        <p>🪙 金錢： $<span id="playerMoney"></span></p>
+        <hr>
+
+        <!-- 武器列表 -->
+        <div id="equipment-list"></div>
+
+        <!-- 道具列表 -->
+        <div id="supply-list"></div>
+
+        <!-- 戰利品列表 -->
+        <div id="loot-list"></div>
+
+        <div class="menu">
+            <button class="exit-button" onclick="goBack()">返回</button>
+        </div>
+    </div>
+
+    <script src="../script.js"></script>
+    <script>
+    
+        // 物品庫
+        const itemDatabase = [
+            { name: "📦包裹", description: "要送到下一座城鎮的貨物", price: 0 },
+            { name: "🗡️匕首", description: "鋒利的小刀<br>力量 + 1", price: 10 },
+            { name: "💰小棍棒", description: "脆弱的木棍，只能當玩具", price: 1 },
+            { name: "🗡️戰斧", description: "沉重的戰斧<br>力量 + 2", price: 20 },
+            { name: "💰巨型狼牙棒", description: "太重了，只有大型生物能揮舞", price: 5 },
+            { name: "💰仙粉", description: "仙子的魔法粉末，可以販賣", price: 10 },
+            { name: "💰狼皮", description: "野狼的毛皮，可以販賣", price: 12 },
+            { name: "⭐食人花種子", description: "蘊藏著蠢蠢欲動的生命，某人願意高價購買", price: 0 },
+            { name: "💰狐狸皮", description: "狐狸的毛皮，可以販賣", price: 6 },
+            { name: "💰蜘蛛絲", description: "巨型蜘蛛的絲線，可以販賣", price: 24 },
+            { name: "💰木材", description: "樹妖的木材，可以販賣", price: 18 },
+        ];
+
+        // 頁面載入時
+        window.onload = function() {
+            showAll() // 顯示所有物品
+        };
+
+        function showAll() {
+            //showEquipmentList();
+            //showSupplyList();
+            getPlayerMoney(); // 讀取資金
+            showLootList();
+        }
+
+        // 顯示戰利品
+        function showLootList() {
+            const lootList = document.getElementById("loot-list");
+            lootList.innerHTML = "";
+
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+            // 統計物品數量
+            let count = {};
+            playerItems.forEach(lootItem => {
+                count[lootItem] = (count[lootItem] || 0) + 1;
+            });
+
+            // 顯示物品列表
+            Object.keys(count).forEach(itemName => {
+                let itemData = itemDatabase.find(item => item.name === itemName);
+
+                if (itemData) {
+                    let itemDiv = document.createElement("div");
+                    itemDiv.classList.add("item");
+
+                    itemDiv.innerHTML = `
+                        <div class="column-container" style="cursor: pointer;">
+                            <div class="column">
+                                <h4 class="item-name">${itemData.name}</h4>
+                            </div>
+                            <div class="column">
+                                × ${count[itemName]}
+                            </div>
+                        </div>
+                        <span class="note" style="display: none;">${itemData.description}</span>
+                    `;
+
+                    // 點擊物品時，顯示或隱藏描述
+                    let itemElement = itemDiv.querySelector(".column-container");
+                    let noteElement = itemDiv.querySelector(".note");
+
+                    itemElement.addEventListener("click", () => {
+                        noteElement.style.display = (noteElement.style.display === "none") ? "block" : "none";
+                    });
+
+                    lootList.appendChild(itemDiv);
+                }
+            });
+        }
+
+
+
+    </script>
+
+</body>
+</html>
