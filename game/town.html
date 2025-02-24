@@ -1,0 +1,53 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城鎮</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="menu/character.html">🎭<span>角色</span></a>
+        <a href="menu/quest.html">📜<span>任務</span></a>
+        <a href="menu/inventory.html">💰<span>物品</span></a>
+        <a href="menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div class="main-content">
+        <h1>城鎮</h1>
+        <p>這裡是一座熱鬧的城鎮。</p>
+
+        <!-- 地點選單 -->
+        <div class="location-menu">
+            <a href="town/inn.html"><button>🛌<br>旅館</button></a>
+            <a href="town/guild.html"><button>📜<br>公會</button></a>
+            <a href="town/tavern.html"><button>🍺<br>酒館</button></a>
+            <a href="town/market.html"><button>💰<br>商店街</button></a>
+            <a href="town/arena.html"><button>⚔<br>競技場</button></a>
+            <a href="town/station.html"><button>🛞<br>驛站</button></a>
+        </div>
+
+        <!-- 選單 -->
+        <div class="menu">
+            <a href="map.html"><button class="exit-button">離開城鎮</button></a>
+        </div>
+    </div>
+
+
+
+    <script src="script.js"></script>
+    <script>
+
+        // 重置遇敵方式（解除被跟蹤）
+        localStorage.removeItem("situation");
+    </script>
+</body>
+</html>

@@ -1,0 +1,177 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>戰鬥結果</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="menu/character.html">🎭<span>角色</span></a>
+        <a href="menu/quest.html">📜<span>任務</span></a>
+        <a href="menu/inventory.html">💰<span>物品</span></a>
+        <a href="menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div class="main-content">
+        <h2 id="situation"></h2>
+        <p id="battle-result"></p>
+        <p id="loot-result"></p>
+        <p id="respawn-result"></p>
+
+        <!-- 選單 -->
+        <div class="menu">
+            <button id="continue-btn" onclick="continueGame()" class="exit-button">繼續</button>
+        </div>
+
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+
+        // 顯示文本
+        const texts = {
+            followed: "後方傳來腳步聲，敵人似乎在靠近……",
+            victory: "消滅了敵人，戰鬥勝利！",
+            escape: "成功逃離了此地",
+            teamSomeDie: "壯烈犧牲……幸好其他人平安逃脫了",
+            robEnemy: "敵人交出所有的財物後，迅速離開你的眼前。",
+            defeated: "戰鬥失敗……",
+            robbed: (randomMoney) => `戰鬥失敗……敵人搜刮你的財物，奪走了 $${randomMoney}`,
+            captured: "戰鬥失敗……你被敵人俘虜了",
+            respawnHere: "在敵人離去之後，你靠意志力撐住了，勉強站了起來",
+            respawnTown: "幸運的是，守衛在巡邏途中發現你，將你送回了城鎮",
+        };
+
+        // 畫面載入時
+        window.onload = function() {
+            showResult();
+        };
+
+        // 顯示結果
+        function showResult() {
+            // 讀取戰鬥結果
+            let situation = parseInt(localStorage.getItem("situation"));
+            let battleResult = parseInt(localStorage.getItem("battleResult"));
+            let lootResult = localStorage.getItem("lootResult");
+            console.log("戰鬥結果：", battleResult);
+            console.log("戰利品：", lootResult) || "";
+
+            // 顯示結果
+            if (situation === 5) {
+                // 被跟蹤
+                document.getElementById("battle-result").textContent = texts.followed;
+                console.log("被跟蹤（再繼續探索會被偷襲）");
+
+            } else if (battleResult === 1) {
+                // 戰鬥勝利的情況
+                document.getElementById("battle-result").textContent = texts.victory;
+
+                // 顯示獲得的金錢和戰利品
+                document.getElementById("loot-result").innerHTML = lootResult;
+
+            } else if (battleResult === 2) {
+                // 全員逃走的情況
+                document.getElementById("battle-result").textContent = texts.escape;
+                
+            } else if (battleResult === 3) {
+                // 有人死亡，剩下的人都已逃走的情況
+                document.getElementById("battle-result").textContent = texts.teamSomeDie;
+
+                let escapeMember = JSON.parse(localStorage.getItem("escapeMember")) || [];
+                console.log("已逃跑成員：", escapeMember.map(m => m.name));
+            
+            } else if (battleResult === 4) {
+                // 搶劫敵人的情況
+                document.getElementById("battle-result").textContent = texts.robEnemy;
+            
+                // 顯示獲得的金錢和戰利品
+                document.getElementById("loot-result").innerHTML = lootResult;
+
+            } else if (battleResult === 5) {
+                // 被擊倒的情況
+                document.getElementById("battle-result").textContent = texts.defeated;
+                respawn(); // 重生
+
+            } else if (battleResult === 6) {
+                // 被搶劫的情況
+                const robbedMoney = parseInt(localStorage.getItem("robbedMoney")) || 0; // 讀取被搶的金額
+                document.getElementById("battle-result").textContent = texts.robbed(robbedMoney);
+                respawn(); // 重生
+
+            } else if (battleResult === 7) {
+                // 成為奴隸的情況
+                document.getElementById("battle-result").textContent = texts.captured;
+            }
+        }
+
+        // 重生
+        function respawn() {    
+            // 讀取所有同伴資料
+            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+
+            // 讓每個同伴的 HP 恢復 1
+            hiredCompanions.forEach(companion => {
+                companion.HP = 1; // 設定每個同伴的 HP 為 1
+            });
+
+            // 存回更新後的數據
+            localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
+
+            // 主角 HP 也恢復 1
+            localStorage.setItem("playerHP", 1);
+
+            // 讀取重生狀態
+            let respawn = parseInt(localStorage.getItem("respawn"));
+
+            if (respawn === 1) {
+                // 原地重生
+                document.getElementById("respawn-result").textContent = texts.respawnHere;
+
+            } else if (respawn === 2) { 
+                // 被送回城鎮
+                document.getElementById("respawn-result").textContent = texts.respawnTown;
+
+                // 讀取城鎮在地圖上的位置
+                const newPos = JSON.parse(localStorage.getItem("townPos")) || { x: 2, y: 1 };
+
+                // 將主角位置設定在新地點
+                let playerPos = newPos;
+                localStorage.setItem("playerPos", JSON.stringify(playerPos));
+            }
+        }
+
+        // 繼續遊戲
+        function continueGame() {
+            // 讀取重生狀態
+            let respawn = parseInt(localStorage.getItem("respawn"));
+            
+            localStorage.removeItem("enemies"); // 清除敵人
+            localStorage.removeItem("teamMember"); // 清除出戰隊伍
+            localStorage.removeItem("escapeMember"); // 清除逃跑隊伍
+            localStorage.removeItem("robEnemy"); // 清除搶劫狀態
+            localStorage.removeItem("battleResult"); // 清除戰鬥結果
+            localStorage.removeItem("lootResult"); // 清除戰利品訊息
+
+            if (respawn === 2) {
+                // 被送回城鎮
+                localStorage.removeItem("respawn"); // 清除重生狀態
+                window.location.href = 'town/inn.html'; // 跳轉到旅館
+            } else {
+                localStorage.removeItem("respawn"); // 清除重生狀態
+                window.location.href = 'map.html'; // 跳轉到地圖
+            }            
+        }
+        
+    </script>
+
+</body>
+</html>

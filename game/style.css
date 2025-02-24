@@ -1,0 +1,364 @@
+﻿/* styles.css */
+
+body{
+    color: #ccc; /* 文字顏色 */
+    margin: 20px;
+    font-family: Arial, sans-serif;
+    font-size: 20px;
+}
+
+h1{
+    font-size: 36px;
+    color: white;
+}
+
+/* 列表標題 */
+h3 {
+    color: white;
+    margin: 10px;
+}
+
+/* 名字、品名 */
+h4 {
+    color: white;
+    margin: 0;
+    font-size: 1em;
+}
+
+a{
+    text-decoration: none; /* 移除超連結底線 */
+
+}
+
+button {
+    background-color: #222;
+    color: #ccc;
+    font-size: 20px;
+    border: none;
+    padding: 5px 15px;
+    margin: 10px 5px;
+    cursor: pointer;
+    border-radius: 5px;
+    text-align: center;
+}
+
+button:hover {
+    background-color: #444;
+    color: #fff;
+}
+
+hr {
+    border: 1px solid #666;
+    margin: 30px 0;
+}
+
+
+/* 主要頁面內容的空間 */
+.main-content, .button-bar {
+    padding: 0px;
+    width: 60%;
+    min-width: 400px; /* 避免過窄 */
+    max-width: 600px; /* 可設定最大寬度 */
+    margin-left: auto;
+    margin-right: auto; /* 置中 */
+}
+@media (max-width: 480px) { /* 當螢幕小於 480px 時 */
+    .main-content, .button-bar {
+        width: 100%; /* 手機版寬度擴展至 90% */
+        min-width: 100%;
+        max-width: none;
+    }
+}
+
+.main-content {
+    margin-top: 80px;
+}
+
+
+/* 一般選單 */
+.menu{
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+}
+
+.menu button {
+    width: 50%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+@media (max-width: 480px) { /* 當螢幕小於 480px 時 */
+    .menu button {
+        width: 70%;
+    }
+}
+
+
+/* 離開按鈕 */
+.exit-button {
+    margin-top: 20px;
+}
+
+
+/* 地點選單 */
+.location-menu{
+    text-align: center;
+}
+
+.location-menu button{
+    width: 90px;
+    height: 90px;
+}
+
+
+/* 兩欄容器（戰鬥、商店） */
+.column-container {
+    display: flex;
+    flex-wrap: wrap; /* 如果內容過長，允許換行 */
+    gap: 20px; /* 設定欄之間的間距 */
+    margin: 5px 0;
+}
+
+/* 品項 */
+.item {
+    padding: 5px;
+    margin: 20px 0px;
+}
+
+/* 欄 */
+.column {
+    flex: 1; /* 佔滿剩餘空間 */
+    margin: auto 0; /* 垂直置中 */
+    text-align: left;
+}
+
+/* 名字欄 */
+.column-name {
+    flex: 0 0 120px; /* 欄的寬度 */
+    margin: auto 0; /* 垂直置中 */
+    text-align: center;
+}
+
+/* 小欄 */
+.column-small {
+    flex: 0 0 50px; /* 欄的寬度 */
+    margin: auto 0; /* 垂直置中 */
+    text-align: center;
+}
+
+/* 欄內按鈕 */
+.column button {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* 欄內提示 */
+.column .note {
+    text-align: center;
+}
+
+/* 按鈕列 */
+.row-buttons {
+    display: flex;
+    text-align: center;
+}
+
+/* 按鈕列裡的按鈕 */
+.row-buttons button {
+    margin-top: 0;
+    margin-bottom: 0;
+}
+@media (max-width: 480px) { /* 當螢幕小於 480px 時 */
+    .row-buttons button {
+        width: 80px;
+    }
+}
+
+
+/* 角色頁面名字 */
+.column h3 {
+    color: white;
+    font-size: 1.1em;
+}
+
+/* 深色背景 */
+.background {
+    background-color: #111;
+    border-radius: 5px;
+}
+
+/* 初始隱藏 */
+.hide {
+    display: none; 
+}
+
+/* 灰色字 */
+.note {
+    color: #666;
+}
+
+/* 置中 */
+.center {
+    text-align: center;
+}
+
+/* 靠上方 */
+.top {
+    margin-top: 0;
+}
+
+/* 小字 */
+.small {
+    font-size: 0.9em;
+    padding: 5px;
+}
+
+/* 選擇敵人 */
+.enemy-container button {
+    background-color: #111;
+    width: 100%;
+    text-align: left;
+    padding: 5px 10px; /* 和.item一樣 */
+    margin: 10px 0px; /* 和.item一樣 */
+}
+
+.enemy-container button:hover {
+    background-color: #4D0000; /* 背景變紅 */
+    color: #fff;
+}
+
+.enemy-container .selected {
+    background-color: #4D0000; /* 背景變紅 */
+    color: #fff;
+}
+
+.red {
+    color: red; /* 受到攻擊後的 HP 變成紅字 */
+    font-weight: bold;
+}
+
+.black {
+    color: #000; /* 敵人旁邊的「鎖定目標」文字 */
+}
+
+.hp {
+    font-size: 0.9em;
+    margin: 0;
+    color: #984B4B;
+}
+
+/* 主要按鈕列 */
+.button-bar {
+    position: fixed;
+    top: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #000;
+    display: flex;
+    transition: transform 0.3s ease-in-out; /* 平滑動畫 */
+    font-size: 1em;
+}
+
+.button-bar a {
+    background-color: #000;
+    color: #666;
+    font-size: 1em;
+    cursor: pointer;
+    width: 100%;
+    padding: 10px 0;
+    text-align: center;
+}
+
+.button-bar a:hover {
+    background-color: #222;
+    color: white;
+}
+
+/* 隱藏到畫面外 */
+.hidden {
+    transform: translateX(-50%) translateY(-100%); 
+}
+
+.button-bar span {
+    font-size: 0.8em;
+}
+
+/* 返回按鈕 */
+.button-bar button {
+    margin-left: 0;
+    background-color: rgba(0, 0, 0, 0);
+}
+.button-bar button:hover {
+    background-color: rgba(0, 0, 0, 0); 
+}
+
+
+
+/* 側邊欄樣式 */
+#sidebar {
+    height: 100%;
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: -300px; /* 初始隱藏 */
+    background-color: #222;
+    padding: 20px;
+    color: #ccc;
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.5);
+    transition: 0.3s; /* 漸變動畫 */
+    z-index: 99;
+}
+
+/* 側邊欄內部 */
+#sidebar .sidebar-menu {
+    margin-top: 50px;
+    max-width: 250px;
+}
+
+/* 側邊欄按鈕 */
+#sidebar button {
+    display: block;
+    width: 100%;
+    padding: 10px;
+    margin-top: 10px;
+    background-color: #222;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+#sidebar button:hover {
+    background-color: #444;
+}
+
+/* 側邊欄開關按鈕 */
+#sidebar-toggle {
+    position: fixed;
+    left: 0;
+    top: 20px;
+    width: 40px;
+    height: 40px;
+    background-color: rgba(0,0,0,0);
+    padding: 10px;
+    cursor: pointer;
+    z-index: 100;
+    border-radius: 5px;
+    transform: translateY(-50%);
+    text-align: center;
+    z-index: 100;
+}
+
+#sidebar-toggle:hover {
+    background-color: #444;
+}
+
+/* 創建角色頁面 */
+input{
+    font-size: 20px;
+    margin: 5px 0;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
