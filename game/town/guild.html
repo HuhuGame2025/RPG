@@ -1,0 +1,306 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>公會</title>
+    <style>
+        body {
+            background-color: #000; /* 背景顏色 */
+        }
+
+    </style>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="../menu/character.html">🎭<span>角色</span></a>
+        <a href="../menu/quest.html">📜<span>任務</span></a>
+        <a href="../menu/inventory.html">💰<span>物品</span></a>
+        <a href="../menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div class="main-content">
+        <h1>📜 公會</h1>
+        <p id="text">你走進了冒險者公會，這裡張貼著各種任務資訊。</p>
+        <hr>
+
+        <!-- 兼職列表 -->
+        <div id="task-list"></div>
+
+        <!-- 任務列表 -->
+        <div id="quest-list"></div>
+
+        <!-- 選單 -->
+        <div class="menu">
+            <button onclick="showTaskList()">📜 查看兼職</button>
+            <button onclick="showQeustList()">📜 查看任務</button>
+            <a href="../town.html"><button class="exit-button">離開</button><a>
+        </div>
+    </div>
+
+    <script src="../script.js"></script>
+    <script>
+        // 畫面載入時
+        window.onload = function() {
+
+        };
+
+        // 顯示文本
+        const texts = {
+            tasks: "兼職適合想在冒險途中順便賺外快的冒險者。",
+            quests: "任務適合尋求挑戰的冒險者，完成任務能讓名聲水漲船高。",
+        };
+
+        // 兼職列表
+        const tasks = [
+            { id: "task01", name: "送貨", description: "只需要將包裹送到下一座城鎮，若包裹在運送過程中損壞，必須賠償 $50。", price: 20, status: ""},
+            { id: "task02", name: "懸賞逃犯", description: "這個小賊躲在荒野中，搶劫落單的旅人，如果你單獨出城就很有可能碰上他。", price: 100, status: "" },
+            { id: "task03", name: "狩獵哥布林", description: "哥布林一直在破壞城鎮的安寧，請逮捕 5 隻哥布林，但不要殺害他們，我們會教他們改過向善。", price: 150, status: "" },
+            { id: "task04", name: "收購種子", description: "食人花的種子很有研究價值，但想取得必須冒著生命危險，如果有 10 個我就高價收購。", price: 200, status: "" },
+        ];
+
+        // 任務列表
+        const quests = [
+            { id: "quest01", name: "失竊的紅寶石", description: "一顆稀有的紅寶石失竊了，我們知道下手的盜賊團躲在哪，希望有人能從他們的巢穴中取回寶石。", price: 400, status: ""},
+            { id: "quest02", name: "吸血鬼擄走的孩子", description: "吸血鬼擄走了一個孩子，囚禁在一座古堡的地牢裡，去營救的守衛也有去無回，希望勇者出手相助。", price: 300, status: "" },
+            { id: "quest03", name: "奴隸的復仇", description: "我曾經為了一袋金幣淪為獸人的奴隸，現在我自由了，我要復仇！讓那個渾蛋嚐嚐同樣的滋味！", price: 200, status: "" },
+            { id: "quest04", name: "協尋丈夫", description: "丈夫在月圓之夜變成狼人，離家出走了，希望有人能帶他回家。不過，請先制伏他再帶回來。", price: 300, status: "" },
+        ];
+
+        // 顯示兼職列表
+        function showTaskList() {
+            // 先清空其他列表
+            document.getElementById("quest-list").innerHTML = "";
+
+            // 顯示說明
+            document.getElementById("text").textContent = texts.tasks;
+
+            // 顯示列表
+            const menu = document.getElementById("task-list");
+            menu.innerHTML = "";
+
+            let takenTasks = JSON.parse(localStorage.getItem("takenTasks")) || [];
+
+            tasks.forEach(task => {
+                let taskDiv = document.createElement("div");
+                taskDiv.classList.add("task");
+                    
+                let isTaken = takenTasks.some(taken => taken.name === task.name);
+                    
+                taskDiv.innerHTML = `
+                    <div class="item">
+                        <h3>${task.name}</h3>
+                        ${task.description}
+
+                        <div class="column-container">
+                            <div class="column">
+                                <p>報酬： $${task.price}</p>
+                            </div>
+                            <div class="column">
+                                ${isTaken ? 
+                                    '<p class="note">進行中</p>' 
+                                    : 
+                                    `<button onclick="takeTask('${task.name}')">承接</button>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                `;
+                menu.appendChild(taskDiv);
+            });
+            window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
+        }
+
+        // 顯示任務列表
+        function showQeustList() {
+            // 先清空其他列表
+            document.getElementById("task-list").innerHTML = "";
+
+            // 顯示說明
+            document.getElementById("text").textContent = texts.quests;
+
+            // 顯示列表
+            const menu = document.getElementById("quest-list");
+            menu.innerHTML = "";
+
+            let takenQuests = JSON.parse(localStorage.getItem("takenQuests")) || [];
+
+            quests.forEach(quest => {
+                let questDiv = document.createElement("div");
+                questDiv.classList.add("quest");
+                    
+                let isTaken = takenQuests.some(taken => taken.name === quest.name);
+                    
+                questDiv.innerHTML = `
+                    <div class="item">
+                        <h3>${quest.name}</h3>
+                        ${quest.description}
+
+                        <div class="column-container">
+                            <div class="column">
+                                <p>報酬： $${quest.price}</p>
+                            </div>
+                            <div class="column">
+                                ${isTaken ? 
+                                    '<p class="note">進行中</p>' 
+                                    : 
+                                    `<button onclick="takeQuest('${quest.name}')">承接</button>`
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <hr>
+                `;
+                menu.appendChild(questDiv);
+            });
+            window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
+        }
+
+        // 承接兼職
+        function takeTask(name, cost) {        
+            let takenTasks = JSON.parse(localStorage.getItem("takenTasks")) || [];
+        
+            // 找到這個兼職的資料
+            let task = tasks.find(comp => comp.name === name);
+        
+            if (task && !takenTasks.some(taken => taken.name === name)) {
+                // 添加兼職資料
+                let takenTask = {
+                    id: task.id,
+                    name: task.name,
+                    description: task.description,
+                    price: task.price,
+                };
+
+                takenTasks.push(takenTask);
+                localStorage.setItem("takenTasks", JSON.stringify(takenTasks));
+
+                // 改變按鈕
+                let button = event.target;
+                button.outerHTML = `<p class="note">進行中</p>`; // 替換按鈕
+            }
+        }
+
+        // 承接任務
+        function takeQuest(name, cost) {        
+            let takenQuests = JSON.parse(localStorage.getItem("takenQuests")) || [];
+        
+            // 找到這個兼職的資料
+            let quest = quests.find(comp => comp.name === name);
+        
+            if (quest && !takenQuests.some(taken => taken.name === name)) {
+                // 添加兼職資料
+                let takenQuest = {
+                    id: quest.id,
+                    name: quest.name,
+                    description: quest.description,
+                    price: quest.price,
+                    status: quest.status,
+                };
+
+                takenQuests.push(takenQuest);
+                localStorage.setItem("takenQuests", JSON.stringify(takenQuests));
+
+                // 改變按鈕
+                let button = event.target;
+                button.outerHTML = `<p class="note">進行中</p>`; // 替換按鈕
+            }
+        }
+
+        // 完成兼職
+        function completeTask(name) {
+            let takenTasks = JSON.parse(localStorage.getItem("takenTasks")) || [];
+            let completedTasks = JSON.parse(localStorage.getItem("completedTasks")) || [];
+            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+    
+            // 找到這個兼職的資料
+            let taskIndex = takenTasks.findIndex(taken => taken.name === name);
+            let task = tasks.find(comp => comp.name === name);
+    
+            if (taskIndex !== -1 && task) {
+                let message = "";
+                switch (task.id) {
+                    case 1: // 送貨
+                        message = "你將包裹完好無缺地送達，獲得了報酬 ${task.price}。";
+                        break;
+                    case 2: // 懸賞逃犯
+                        message = "你成功逮捕逃犯，讓旅人的安全得到保障，獲得了報酬 ${task.price}。";
+                        break;
+                    case 3: // 狩獵哥布林
+                        message = "你交出哥布林，獲得了報酬 ${task.price}。哥布林被趕進了籠子裡，他們氣憤地辱罵你，而你留下他們獨自面對未知的命運。";
+                        break;
+                    case 4: // 收購種子
+                        message = "你交出食人花的種子，獲得了報酬 ${task.price}。那些種子被裝進了鐵製的容器裡，就像被當成什麼危險物品。";
+                        break;
+                }
+        
+                playerMoney += task.price;
+        
+                // 更新已完成任務
+                completedTasks.push(takenTasks[taskIndex]);
+                takenTasks.splice(taskIndex, 1);
+        
+                // 更新 localStorage
+                localStorage.setItem("takenTasks", JSON.stringify(takenTasks));
+                localStorage.setItem("completedTasks", JSON.stringify(completedTasks));
+                localStorage.setItem("playerMoney", playerMoney);
+        
+                // 改變按鈕
+                let button = event.target;
+                button.outerHTML = `<p class="note">已完成</p>`; // 替換按鈕
+            }
+        }
+
+        // 完成任務
+        function completeQuest(name) {
+            let takenQuests = JSON.parse(localStorage.getItem("takenQuests")) || [];
+            let completedQuests = JSON.parse(localStorage.getItem("completedQuests")) || [];
+            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+    
+            // 找到這個兼職的資料
+            let questIndex = takenQuests.findIndex(taken => taken.name === name);
+            let quest = quests.find(comp => comp.name === name);
+    
+            if (questIndex !== -1 && quest) {
+                let message = "";
+                switch (quest.id) {
+                    case 1: // 失竊的紅寶石
+                        message = "你找回了紅寶石，獲得了報酬 ${quest.price}。";
+                        break;
+                    case 2: // 吸血鬼擄走的孩子
+                        message = "你從吸血鬼手中解救了孩子，獲得了報酬 ${quest.price}。";
+                        break;
+                    case 3: // 奴隸的復仇
+                        message = "你完成了任務，獲得了報酬 ${quest.price}。";
+                        break;
+                    case 4: // 協尋丈夫
+                        message = "你帶回了狼人丈夫，獲得了報酬 ${quest.price}。";
+                        break;
+                }
+        
+                playerMoney += quest.price;
+        
+                // 更新已完成任務
+                completedQuests.push(takenQuests[questIndex]);
+                takenQuests.splice(questIndex, 1);
+        
+                // 更新 localStorage
+                localStorage.setItem("takenQuests", JSON.stringify(takenQuests));
+                localStorage.setItem("completedQuests", JSON.stringify(completedQuests));
+                localStorage.setItem("playerMoney", playerMoney);
+        
+                // 改變按鈕
+                let button = event.target;
+                button.outerHTML = `<p class="note">已完成</p>`; // 替換按鈕
+            }
+        }
+
+
+    </script>
+
+</body>
+</html>
