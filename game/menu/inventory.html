@@ -1,0 +1,152 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物品</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            background-color: #000 !important; /* 背景顏色 */
+        }
+        
+
+
+    </style>
+</head>
+<body>
+    <!-- 返回按鈕 -->
+    <div class="button-bar" id="buttonBar">
+        <button class="note" onclick="goBack()"><span>〈 返回</span></button>
+    </div>
+
+    <div class="main-content">
+        <h2>物品</h2>
+        <p class="note">點擊物品可查看詳細資訊</p>
+        <p>🪙 $<span id="playerMoney"></span></p>
+        <hr>
+
+        <!-- 物品列表 -->
+        <div id="item-list"></div>
+
+        <!-- Top按紐 -->
+        <button class="top-button" onclick="goTop()"></button>
+
+    </div>
+
+    <script src="../script.js"></script>
+    <script>
+    
+        // 頁面載入時
+        window.onload = function() {
+            getPlayerMoney(); // 讀取資金
+            getPlayerItem(); // 顯示所有物品
+            
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            console.log("物品", playerItems);
+        };
+
+        // 顯示所有物品
+        function getPlayerItem() {
+            let itemList = document.getElementById("item-list");
+            
+            itemList.innerHTML = "";
+
+            // 讀取玩家的物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+            // 統計物品數量
+            let count = {};
+            playerItems.forEach(item => {
+                count[item] = (count[item] || 0) + 1;
+            });
+
+            // 顯示物品列表
+            Object.keys(count).forEach(itemId => {
+                let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
+
+                if (item) {
+                    let itemDiv = document.createElement("div");
+                    itemDiv.classList.add("item");
+
+                    itemDiv.innerHTML = `
+                        <div class="column-container" style="cursor: pointer;">
+                            <div class="column">
+                                <span class="item-name">${item.name} × ${count[itemId]}</span>
+                            </div>
+                            <div class="column-name row-buttons">
+                                <p class="column">$${item.price}</p>
+                                ${item.type !== "specialItem" ? 
+                                    `<button class="column" onclick="discardItem('${item.id}')">
+                                        <span class="small">丟棄</span>
+                                    </button>` : ""}
+                            </div>
+                        </div>
+                        <span class="note" style="display: none;">${item.description}</span>
+                    `;
+
+                    // 點擊物品時，顯示或隱藏描述
+                    let itemElement = itemDiv.querySelector(".column-container");
+                    let noteElement = itemDiv.querySelector(".note");
+
+                    itemElement.addEventListener("click", () => {
+                        noteElement.style.display = (noteElement.style.display === "none") ? "block" : "none";
+                    });
+
+                    itemList.appendChild(itemDiv);
+                }
+            });
+        }
+
+        // 丟棄物品
+        function discardItem(itemId) {
+            // 讀取主角所有的物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+            // 找出該物品的數量
+            let itemCount = playerItems.filter(item => item === itemId).length;
+    
+            let discardAmount; // 丟棄的數量
+
+            if (itemCount === 1) {
+                // 如果只有 1 個，就直接丟
+                discardAmount = 1;
+            } else {
+                // 如果超過 1 個，讓玩家輸入數量
+                let input = prompt("要丟棄幾件？", "1");
+
+                // 如果玩家按「取消」，則直接結束函式
+                if (input === null) {
+                    return;
+                }
+
+                discardAmount = parseInt(input);
+
+                // 驗證輸入是否有效
+                if (isNaN(discardAmount) || discardAmount <= 0) {
+                    alert("請輸入有效的數量");
+                    return;
+                } else if (discardAmount > itemCount) {
+                    discardAmount = itemCount;
+                }
+            }         
+    
+            // 移除物品
+            for (let i = 0; i < discardAmount; i++) {
+                let index = playerItems.indexOf(itemId);
+                if (index !== -1) {
+                    playerItems.splice(index, 1); // 移除一個該物品
+                }
+            }
+
+            // 更新 `localStorage`
+            localStorage.setItem("playerItems", JSON.stringify(playerItems));
+
+            // 重新顯示物品列表
+            getPlayerItem();
+        }
+
+    </script>
+
+</body>
+</html>

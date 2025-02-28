@@ -1,0 +1,435 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>角色</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            background-color: #000 !important; /* 背景顏色 */
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- 返回按鈕 -->
+    <div class="button-bar" id="buttonBar">
+        <button class="note" onclick="goBack()"><span>〈 返回</span></button>
+    </div>
+
+    <div class="main-content">
+        <!-- 角色詳情 -->
+        <div id="character-sheet">
+        </div>
+    </div>
+
+    <script src="../script.js"></script>
+    <script>
+    
+        // 頁面載入時
+        window.onload = function() {
+            showCharacterSheet(); // 顯示角色詳情
+        };
+        
+        // 顯示角色詳情
+        function showCharacterSheet(memberId = null) {
+            // 讀取對象id
+            memberId = localStorage.getItem("npcId");
+
+            // 讀取所有成員的資料
+            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+
+            // 找到這個成員的資料
+            const member = teamMember.find(m => m.id === memberId);
+            console.log("成員", member);
+            
+            // 查找武器和護具的名稱
+            const weaponName = (member.weapon && member.weapon.name) ? member.weapon.name : "（無武器）";
+            const armorName = (member.armor && member.armor.name) ? member.armor.name : "（無護具）";
+
+            // 計算裝備的加值
+            let itemStr = member.totalStr - member.str;
+            let itemDex = member.totalDex - member.dex;
+            let itemCha = member.totalCha - member.cha;
+            let itemArm = member.totalArm;
+
+            // 如果數值為正數，前面加上 `+`
+            itemStr = itemStr > 0 ? `+${itemStr}` : itemStr;
+            itemDex = itemDex > 0 ? `+${itemDex}` : itemDex;
+            itemCha = itemCha > 0 ? `+${itemCha}` : itemCha;
+            itemArm = itemArm > 0 ? `+${itemArm}` : itemArm;
+
+            // 顯示角色詳情
+            const menu = document.getElementById("character-sheet");
+            menu.innerHTML = "";
+
+            let characterDiv = document.createElement("div");
+                                       
+            characterDiv.innerHTML = `
+                <div class="item">
+                    <div class="center">${member.type}</div>
+                    <div class="column-container background">
+                        <button class="column-small" onclick="lastMember('${member.id}')">◀︎</button>
+                        <h3 class="column center">${member.name}</h3>
+                        <button class="column-small" onclick="nextMember('${member.id}')">▶︎</button>
+                    </div>
+                </div>
+
+                <div class="item">
+                    <span>生命值</span>
+                    <div class="column-container background">
+                        <span class="column center hp" id="HP-bar"></span>
+                        <span class="column center">${member.HP} / ${member.MaxHP}</span>
+                        <span class="column center note" id="HP-description"></span>
+                    </div>
+                </div>
+                    
+                <div class="item">
+                    <span>屬性</span>
+                    <div class="column-container background">
+                        <span class="column center">🫀 體質</span>
+                        <div class="column row-buttons">
+                            <span class="column center">${member.con}</span>
+                            <span class="column center"></span>
+                        </div>
+                        <span class="column center note" id="con-description"></span>
+                    </div>
+                    <div class="column-container background">
+                        <span class="column center">⚔️ 力量</span>
+                        <div class="column row-buttons">
+                            <span class="column center">${member.totalStr}</span>
+                            <span class="column center">(${itemStr})</span>
+                        </div>
+                        <span class="column center note" id="str-description"></span>
+                    </div>
+                    <div class="column-container background">
+                        <span class="column center">🏃 敏捷</span>
+                        <div class="column row-buttons">
+                            <span class="column center">${member.totalDex}</span>
+                            <span class="column center">(${itemDex})</span>
+                        </div>
+                        <span class="column center note" id="dex-description"></span>
+                    </div>
+                    <div class="column-container background">
+                        <span class="column center">👁️ 感知</span>
+                        <div class="column row-buttons">
+                            <span class="column center">${member.wis}</span>
+                            <span class="column center"></span>
+                        </div>
+                        <span class="column center note" id="wis-description"></span>
+                    </div>
+                    <div class="column-container background">
+                        <span class="column center">✨ 魅力</span>
+                        <div class="column row-buttons">
+                            <span class="column center">${member.totalCha}</span>
+                            <span class="column center">(${itemCha})</span>
+                        </div>
+                        <span class="column center note" id="cha-description"></span>
+                    </div>
+                    <div class="column-container background">
+                        <span class="column center">🛡️ 護甲</span>
+                        <div class="column row-buttons">
+                            <span class="column center">${member.totalArm}</span>
+                            <span class="column center">(${itemArm})</span>
+                        </div>
+                        <span class="column center note"></span>
+                    </div>
+                </div>
+
+                <div class="item">
+                    <span>裝備</span>
+                    <div class="column-container">
+                        <button class="column center" onclick="chooseEquipment('weapon')">${weaponName}</button>
+                        <button class="column center" onclick="chooseEquipment('armor')">${armorName}</button>
+                    </div>
+                </div>
+                <div id="item-list"></div>
+
+                <div class="item">
+                    <p>${member.description}</p>
+                </div>
+            `;
+            menu.appendChild(characterDiv);
+
+            // 顯示屬性描述
+            document.getElementById("HP-bar").textContent = getStatDescription("HP-bar", `${member.id}`);
+            document.getElementById("HP-description").textContent = getStatDescription("HP", `${member.id}`);
+            document.getElementById("con-description").textContent = getStatDescription("con", `${member.id}`);
+            document.getElementById("str-description").textContent = getStatDescription("str", `${member.id}`);
+            document.getElementById("dex-description").textContent = getStatDescription("dex", `${member.id}`);
+            document.getElementById("wis-description").textContent = getStatDescription("wis", `${member.id}`);
+            document.getElementById("cha-description").textContent = getStatDescription("cha", `${member.id}`);
+            
+            window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
+        }
+
+        // 顯示屬性描述
+        function getStatDescription(stat, memberId) {
+            // 讀取出戰成員
+            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];        
+
+            // 找到角色的資料
+            member = teamMember.find(character => character.id === memberId);
+
+            // 顯示描述
+            let description = "";
+            switch (stat) {
+                case "HP-bar":
+                    let unit = 5 ; // 每格代表的 HP 值
+                    let maxUnit = 8 ; // 格數上限
+                    description = member.HP === 0 ? "" : "❚".repeat(Math.min(Math.ceil(member.HP / unit), maxUnit));
+                    break;
+                case "HP":
+                    if (member.HP === member.MaxHP) {
+                        description = "健康";
+                    } else if (member.HP === 0) {
+                        description = "昏迷";
+                    } else if (member.HP <= member.MaxHP*0.5) {
+                        description = "重傷";
+                    } else {
+                        description = "輕傷";
+                    }
+                    break;
+                case "con":
+                    if (member.con < 8) {
+                        description = "弱不禁風";
+                    } else if (member.con <= 12) {
+                        description = "中等";
+                    } else {
+                        description = "身強體壯";
+                    }
+                    break;
+                case "str":
+                    if (member.totalStr < 8) {
+                        description = "軟弱無力";
+                    } else if (member.totalStr <= 12) {
+                        description = "普通";
+                    } else {
+                        description = "孔武有力";
+                    }
+                    break;
+                case "dex":
+                    if (member.totalDex < 8) {
+                        description = "動作笨拙";
+                    } else if (member.totalDex <= 12) {
+                        description = "無礙";
+                    } else {
+                        description = "身手矯捷";
+                    }
+                    break;
+                case "wis":
+                    if (member.wis < 8) {
+                        description = "少一根筋";
+                    } else if (member.wis <= 12) {
+                        description = "正常";
+                    } else {
+                        description = "明察秋毫";
+                    }
+                    break;
+                case "cha":
+                    if (member.totalCha < 8) {
+                        description = "惹人厭惡";
+                    } else if (member.totalCha <= 12) {
+                        description = "平凡";
+                    } else {
+                        description = "令人著迷";
+                    }
+                    break;
+
+            }
+            return description;
+        }
+
+        // 切換為上一個角色
+        function lastMember(memberId) {
+            // 讀取出戰成員
+            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];        
+
+            // 找到角色的索引
+            let index = teamMember.findIndex(m => m.id === memberId);
+
+            // 計算上一個角色的索引
+            let prevIndex = (index - 1 + teamMember.length) % teamMember.length;
+
+            // 切換到上一個角色
+            localStorage.setItem("npcId", teamMember[prevIndex].id);
+            showCharacterSheet(teamMember[prevIndex].id);
+        }
+
+        // 切換為下一個角色
+        function nextMember(memberId) {
+            // 讀取出戰成員
+            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];        
+
+            // 找到角色的索引
+            let index = teamMember.findIndex(m => m.id === memberId);
+
+            // 計算下一個角色的索引
+            let nextIndex = (index + 1 + teamMember.length) % teamMember.length;
+
+            // 切換到下一個角色
+            localStorage.setItem("npcId", teamMember[nextIndex].id);
+            showCharacterSheet(teamMember[nextIndex].id);
+        }
+
+        // 選擇裝備
+        function chooseEquipment(itemType) {
+            let itemList = document.getElementById("item-list");            
+            itemList.innerHTML = "";
+
+            // 讀取玩家的物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+            // 統計物品數量
+            let count = {};
+            playerItems.forEach(item => {
+                count[item] = (count[item] || 0) + 1;
+            });
+
+            // 顯示物品列表
+            Object.keys(count).forEach(itemId => {
+                let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
+
+                // 顯示這個類型的物品
+                if (item && item.type === itemType) {
+                    let itemDiv = document.createElement("div");
+
+                    itemDiv.innerHTML = `
+                        <div class="column-container" style="cursor: pointer;">
+                            <div class="column">
+                                <span class="item-name">${item.name} × ${count[itemId]}</span>
+                            </div>
+                            <div class="column-name row-buttons">
+                                <button class="small" onclick="equip('${item.id}')">選擇</button>
+                            </div>
+                        </div>
+                        <span class="note" style="display: none;">${item.description}</span>
+                    `;
+
+                    // 點擊物品時，顯示或隱藏描述
+                    let itemElement = itemDiv.querySelector(".column-container");
+                    let noteElement = itemDiv.querySelector(".note");
+
+                    itemElement.addEventListener("click", () => {
+                        noteElement.style.display = (noteElement.style.display === "none") ? "block" : "none";
+                    });
+
+                    itemList.appendChild(itemDiv);
+                }
+            });
+
+            // 添加「無」的按鈕
+            let unequipButtonDiv = document.createElement("div");
+
+            if (itemType === "weapon") {
+                unequipButtonDiv.innerHTML = `
+                    <div class="column-container" style="cursor: pointer;">
+                        <div class="column">
+                            <span class="item-name">（無武器）</span>
+                        </div>
+                        <div class="column-name row-buttons">
+                            <button class="small" onclick="equip('noWeapon')">選擇</button>
+                        </div>
+                    </div>
+                `;
+            } else if (itemType === "armor") {
+                unequipButtonDiv.innerHTML = `
+                    <div class="column-container" style="cursor: pointer;">
+                        <div class="column">
+                            <span class="item-name">（無護具）</span>
+                        </div>
+                        <div class="column-name row-buttons">
+                            <button class="small" onclick="equip('noArmor')">選擇</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            itemList.appendChild(unequipButtonDiv);
+        }
+
+        // 穿上或脫下裝備
+        function equip(itemId) {
+            // 從 URL 讀取 memberId
+            const urlParams = new URLSearchParams(window.location.search);
+            const memberId = urlParams.get("memberId");
+
+            // 讀取所有成員的資料
+            const hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+
+            // 找到該成員的索引
+            const memberIndex = teamMember.findIndex(m => m.id === memberId);
+
+            // 取得該成員的資料
+            let member = teamMember[memberIndex];
+
+
+            // 讀取玩家的物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+            // 如果脫下裝備
+            if (itemId === "noWeapon") {
+                if (member.weapon) playerItems.push(member.weapon.id); // 將原本的武器放回主角物品
+                member.weapon = null; // 清空武器
+            } else if (itemId === "noArmor") {
+                if (member.armor) playerItems.push(member.armor.id); // 將原本的護具放回主角物品
+                member.armor = null; // 清空護具
+
+            // 如果穿上裝備
+            } else {
+                let item = itemDatabase.find(i => i.id === itemId); // 找到這件裝備的資料
+
+                if (item.type === "weapon") {
+                    if (member.weapon) playerItems.push(member.weapon.id); // 將原本的武器放回主角物品
+                    member.weapon = item; // 更換武器
+                } else if (item.type === "armor") {
+                    if (member.armor) playerItems.push(member.armor.id); // 先將原本的護具放回主角物品
+                    member.armor = item; // 更換護具
+                }
+
+                // 從主角物品中移除穿上的裝備
+                const itemIndex = playerItems.findIndex(i => i === itemId);
+                if (itemIndex !== -1) {
+                    playerItems.splice(itemIndex, 1);
+                }
+            }
+
+            // 確保裝備物品的屬性正確
+            let weapon = member.weapon ? member.weapon : { str: 0, arm: 0, dex: 0 };
+            let armor = member.armor ? member.armor : { str: 0, arm: 0, dex: 0 };
+            
+            // 計算角色的總屬性，確保基礎屬性不受影響
+            member.totalStr = (member.str || 0) + (weapon.str || 0) + (armor.str || 0);
+            member.totalArm = (member.arm || 0) + (weapon.arm || 0) + (armor.arm || 0);
+            member.totalDex = (member.dex || 0) + (weapon.dex || 0) + (armor.dex || 0);
+
+            // 更新 localStorage
+            teamMember[memberIndex] = member;
+            localStorage.setItem("teamMember", JSON.stringify(teamMember));
+            localStorage.setItem("playerItems", JSON.stringify(playerItems));
+
+            // 同步儲存到角色和同伴資料
+            if (member.id === "player") {
+                localStorage.setItem("playerWeapon", JSON.stringify(member.weapon));
+                localStorage.setItem("playerArmor", JSON.stringify(member.armor));
+                localStorage.setItem("playerTotalStr", member.totalStr);
+                localStorage.setItem("playerTotalArm", member.totalArm);
+                localStorage.setItem("playerTotalDex", member.totalDex);
+            } else {
+                let companionIndex = parseInt(member.id.match(/\d+/)[0]) - 1;
+                if (hiredCompanions[companionIndex]) {
+                    hiredCompanions[companionIndex] = member
+                    localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
+                }
+            }
+            
+            // 更新顯示
+            showCharacterSheet();
+        }
+
+    </script>
+
+</body>
+</html>
