@@ -1,0 +1,698 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>戰鬥</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+        }
+    </style>
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="menu/character.html">🎭<span>角色</span></a>
+        <a href="menu/quest.html">📜<span>任務</span></a>
+        <a href="menu/inventory.html">💰<span>物品</span></a>
+        <a href="menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content hide">
+        <!-- 敵人訊息 -->
+        <h3><span id="npc-adj"></span><span id="npc-name"></span>：</h3>
+        <div class="dialogue-text"><span id="npc-text"></span></div>
+        <hr>
+
+        <!-- 主角回答 -->
+        <h3><span id="playerName"></span>：</h3>
+        <div id="choices" class="menu"></div>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div id="main" class="main-content">
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+
+        // 對話資料庫
+        const dialogueData = {
+            "盜賊": {
+                "enemySurrender": {
+                    text: "等等！抱歉，是我挑錯對手了！我投降，能不能放我一馬？",
+                    choices: [
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                        { text: "你可以走了", next: "", action: "spare" },
+                        { text: "把你的財物給我", next: "", action: "rob" },
+                        { text: "你必須跟我走", next: "", action: "capture" },
+                    ]
+                },
+                "capture": {
+                    text: "要逮捕我嗎？好吧，算我倒楣。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "enemyJoin" },
+                    ]
+                },
+                "talk": {
+                    text: "你想怎麼樣？",
+                    choices: [
+                        { text: "不想死就快點投降（力量）", next: "", action: "intimidate" },
+                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade" },
+                        { text: "我投降，這些錢給你（$50）", next: "", action: "pay" },
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                    ]
+                },
+                "intimidateFail": {
+                    text: "別傻了，你以為你打得贏我嗎？",
+                    choices: [
+                        { text: "沒辦法了", next: "", action: "fight" },
+                    ]
+                },
+                "persuadeSuccess": {
+                    text: "唉，說得有道理……我大概不適合當盜賊吧。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+                "persuadeFail": {
+                    text: "別開玩笑了！要我放過你，就把錢拿出來！",
+                    choices: [
+                        { text: "（繼續）", next: "talk" },
+                    ]
+                },
+                "payEnough": {
+                    text: "哈哈！這就對了，你可以走了！",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+                //"payNotEnough": {
+                //    text: "什麼？你就只有這點錢？我才不信！",
+                //    choices: [
+                //        { text: "（繼續）", next: "talk" },
+                //    ]
+                //},
+            },
+            "哥布林": {
+                "enemySurrender": {
+                    text: "不要殺我！冒險者大人，你想要什麼就拿去吧！我不想死！",
+                    choices: [
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                        { text: "你可以走了", next: "", action: "spare" },
+                        { text: "把你的財物給我", next: "", action: "rob" },
+                        { text: "你必須跟我走", next: "", action: "capture" },
+                    ]
+                },
+                "capture": {
+                    text: "好的！好的！只要不殺我，你要我做什麼我都做！主人！",
+                    choices: [
+                        { text: "繼續", next: "", action: "enemyJoin" },
+                    ]
+                },
+                "talk": {
+                    text: "什麼？要認輸了嗎？",
+                    choices: [
+                        { text: "不想死就快點投降（力量）", next: "", action: "intimidate" },
+                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade" },
+                        { text: "我投降，這些錢給你（$50）", next: "", action: "pay" },
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                    ]
+                },
+                "intimidateFail": {
+                    text: "不要以為你長得比較大隻，我就會怕你喔！",
+                    choices: [
+                        { text: "沒辦法了", next: "", action: "fight" },
+                    ]
+                },
+                "persuadeSuccess": {
+                    text: "唔呃……老實說我也不想死啊，那就當作我們沒見過吧！",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+                "persuadeFail": {
+                    text: "你該不會想跟我和平相處，變成朋友吧？太天真了，傻瓜！",
+                    choices: [
+                        { text: "（繼續）", next: "talk" },
+                    ]
+                },
+                "payEnough": {
+                    text: "喔！不早點拿出來！嘿嘿，多來幾個像你這麼識相的，我就發財啦！",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+                //"payNotEnough": {
+                //    text: "沒錢？我看你是把錢藏起來了吧，我一定會找到的！",
+                //    choices: [
+                //        { text: "（繼續）", next: "talk" },
+                //    ]
+                //},
+            },
+            "獸人": {
+                "enemySurrender": {
+                    text: "停戰，再打下去也沒有意義，我決定饒你一命，別再讓我見到你！",
+                    choices: [
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                        { text: "你可以走了", next: "", action: "spare" },
+                        { text: "把你的財物給我", next: "", action: "rob" },
+                        { text: "你必須跟我走", next: "capture" },
+                    ]
+                },
+                "capture": {
+                    text: "你說什麼？即便是死，獸人永不為奴！",
+                    choices: [
+                        { text: "算了", next: "enemySurrender" },
+                    ]
+                },
+                "talk": {
+                    text: "我和人類沒什麼好說的。",
+                    choices: [
+                        { text: "不想死就快點投降（力量）", next: "", action: "intimidate" },
+                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade" },
+                        { text: "我投降，這些錢給你（$50）", next: "", action: "pay" },
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                    ]
+                },
+                "intimidateFail": {
+                    text: "不自量力的蠢蛋！就來看看死的會是誰！",
+                    choices: [
+                        { text: "沒辦法了", next: "", action: "fight" },
+                    ]
+                },
+                "persuadeSuccess": {
+                    text: "哼，我也不想被說只會欺負弱小，趁我後悔前快消失吧！",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+                "persuadeFail": {
+                    text: "那是懦夫的想法！獸人會戰到最後一刻，至死方休！",
+                    choices: [
+                        { text: "（繼續）", next: "talk" },
+                    ]
+                },
+                "payEnough": {
+                    text: "想用錢討好我？果然是人類的作風，但我不討厭。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+                //"payNotEnough": {
+                //    text: "你的錢根本不夠，你以為我這麼好敷衍的嗎？",
+                //    choices: [
+                //        { text: "（繼續）", next: "talk" },
+                //    ]
+                //},
+            },
+            "狼人": {
+                "enemySurrender": {
+                    text: "嗚……你……很強！我……輸了……",
+                    choices: [
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                        { text: "你可以走了", next: "", action: "spare" },
+                        { text: "把你的財物給我", next: "", action: "rob" },
+                        { text: "你必須跟我走", next: "", action: "capture" },
+                    ]
+                },
+                "capture": {
+                    text: "我……聽你的……",
+                    choices: [
+                        { text: "繼續", next: "", action: "enemyJoin" },
+                    ]
+                },
+                "talk": {
+                    text: "啊？",
+                    choices: [
+                        { text: "不想死就快點投降（力量）", next: "", action: "intimidate" },
+                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade" },
+                        { text: "我投降，這些錢給你（$50）", next: "", action: "pay" },
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                    ]
+                },
+                "intimidateFail": {
+                    text: "我！會贏！你！會死！",
+                    choices: [
+                        { text: "沒辦法了", next: "", action: "fight" },
+                    ]
+                },
+                "persuadeSuccess": {
+                    text: "我……不喜歡……受傷……",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+                "persuadeFail": {
+                    text: "不！我要打！",
+                    choices: [
+                        { text: "（繼續）", next: "talk" },
+                    ]
+                },
+                "payEnough": {
+                    text: "閃亮的小東西……可以換食物……好吧。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+            },
+            "吸血鬼": {
+                "enemySurrender": {
+                    text: "冷靜點，讓我們像文明人一樣談談吧。我身上有不少金幣，你想要的話可以全部拿走。",
+                    choices: [
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                        { text: "你可以走了", next: "", action: "spare" },
+                        { text: "把你的財物給我", next: "", action: "rob" },
+                        { text: "你必須跟我走", next: "capture" },
+                    ]
+                },
+                "capture": {
+                    text: "真有趣，為什麼不是你跟我走？你可以成為一個很棒的血奴。",
+                    choices: [
+                        { text: "算了", next: "enemySurrender" },
+                    ]
+                },
+                "talk": {
+                    text: "你想談談了嗎？我們也許可以做個交易。",
+                    choices: [
+                        { text: "不想死就快點投降（力量）", next: "", action: "intimidate" },
+                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade" },
+                        { text: "我投降，這些錢給你（$50）", next: "", action: "pay" },
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                    ]
+                },
+                "intimidateFail": {
+                    text: "真可愛，我喜歡會反抗的，但如果要把你帶回家當寵物，我需要教你一點禮貌。",
+                    choices: [
+                        { text: "沒辦法了", next: "", action: "fight" },
+                    ]
+                },
+                "persuadeSuccess": {
+                    text: "要放棄像你這麼迷人的獵物，真是令我心痛，但我想看看你會如何成長，期待下次再見了。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+                "persuadeFail": {
+                    text: "喔不，親愛的，這只是由我單方面傷害你，而且我正樂在其中。",
+                    choices: [
+                        { text: "（繼續）", next: "talk" },
+                    ]
+                },
+                "payEnough": {
+                    text: "我對你的錢不感興趣，但你表現出的誠意確實打動了我，我會給你機會，試著逃跑吧。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+            },
+            "巨魔": {
+                "enemySurrender": {
+                    text: "啊啊啊！我受夠你這討厭的小矮人了！煩死了，滾開！",
+                    choices: [
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                        { text: "你可以走了", next: "", action: "spare" },
+                        { text: "把你的財物給我", next: "", action: "rob" },
+                        { text: "你必須跟我走", next: "capture" },
+                    ]
+                },
+                "capture": {
+                    text: "哈哈哈！憑你也想抓住巨魔？不怕我拆了你的房子嗎？作夢吧！",
+                    choices: [
+                        { text: "算了", next: "enemySurrender" },
+                    ]
+                },
+                "talk": {
+                    text: "有屁快放！",
+                    choices: [
+                        { text: "不想死就快點投降（力量）", next: "", action: "intimidate" },
+                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade" },
+                        { text: "我投降，這些錢給你（$50）", next: "", action: "pay" },
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                    ]
+                },
+                "intimidateFail": {
+                    text: "你好大的膽子，我要把你的膽挖出來嚐嚐看！",
+                    choices: [
+                        { text: "沒辦法了", next: "", action: "fight" },
+                    ]
+                },
+                "persuadeSuccess": {
+                    text: "嗯……喔？仔細一看，你真是個漂亮的小傢伙！把你殺掉太可惜了。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+                "persuadeFail": {
+                    text: "你在說什麼？傷害人最好玩了，讓我聽聽你的慘叫聲吧！",
+                    choices: [
+                        { text: "（繼續）", next: "talk" },
+                    ]
+                },
+                "payEnough": {
+                    text: "唔，金子！我喜歡金子！金子全都是我的！",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+            },
+            "小仙子": {
+                "enemySurrender": {
+                    text: "哈哈，你贏了！只是稍微捉弄你一下，別生氣啦。",
+                    choices: [
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                        { text: "你可以走了", next: "", action: "spare" },
+                        { text: "把你的財物給我", next: "", action: "rob" },
+                        { text: "你必須跟我走", next: "", action: "capture" },
+                    ]
+                },
+                "capture": {
+                    text: "咦？你要帶我去哪裡？",
+                    choices: [
+                        { text: "繼續", next: "", action: "enemyJoin" },
+                    ]
+                },
+                "talk": {
+                    text: "怎麼啦？你想跟我說什麼？",
+                    choices: [
+                        { text: "不想死就快點投降（力量）", next: "", action: "intimidate" },
+                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade" },
+                        { text: "我投降，這些錢給你（$50）", next: "", action: "pay" },
+                        { text: "繼續戰鬥", next: "", action: "fight" },
+                    ]
+                },
+                "intimidateFail": {
+                    text: "好兇！但是你看起來……有點弱啊，不一定會是我輸喔！",
+                    choices: [
+                        { text: "沒辦法了", next: "", action: "fight" },
+                    ]
+                },
+                "persuadeSuccess": {
+                    text: "嗯嗯，我也不喜歡打架。那我們就和平的道別吧，祝你有段美好的旅程！",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+                "persuadeFail": {
+                    text: "唉唷，我還沒玩夠耶！你被捉弄的反應真有趣，嘻嘻！",
+                    choices: [
+                        { text: "（繼續）", next: "talk" },
+                    ]
+                },
+                "payEnough": {
+                    text: "好多錢幣喔！我真的可以拿嗎？太棒了，我要蓋一間錢幣房子！但我要怎麼搬回去呢……",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap" },
+                    ]
+                },
+            },
+        };
+
+        // 顯示文本
+        const texts = {
+            partyFull : "隊伍人數已滿，請選擇要替換的同伴",
+        }
+
+        // 畫面載入時
+        window.onload = function() {
+            getDialogueNpc(); // 判斷交談對象
+            getBackground(); // 讀取背景
+        };
+
+        // 判斷交談對象
+        function getDialogueNpc() {
+            // 讀取所有敵人的資料
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+            let enemyName, enemyAdj;
+
+            const npcId = localStorage.getItem("npcId"); // 讀取交談對象
+
+            // 檢查是否有指定對象
+            if (npcId) {
+                // 如果有指定對象，根據 npcId 取得對應的敵人索引
+                let targetIndex = parseInt(npcId.replace("enemy", "")) - 1;
+
+                // 根據敵人索引取得敵人名字
+                if (enemies[targetIndex]) {
+                    enemyName = enemies[targetIndex].name;
+                    enemyAdj = enemies[targetIndex].adj;
+                }
+
+            } else {
+                // 如果沒有指定，取第一個敵人的名字
+                enemyName = enemies.length > 0 ? enemies[0].name : "";
+                enemyAdj = enemies.length > 0 ? enemies[0].adj : "";
+            } 
+
+            const npcName = enemyAdj + enemyName;
+            localStorage.setItem("npcName", npcName);
+
+            // 判斷對話的情況
+            if (npcId) {
+                // 如果有指定對象，就是交談的情況
+                showDialogue('talk');
+            } else {
+                // 否則是敵人投降的情況
+                showDialogue('enemySurrender');
+            }
+        }
+
+        // 繼續戰鬥
+        function fight() {
+            localStorage.setItem("situation", 2); // 下回合恢復正常回合
+
+            localStorage.removeItem("npcId"); // 清除交談對象
+            localStorage.removeItem("persuadeResult"); // 清除說服結果
+
+            window.location.href = 'battle.html'; // 跳轉到戰鬥頁面
+        }
+
+        // 饒恕
+        function spare() {
+            localStorage.removeItem("enemies"); // 清空所有敵人，以免刷新頁面時重置敵人
+            returnMap(); // 跳轉到地圖
+        }
+
+        // 搶劫
+        function rob() {
+            // 下回合恢復正常回合
+            let situation = parseInt(localStorage.getItem("situation"));
+            situation = 2; 
+            localStorage.setItem("situation", situation); 
+
+            // 設為搶劫狀態
+            localStorage.setItem("robEnemy", "true");
+
+            window.location.href = 'battle.html'; // 跳轉到戰鬥頁面
+        }
+
+        // 捕捉
+        function capture() {
+            // 清除對話
+            removeDialogue();
+
+            // 讀取所有敵人的資料
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+
+            // 找到第一個敵人的資料（敵人只剩一個）
+            let enemy = enemies.length > 0 ? enemies[0] : null;
+
+            // 讀取已雇用的同伴資料
+            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+
+            // 限制最多 3 個同伴
+            if (hiredCompanions.length >= 3) {
+                // 建立選擇 UI
+                let menu = document.createElement("div");
+                menu.id = "replaceMenu";
+                menu.classList.add("menu");
+
+                let message = document.createElement("p");
+                message.textContent = texts.partyFull; // 顯示隊伍已滿的訊息
+                menu.appendChild(message);
+
+                // 為每個已雇用的同伴建立一個按鈕
+                hiredCompanions.forEach((companion, index) => {
+                    let button = document.createElement("button");
+                    button.textContent = companion.name;
+
+                    button.onclick = function () {
+                        hiredCompanions.splice(index, 1); // 移除選擇的同伴
+                        localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
+
+                        document.body.removeChild(menu);  // 清除選單
+                        showDialogue('capture'); // 顯示敵人加入的對話
+                    };
+
+                    menu.appendChild(button);
+                });
+
+                // 取消按鈕
+                let cancelButton = document.createElement("button");
+                cancelButton.textContent = "取消";
+    
+                cancelButton.onclick = function () {
+                    document.body.removeChild(menu); // 清除選單
+                    showDialogue('enemySurrender'); // 回到投降的對話中
+                    return;
+                };
+
+                menu.appendChild(cancelButton);
+                 document.body.appendChild(menu);
+            
+            } else {
+                // 隊伍未滿，直接加入
+                showDialogue('capture'); // 顯示敵人加入的對話
+            }
+        }
+
+        // 敵人加入隊伍
+        function enemyJoin() {
+            // 讀取所有敵人的資料
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+
+            // 找到第一個敵人的資料（敵人只剩一個）
+            let enemy = enemies.length > 0 ? enemies[0] : null;
+
+            //添加為同伴
+            addCompanion(enemy);
+                           
+            // 重新讀取最新的 hiredCompanions，確保數據是最新的
+            hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+
+            // 將類型和目前 HP 儲存到同伴資料中
+            let latestCompanionIndex = hiredCompanions.length - 1; // 取得最新加入的同伴（最後一個）
+            if (latestCompanionIndex >= 0) {
+                hiredCompanions[latestCompanionIndex].type = "奴僕";
+                hiredCompanions[latestCompanionIndex].HP = enemy.HP;
+            }
+            localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
+
+            // 顯示捕捉的訊息
+            document.getElementById("npc-text").textContent = enemy.captured; // 顯示捕捉的訊息
+
+            returnMap(); // 回到地圖
+        }
+
+        // 威嚇
+        function intimidate() {
+            // 讀取成員資料
+            let presentMember = JSON.parse(localStorage.getItem("presentMember")) || [];
+
+            // 隊伍總力量
+            let teamStr = 0; 
+            presentMember.forEach(member => {
+                teamStr += member.totalStr;
+            });
+            
+            // 讀取所有敵人資料
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+
+            // 敵人總 HP
+            let totalEnemyHP = 0;
+            enemies.forEach(enemy => {
+                if (enemy.HP) {
+                    for (let i = 0; i < enemies.length; i++) {
+                        totalEnemyHP += enemy.HP;
+                    }
+                }
+            });
+
+            // 敵人是否投降
+            let enemyType = enemies.length > 0 ? enemies[0].type : ""; // 取第一個敵人的類型
+            if (enemies.length === 1 && enemyType === "人形" && teamStr > totalEnemyHP) {
+                // 只剩一個人形敵人，且隊伍總力量 > 敵人總 HP 時，威嚇成功
+                showDialogue('enemySurrender'); // 敵人投降
+            } else {
+                showDialogue('intimidateFail'); // 敵人拒絕投降
+            }
+        }
+
+        // 說服
+        function persuade() {
+            // 檢查是否已經骰過，以免刷新頁面時重骰
+            const persuadeResult = localStorage.getItem("persuadeResult");
+            if (persuadeResult === "success") {
+                showDialogue('persuadeSuccess');
+                return;
+            } else if (persuadeResult === "fail") {
+                showDialogue('persuadeFail');
+                return;
+            } 
+
+            // 讀取主角的魅力
+            const playerTotalCha = parseInt(localStorage.getItem("playerTotalCha"));
+
+            // 讀取所有敵人資料
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+            let enemyWis;
+
+            const npcId = localStorage.getItem("npcId"); // 讀取交談對象
+
+            // 檢查是否有指定對象
+            if (npcId) {
+                // 如果有指定對象，根據 npcId 取得對應的敵人索引
+                let targetIndex = parseInt(npcId.replace("enemy", "")) - 1;
+
+                // 根據敵人索引取得敵人感知
+                if (enemies[targetIndex]) {
+                    enemyWis = enemies[targetIndex].wis;
+                }
+
+            } else {
+                // 如果沒有指定，取第一個敵人的感知
+                enemyWis = enemies.length > 0 ? enemies[0].wis : "";
+            } 
+
+            // 計算說服成功率
+            let persuadeChance = playerTotalCha / (playerTotalCha + enemyWis);
+
+            let randomValue = Math.random(); // 產生 0~1 的隨機小數
+            // 檢查成功率
+            console.log(`主角魅力: ${playerTotalCha}, 敵人感知: ${enemyWis}`);
+            console.log(`計算的說服成功率: ${(persuadeChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+
+            // 顯示說服結果
+            if (randomValue <= persuadeChance) {
+                // 說服成功
+                showDialogue('persuadeSuccess');
+                localStorage.setItem("persuadeResult", "success"); // 記錄結果，跳轉頁面時再清除，以免刷新頁面時重骰
+            } else {
+                // 說服失敗
+                showDialogue('persuadeFail');
+                localStorage.setItem("persuadeResult", "fail"); // 記錄結果，跳轉頁面時再清除，以免刷新頁面時重骰
+            }
+        }
+
+        // 付錢
+        function pay() {
+            // 讀取主角金錢
+            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+
+            if (playerMoney >= 50) {
+                // 如果錢夠，扣除金錢並儲存
+                playerMoney -= 50;
+                localStorage.setItem("playerMoney", playerMoney);
+                showDialogue('payEnough');
+
+            } else {
+                // 如果錢不夠
+                alert("金錢不足");
+            }
+        }
+
+        // 回到地圖
+        function returnMap() {
+            localStorage.removeItem("enemies"); // 清空所有敵人
+
+            localStorage.removeItem("npcId"); // 清除交談對象
+            localStorage.removeItem("persuadeResult"); // 清除說服結果
+
+            window.location.href = 'map.html'; // 跳轉到地圖
+        }
+    </script>
+
+</body>
+</html>
