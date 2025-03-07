@@ -1,0 +1,66 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>選項</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            background-color: #000 !important; /* 背景顏色 */
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- 返回按鈕 -->
+    <div class="button-bar header" id="buttonBar">
+        <button class="exit-button" onclick="goBack()">　〈 返回</button>
+        <h3>選項</h3>
+    </div>
+
+    <div class="main-content">
+        <br>
+        <div id="text"></div>
+
+         <!-- 選單 -->
+        <div class="menu">
+            <button onclick="aboutBattle()">戰鬥說明</button>
+            <a href="../index.html"><button>回首頁</button></a>
+        </div>
+    </div>
+
+    <script src="../script.js"></script>
+    <script>
+    
+        // 頁面載入時
+        window.onload = function() {
+
+        };
+        
+        // 戰鬥說明
+        function aboutBattle() {
+            const text = document.getElementById("text");
+            text.innerHTML = `
+                <h1>戰鬥說明</h1>
+                <p>影響戰鬥的屬性有體質、力量、敏捷。</p>
+                <p>【體質】<br>角色的最大生命值等於體質的 2 倍。</p>
+                <p>【力量】<br>角色的攻擊造成的傷害等於力量。</p>
+                <p>【敏捷】<br>角色的敏捷越高，攻擊的命中率和逃跑的成功率越高。</p>
+                <hr>
+                <p>在戰鬥中，角色每回合都能選擇攻擊或逃跑。</p>
+                <p>【攻擊】<br>攻擊的命中率等於角色「敏捷」除以「角色敏捷 + 敵人敏捷」。<br>命中時造成等同於角色「力量」的傷害。</p>
+                <p>【逃跑】<br>逃跑的成功率等於角色「敏捷」除以「角色敏捷 + 敵人敏捷」。</p>
+                <hr>
+                <p>當隊伍中有 2 人以上還沒行動時，就可以使用聯手攻擊、一起逃跑。</p>
+                <p>【聯手攻擊】<br>採計所有攻擊者的敏捷，因此能大幅提高命中率，並造成等同所有攻擊者力量的傷害。</p>
+                <p>【一起逃跑】<br>採計敏捷最低成員的敏捷，因此只要該成員逃跑失敗，所有人都會一起失敗。</p>
+             `;
+        }
+
+
+
+    </script>
+
+</body>
+</html>
