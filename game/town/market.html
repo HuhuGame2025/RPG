@@ -1,0 +1,292 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商店街</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            background-image: url('../images/town.jpg');
+        }
+
+    </style>
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="../menu/character.html">🎭<span>角色</span></a>
+        <a href="../menu/quest.html">📜<span>任務</span></a>
+        <a href="../menu/inventory.html">💰<span>物品</span></a>
+        <a href="../menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div class="main-content">
+        <div class="header">    
+            <button class="exit-button" onclick="toTown()">〈 離開</button>
+            <h1>商店街</h1>
+        </div>
+
+        <p id="text">你來到了商店街，在這裡可以採購裝備和旅行用品，也有人會收購你的物品。</p>
+        <p class="small">🪙 $<span id="playerMoney"></span></p>
+
+        <!-- 選單 -->
+        <div class="menu">
+            <button onclick="showShop('equipment')">🔨 鐵匠鋪</button>
+            <button onclick="showShop('supply')">🫙 雜貨店</button>
+            <button onclick="getPlayerItem()">💰 收購商</button>
+        </div>
+
+        <!-- 商品列表 -->
+        <p class="note">點擊物品可查看詳細資訊</p>
+        <div id="item-list"></div>
+        <br>
+
+        <!-- Top按紐 -->
+        <button class="top-button" onclick="goTop()"></button>
+    </div>
+
+    <script src="../script.js"></script>
+    <script>
+        // 畫面載入時
+        window.onload = function() {
+            getPlayerMoney(); // 讀取資金
+        };
+
+        // 顯示文本
+        const texts = {
+            equipments: "鐵匠鋪販售數種武器和護具。",
+            supplies: "雜貨店販售旅行途中可使用的物品。",
+            sellItem: "可以將冒險中獲得的戰利品售出。",
+            nothingToSell: "你目前沒有物品可賣。",
+        };
+
+        // 顯示商品列表
+        function showShop(itemType) {
+            // 先清空列表
+            document.getElementById("item-list").innerHTML = "";
+
+            let itemData = [];
+
+            // 顯示說明並篩選對應的物品
+            if (itemType === "equipment") {
+                document.getElementById("text").textContent = texts.equipments;
+                itemData = itemDatabase.filter(i => ["weapon", "armor"].includes(i.type)); 
+
+            } else if (itemType === "supply") {  // 修正為 else if
+                document.getElementById("text").textContent = texts.supplies;
+                itemData = itemDatabase.filter(i => i.type === "supply"); // 修正為字串
+            }
+
+            // 顯示列表
+            const menu = document.getElementById("item-list");
+            menu.innerHTML = "";
+
+            itemData.forEach(item => {
+                let itemDiv = document.createElement("div");
+                let buyPrice = item.price * 2; // 顯示 2 倍價格
+                itemDiv.classList.add("item");
+            
+                itemDiv.innerHTML = `
+                    <div class="column-container" style="cursor: pointer;">
+                        <div class="column">
+                            <span class="item-name">${item.name}</span>
+                        </div>
+                        <div class="column-name row-buttons">
+                            <p class="column">$${buyPrice}</p>
+                            <button class="column" onclick="buyItem('${item.id}')"><span class="small">購買</span></button>
+                        </div>
+                    </div>
+                    <span class="note" style="display: none;">${item.description}</span>
+                `;
+                // 點擊物品時，顯示或隱藏描述
+                let itemElement = itemDiv.querySelector(".column-container");
+                let noteElement = itemDiv.querySelector(".note");
+
+                itemElement.addEventListener("click", () => {
+                    noteElement.style.display = (noteElement.style.display === "none") ? "block" : "none";
+                });
+
+                menu.appendChild(itemDiv);
+            });
+            window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
+        }
+
+        // 購買裝備
+        function buyItem(itemId) {       
+            // 讀取玩家的金錢
+            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+
+            // 讀取玩家的所有物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+            // 找到這件商品的資料
+            let item = itemDatabase.find(i => i.id === itemId);
+
+            if (item) {
+                let buyAmount; // 購買數量
+
+                // 讓玩家輸入數量
+                let input = prompt(`目前金錢有 $${playerMoney}，要購買幾件？`, "1");
+
+                // 如果玩家按「取消」，則直接結束函式
+                if (input === null) {
+                    return;
+                }
+
+                buyAmount = parseInt(input);
+
+                // 驗證輸入是否有效
+                if (isNaN(buyAmount) || buyAmount <= 0) {
+                    alert("請輸入有效的數量");
+                    return;
+                }
+
+                let buyPrice = item.price * 2; // 設定購買價格為 2 倍
+                let totalCost = buyPrice * buyAmount; // 計算總價格
+
+                if (playerMoney >= totalCost) {
+                    // 扣除金錢
+                    playerMoney -= totalCost;
+
+                    // 把物品加入玩家背包 (考慮數量)
+                    for (let i = 0; i < buyAmount; i++) {
+                        playerItems.push(itemId);
+                    }
+
+                    // 更新畫面上的金錢數字
+                    document.getElementById('playerMoney').textContent = playerMoney;
+
+                    // 存回 localStorage
+                    localStorage.setItem("playerItems", JSON.stringify(playerItems));
+                    localStorage.setItem("playerMoney", playerMoney);
+                } else {
+                    alert("金錢不足");
+                }
+            }
+        }
+
+        // 顯示可販賣的物品
+        function getPlayerItem() {
+            // 顯示說明
+            document.getElementById("text").textContent = texts.sellItem;
+
+            let itemList = document.getElementById("item-list");            
+            itemList.innerHTML = "";
+
+            // 讀取玩家的物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+            // 如果沒有物品，顯示沒有物品可賣的訊息
+            if (playerItems.length === 0) {
+               document.getElementById("text").textContent = texts.nothingToSell;
+            }
+
+            // 統計物品數量
+            let count = {};
+            playerItems.forEach(item => {
+                count[item] = (count[item] || 0) + 1;
+            });
+
+            // 顯示物品列表
+            Object.keys(count).forEach(itemId => {
+                let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
+
+                // 排除 specialItem 類型的物品
+                if (item && item.type !== "specialItem") {
+                    let itemDiv = document.createElement("div");
+                    itemDiv.classList.add("item");
+
+                    itemDiv.innerHTML = `
+                        <div class="column-container" style="cursor: pointer;">
+                            <div class="column">
+                                <span class="item-name">${item.name} × ${count[itemId]}</span>
+                            </div>
+                            <div class="column-name row-buttons">
+                                <p class="column">$${item.price}</p>
+                                <button class="column" onclick="sellItem('${item.id}')"><spam class="small">賣出</span></button>
+                            </div>
+                        </div>
+                        <span class="note" style="display: none;">${item.description}</span>
+                    `;
+
+                    // 點擊物品時，顯示或隱藏描述
+                    let itemElement = itemDiv.querySelector(".column-container");
+                    let noteElement = itemDiv.querySelector(".note");
+
+                    itemElement.addEventListener("click", () => {
+                        noteElement.style.display = (noteElement.style.display === "none") ? "block" : "none";
+                    });
+
+                    itemList.appendChild(itemDiv);
+                }
+            });
+        }
+
+        // 賣出物品
+        function sellItem(itemId) {
+            // 讀取主角所有的物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+
+            // 找出該物品的數量
+            let itemCount = playerItems.filter(item => item === itemId).length;
+    
+            let sellAmount; // 賣出的數量
+
+            if (itemCount === 1) {
+                // 如果只有 1 個，就直接賣
+                sellAmount = 1;
+            } else {
+                // 如果超過 1 個，讓玩家輸入數量
+                let input = prompt("要賣出幾件？", "1");
+
+                // 如果玩家按「取消」，則直接結束函式
+                if (input === null) {
+                    return;
+                }
+
+                sellAmount = parseInt(input);
+
+                // 驗證輸入是否有效
+                if (isNaN(sellAmount) || sellAmount <= 0) {
+                    alert("請輸入有效的數量");
+                    return;
+                } else if (sellAmount > itemCount) {
+                    sellAmount = itemCount;
+                }
+            }         
+
+            // 計算賣出金額
+            let item = itemDatabase.find(i => i.id === itemId);
+            if (!item) {
+                alert("物品不存在");
+                return;
+            }
+            let totalPrice = item.price * sellAmount;
+    
+            // 移除物品
+            for (let i = 0; i < sellAmount; i++) {
+                let index = playerItems.indexOf(itemId);
+                if (index !== -1) {
+                    playerItems.splice(index, 1); // 移除一個該物品
+                }
+            }
+
+            // 增加金錢
+            playerMoney += totalPrice;
+            document.getElementById('playerMoney').textContent = playerMoney;
+
+            // 更新 `localStorage`
+            localStorage.setItem("playerItems", JSON.stringify(playerItems));
+            localStorage.setItem("playerMoney", playerMoney);
+
+            // 重新顯示物品列表
+            getPlayerItem();
+        }
+
+    </script>
+
+</body>
+</html>
