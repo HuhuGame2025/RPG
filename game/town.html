@@ -1,0 +1,95 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>城鎮</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background-image: url('images/town.jpg');
+        }
+    </style>
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="menu/character.html">🎭<span>角色</span></a>
+        <a href="menu/quest.html">📜<span>任務</span></a>
+        <a href="menu/inventory.html">💰<span>物品</span></a>
+        <a href="menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div id="main" class="main-content">
+        <div class="header">
+            <h1 id="townName">城鎮</h1>
+        </div>
+        <p>這裡是一座熱鬧的城鎮。</p>
+
+        <!-- 地點選單 -->
+        <div class="location-menu">
+            <a href="town/inn.html"><button>🛌<br>旅館</button></a>
+            <a href="town/guild.html"><button>🤝<br>公會</button></a>
+            <a href="town/tavern.html"><button>🍺<br>酒館</button></a>
+            <a href="town/market.html"><button>💰<br>商店街</button></a>
+            <a href="town/arena.html"><button>⚔<br>競技場</button></a>
+            <a href="town/station.html"><button>🛞<br>驛站</button></a>
+        </div>
+
+        <!-- 選單 -->
+        <div class="menu">
+            <br>
+            <button onclick="leaveTown()">離開城鎮</button>
+        </div>
+    </div>
+
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content"></div>
+
+    <script src="script.js"></script>
+    <script>
+
+        // 畫面載入時
+        window.onload = function() {
+            showTownName(); // 顯示城鎮名稱
+            localStorage.setItem("backgroundStyle", "url('images/town.jpg')"); // 儲存背景圖
+            localStorage.removeItem("situation"); // 重置遇敵方式（解除被跟蹤）
+
+        };
+
+        // 對話資料庫
+        const dialogueData = {
+            "守衛": {
+                "被守衛攔下": {
+                    npc: "守衛",
+                    text: "等一下，你是通緝犯，乖乖跟我們走吧。",
+                    choices: [
+                        { text: "投降", next: "", action: "arrested()" },
+                        { text: "抵抗", next: "", action: "battle(2, '守衛', 4, 'map.html')" },
+                    ]
+                },
+            },
+        };
+
+        // 顯示城鎮名稱
+        function showTownName() {
+            // 讀取主角位置
+            const playerPos = JSON.parse(localStorage.getItem("playerPos"));
+            document.getElementById("townName").textContent = playerPos.name;
+        }
+
+        // 離開城鎮
+        function leaveTown() {
+            // 檢查是否被通緝中
+            const wantedLevel = parseInt(localStorage.getItem("wantedLevel")) || 0;
+            if (wantedLevel > 0) {
+                localStorage.setItem("npcName", "守衛");
+                showDialogue("被守衛攔下");
+            } else {
+                window.location.href = 'map.html'; // 跳轉到地圖
+            }
+        }
+    </script>
+</body>
+</html>
