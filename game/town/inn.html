@@ -1,0 +1,364 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>旅館</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            background-image: url('../images/inn.jpg');
+        }
+
+    </style>
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="../menu/character.html">🎭<span>角色</span></a>
+        <a href="../menu/quest.html">📜<span>任務</span></a>
+        <a href="../menu/inventory.html">💰<span>物品</span></a>
+        <a href="../menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div id= "main" class="main-content">
+        <div class="header">    
+            <button class="exit-button" onclick="toTown()">〈 離開</button>
+            <h1>旅館</h1>
+        </div>
+
+        <p>你走進了旅館，這裡提供便宜而舒適的房間。</p>
+        <p class="small">🪙 $<span id="playerMoney"></span></p>
+
+            <!-- 顯示隊伍資料 -->
+            <div>
+                <!-- 主角 -->
+                <div id="player" class="background">
+                    <div class="column-container item">
+                        <div class="column-name">
+                            <h4 id="playerName"></h4>
+                            <h4 class="hp"><span id="playerHP"></span> / <span id="playerMaxHP"></span></h4>
+                        </div>
+                        <div class="column">
+                            <span id="player-action" class="battle-text"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 同伴 -->
+                <div id="companion1" class="hide background">
+                    <div class="column-container item">
+                        <div class="column-name">
+                            <h4 id="companion1-name"></h4>
+                            <h4 class="hp"><span id="companion1-HP"></span> / <span id="companion1-MaxHP"></span></h4>
+                        </div>
+                        <div class="column">
+                            <span id="companion1-action" class="battle-text"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="companion2" class="hide background">
+                    <div class="column-container item">
+                        <div class="column-name">
+                            <h4 id="companion2-name"></h4>
+                            <h4 class="hp"><span id="companion2-HP"></span> / <span id="companion2-MaxHP"></span></h4>
+                        </div>
+                        <div class="column">
+                            <span id="companion2-action" class="battle-text"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="companion3" class="hide background">
+                    <div class="column-container item">
+                        <div class="column-name">
+                            <h4 id="companion3-name"></h4>
+                            <h4 class="hp"><span id="companion3-HP"></span> / <span id="companion3-MaxHP"></span></h4>
+                        </div>
+                        <div class="column">
+                            <span id="companion3-action" class="battle-text"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+    
+         <!-- 選單 -->
+        <div class="menu">
+            <button onclick="stay()">🛌 住宿（$20）</button>
+        </div>
+    </div>
+
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content"></div>
+
+    <!-- 突發事件 -->
+    <p id="text"></p>
+    <div class="menu">
+        <div id="button-container"></div>
+    </div>
+
+    <script src="../script.js"></script>
+    <script>
+        // 畫面載入時
+        window.onload = function() {
+            loadPartyData(); // 讀取隊伍資料
+
+            // 顯示健康程度
+            showText('player');
+            showText('companion1');
+            showText('companion2');
+            showText('companion3');
+
+            // 儲存背景圖
+            localStorage.setItem("backgroundStyle", "url('images/inn.jpg')");
+        };
+        
+        // 對話資料庫
+        const dialogueData = {
+            "賽恩": {
+                "夜襲": {
+                    text: "夜裡，你從熟睡中醒來，看見賽恩趴在你的床邊。<br><br>他掀開面罩的下半部，露出尖銳的獠牙，那是吸血鬼的特徵。",
+                    choices: [
+                        { text: "抵抗", next: "抵抗" },
+                        { text: "允許", next: "允許" },
+                    ]
+                },
+                    "抵抗": {
+                        text: "賽恩似乎嘆了口氣，接著慢慢後退，離開了你。",
+                        choices: [
+                            { text: "繼續睡", next: "", action: "removeDialogue()" },
+                        ]
+                    },
+                    "允許": {
+                        npc: "npc",
+                        text: "別動，我不會傷害你……<br><br>至少不會太嚴重。",
+                        choices: [
+                            { text: "（繼續）", next: "吸血", action: "bloodSucked()" },
+                        ]
+                    },
+                    "吸血": {
+                        text: "賽恩在你的脖子上咬了一口，節制地喝了一點點血，就滿足地離開了。",
+                        choices: [
+                            { text: "繼續睡", next: "", action: "(loadPartyData(), removeDialogue())" },
+                        ]
+                    },
+            },
+            "吸血鬼": {
+                "夜襲": {
+                    text: "夜裡，你從熟睡中醒來，看見{npcName}趴在你的床邊，露出尖銳的獠牙。",
+                    choices: [
+                        { text: "抵抗", next: "", action: "battle(2, 'npcName', 1, 'town/inn.html')" },
+                        { text: "允許", next: "", action: "bloodSucked()" },
+                    ]
+                },
+                    "允許": {
+                        text: "{npcName}在你的脖子上咬了一口，暢飲你的鮮血後，滿足地離開了。",
+                        choices: [
+                            { text: "繼續睡", next: "", action: "(loadPartyData(), removeDialogue())" },
+                        ]
+                    },
+
+                "賽恩阻止": {
+                    text: "正當你準備好被咬時，賽恩將吸血鬼從你身旁拉開，趕出了房間。",
+                    choices: [
+                        { text: "看著賽恩", next: "賽恩質問" },
+                    ]
+                },
+                    "賽恩質問": {
+                        npc: "賽恩",
+                        text: "為什麼要讓那頭野獸碰你？",
+                        choices: [
+                            { text: "不關你的事", next: "不悅" },
+                            { text: "謝謝幫忙", next: "謝謝" },
+                        ]
+                    },
+                    "不悅": {
+                        text: "賽恩不發一語，轉身離開。",
+                        choices: [
+                            { text: "繼續睡", next: "", action: "removeDialogue()" },
+                        ]
+                    },
+                    "謝謝": {
+                        text: "賽恩點了下頭，回到他自己的床上。",
+                        choices: [
+                            { text: "繼續睡", next: "", action: "removeDialogue()" },
+                        ]
+                    },
+            },
+        };
+
+        // 顯示文本
+        const texts = {
+            good: "精力充沛",
+            dead: "體力透支，無法繼續冒險",
+            bad: "還能勉強再撐一下",
+            okay: "目前還有體力",
+            seedGrown: "夜裡，一個奇怪的聲響從你的背包裡傳來，食人花種子發芽了，兇猛的食人花幼苗對你發動攻擊。",
+        };
+
+        // 顯示健康程度
+        function showText(member) {
+            // 讀取隊伍資訊
+            if (member === 'player') {
+                memberHP = localStorage.getItem("playerHP");
+                memberMaxHP = localStorage.getItem("playerMaxHP");
+            } else if (member.startsWith("companion")) {
+                let compIndex = parseInt(member.replace("companion", "")) - 1;
+                let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+                if (hiredCompanions[compIndex]) {
+                    memberHP = hiredCompanions[compIndex].HP;
+                    memberMaxHP = hiredCompanions[compIndex].MaxHP;
+                }
+            }
+
+            // 顯示文本
+            let actionElement = document.getElementById(`${member}-action`);
+            if (!actionElement) {
+                console.warn(`找不到ID為 ${member}-action 的元素`);
+                return;
+            }
+
+            if (memberHP === memberMaxHP) {
+                actionElement.textContent = texts.good; // 滿血
+            } else if (memberHP <= 0) {
+                actionElement.textContent = texts.dead; // 死亡
+            } else if (memberHP <= memberMaxHP * 0.5) {
+                actionElement.textContent = texts.bad; // 重傷
+            } else {
+                actionElement.textContent = texts.okay; // 輕傷
+            }
+        }
+
+        // 住宿
+        function stay() {
+            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+            // 如果資金有$20以上
+            if (playerMoney >= 20) {
+                playerMoney -= 20;
+                localStorage.setItem("playerMoney", playerMoney);
+                document.getElementById('playerMoney').textContent = playerMoney;
+                resetHP();
+            } else {
+                alert("金錢不足");
+            }
+
+            // 重置拚酒量遊戲
+            localStorage.removeItem("drinkingStart");
+            localStorage.removeItem("drinkingResults");
+            localStorage.removeItem("drinkingEnd");
+            
+            // 通緝等級每天下降 1 級
+            addWantedLevel(-1);
+
+            // 重置副本進度
+            //localStorage.removeItem("currentKey"); // 清除對話 key
+
+            checkEvent(); // 檢查是否有突發事件
+
+            // 顯示健康程度
+            showText('player');
+            showText('companion1');
+            showText('companion2');
+            showText('companion3');
+        }
+
+        // 檢查是否有突發事件（只會發生一件，按照優先順序寫）
+        function checkEvent() {
+            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            
+            // 檢查賽恩是否襲擊
+            const assassin = teamMember.find(member => member.name.includes("賽恩"));
+            if (assassin && Math.random() < 0.2) {  // 20% 機率襲擊
+                localStorage.setItem("npcName", "賽恩");
+                showDialogue("夜襲");
+                return;
+            }
+
+            // 檢查每個吸血鬼是否襲擊
+            const vampires = teamMember.filter(member => member.name.includes("吸血鬼"));
+            vampires.forEach(vampire => {
+                if (Math.random() < 2) {  // 20% 機率襲擊
+                    localStorage.setItem("npcName", vampire.name);
+                    showDialogue("夜襲");
+                    return;
+                }
+            });
+
+            // 檢查食人花種子是否長出來
+            const seedCount = playerItems.filter(i => i === "loot08").length;
+            if (seedCount > 0) {
+                let grownCount = 0; // 長出的種子數量
+                let maxGrowth = Math.min(seedCount, 4); // 最多長出 4 顆
+
+                // 過濾掉長出來的種子
+                playerItems = playerItems.filter(item => {
+                    // 如果是種子，並且還沒長滿 4 個，就有 10% 機率長出來
+                    if (item === "loot08" && grownCount < maxGrowth && Math.random() < 0.1) {
+                        grownCount++; // 記錄長出來的數量
+                        return false; // 移除這顆種子
+                    }
+                    return true; // 保留其他物品
+                });
+                localStorage.setItem("playerItems", JSON.stringify(playerItems));
+
+                // 如果有種子長出來，進入指定的戰鬥
+                if (grownCount > 0) {
+                    // 隱藏主要內容
+                    document.getElementById("main").style.display = "none";
+
+                    // 顯示種子長出來的訊息
+                    document.getElementById("text").textContent = texts.seedGrown;
+
+                    // 顯示戰鬥按鈕
+                    document.getElementById("button-container").innerHTML = `
+                        <button id="fight-btn">⚔️ 戰鬥</button>
+                    `;
+                    document.getElementById("fight-btn").addEventListener("click", function () {
+                        let encounter = {
+                            situation: 2,
+                            enemyAdj: "",
+                            enemyName: "食人花幼苗",
+                            enemyCount: grownCount,
+                            destination: "town/inn.html",
+                        };
+                        localStorage.setItem("encounter", JSON.stringify(encounter)); // 儲存指定遭遇
+                        localStorage.setItem("backgroundStyle", "url('images/inn.jpg')"); // 儲存背景圖
+                        window.location.href = "../encounter.html"; // 跳轉到遭遇頁面
+                    });
+                }
+                goTop();
+                return;
+            }
+        }
+
+        // 被吸血
+        function bloodSucked() {
+            let playerHP = parseInt(localStorage.getItem("playerHP"));
+            const npcName = localStorage.getItem("npcName");
+            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            const assassin = teamMember.find(member => member.name.includes("賽恩"));
+
+            if (npcName === "賽恩") {
+                // 如果是賽恩，吸 1 HP
+                playerHP -= 1;
+
+            } else if (npcName !== "賽恩" && assassin) {
+                // 如果是其他吸血鬼，但賽恩在隊伍中，他會阻止吸血
+                showDialogue("賽恩阻止");
+
+            } else {
+                // 如果是其他吸血鬼，吸 2 HP
+                playerHP -= 2;
+                showDialogue("允許");
+            }
+           
+            localStorage.setItem("playerHP", playerHP);
+        }
+
+    </script>
+
+</body>
+</html>

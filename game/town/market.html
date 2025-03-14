@@ -1,0 +1,264 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>商店街</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            background-image: url('../images/town.jpg');
+        }
+
+    </style>
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="../menu/character.html">🎭<span>角色</span></a>
+        <a href="../menu/quest.html">📜<span>任務</span></a>
+        <a href="../menu/inventory.html">💰<span>物品</span></a>
+        <a href="../menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div id="main" class="main-content">
+        <div class="header">    
+            <button class="exit-button" onclick="toTown()">〈 離開</button>
+            <h1>商店街</h1>
+        </div>
+
+        <p id="text">你來到了商店街，在這裡可以採購各種物品，也有人會收購你的戰利品。</p>
+        <p class="small">🪙 $<span id="playerMoney"></span></p>
+
+        <!-- 選單 -->
+        <div class="menu">
+            <button onclick="showShop('equipment')">🔨 鐵匠鋪</button>
+            <button onclick="showShop('supply')">🫙 雜貨店</button>
+            <button onclick="showShop('clothes')">🧥 服飾店</button>
+            <button onclick="loadPlayerItem()">💰 收購商</button>
+        </div>
+
+        <!-- 商品列表 -->
+        <p class="note">點擊物品可查看詳細資訊</p>
+        <div id="item-list"></div>
+        <br>
+
+        <!-- Top按紐 -->
+        <button class="top-button" onclick="goTop()"></button>
+    </div>
+
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content"></div>
+
+    <script src="../script.js"></script>
+    <script>
+        // 畫面載入時
+        window.onload = function() {
+            localStorage.setItem("npcName", "商店街"); // 設定對話者
+            wantedCheck(); // 檢查是否被通緝中
+            loadPartyData();
+        };
+
+        // 顯示文本
+        const texts = {
+            equipments: "鐵匠鋪販售各種武器和護具。",
+            supplies: "雜貨店販售旅行需要的補給品。",
+            clothes: "服飾店販售最時尚的服裝精品。",
+            sellItem: "可以將冒險中獲得的戰利品售出。",
+            nothingToSell: "你目前沒有物品可賣。",
+        };
+
+        // 對話資料庫
+        const dialogueData = {
+            "商店街": {
+                "偷竊成功": {
+                    text: "你迅速將商品放進背包，沒有人看見。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "偷竊失敗": {
+                    text: "正當你將商品放進背包時，店家大喊「小偷！」<br><br>守衛以最快的速度衝進了店裡。",
+                    choices: [
+                        { text: "（繼續）", next: "守衛抵達" },
+                    ]
+                },
+                "守衛抵達": {
+                    npc: "守衛",
+                    text: "在城裡犯罪是要付出代價的，放下武器，跟我們走！",
+                    choices: [
+                        { text: "投降", next: "", action: "arrested()" },
+                        { text: "抵抗", next: "", action: "battle(2, '守衛', 2, 'town.html')" },
+                    ]
+                },
+                "被守衛攔下": {
+                    npc: "守衛",
+                    text: "找到你了，罪犯！",
+                    choices: [
+                        { text: "投降", next: "", action: "arrested()" },
+                        { text: "抵抗", next: "", action: "battle(2, '守衛', '', 'town.html')" },
+                    ]
+                },
+            },
+        };
+
+        // 偷竊
+        function stealItem(itemId) {       
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            const playerTotalDex = parseInt(localStorage.getItem("playerTotalDex"));
+
+            // NPC的感知
+            let npcWis = 20;
+
+            // 計算偷竊成功率
+            let stealChance = playerTotalDex / (playerTotalDex + npcWis);
+            let randomValue = Math.random(); // 產生 0~1 的隨機小數
+            // 檢查成功率
+            console.log(`主角敏捷: ${playerTotalDex}, NPC感知: ${npcWis}`);
+            console.log(`計算的偷竊成功率: ${(stealChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+
+            // 顯示偷竊結果
+            if (randomValue <= stealChance) {
+                // 偷竊成功時
+                let item = itemDatabase.find(i => i.id === itemId);
+                playerItems.push(itemId);  // 把物品加入玩家背包
+                localStorage.setItem("playerItems", JSON.stringify(playerItems));
+                showDialogue("偷竊成功");
+
+            } else {
+                // 偷竊失敗時
+                addWantedLevel(1); // 通緝等級上升
+                showDialogue("偷竊失敗");
+            }
+        }
+
+        // 顯示可販賣的物品
+        function loadPlayerItem() {
+            // 顯示說明
+            document.getElementById("text").textContent = texts.sellItem;
+
+            // 讀取主角的物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+            // 如果沒有物品，顯示沒有物品可賣的訊息
+            if (playerItems.length === 0) {
+               document.getElementById("text").textContent = texts.nothingToSell;
+            }
+
+            // 統計物品數量
+            let count = {};
+            playerItems.forEach(item => {
+                count[item] = (count[item] || 0) + 1;
+            });
+
+            // 顯示物品列表
+            let itemList = document.getElementById("item-list");            
+            itemList.innerHTML = "";
+
+            Object.keys(count).forEach(itemId => {
+                let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
+
+                // 排除 specialItem 類型的物品和同伴專屬物品
+                if (item && item.type !== "specialItem" && !item.owner) {
+                    let itemDiv = document.createElement("div");
+                    itemDiv.classList.add("item", "background");
+
+                    itemDiv.innerHTML = `
+                        <div class="column-container" style="cursor: pointer;">
+                            <span class="column">${item.name} × ${count[itemId]}</span>
+                            <span class="column-small">$${item.price}</span>
+                            <button onclick="sellItem('${item.id}')">
+                                <spam class="small">賣出</span>
+                            </button>
+                        </div>
+                        <span class="note" style="display: none;">${item.description}</span>
+                    `;
+
+                    // 點擊物品時，顯示或隱藏描述
+                    let itemElement = itemDiv.querySelector(".column-container");
+                    let noteElement = itemDiv.querySelector(".note");
+
+                    itemElement.addEventListener("click", () => {
+                        noteElement.style.display = (noteElement.style.display === "none") ? "block" : "none";
+                    });
+
+                    itemList.appendChild(itemDiv);
+                }
+            });
+        }
+
+        // 賣出
+        function sellItem(itemId) {
+            // 讀取主角所有的物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+
+            // 找出該物品的數量
+            let itemCount = playerItems.filter(item => item === itemId).length;
+    
+            let sellAmount; // 賣出的數量
+
+            if (itemCount === 1) {
+                // 如果只有 1 個，就直接賣
+                sellAmount = 1;
+            } else {
+                // 如果超過 1 個，讓玩家輸入數量
+                let input = prompt("要賣出幾件？", "1");
+
+                // 如果玩家按「取消」，則直接結束函式
+                if (input === null) {
+                    return;
+                }
+
+                sellAmount = parseInt(input);
+
+                // 驗證輸入是否有效
+                if (isNaN(sellAmount) || sellAmount <= 0) {
+                    alert("請輸入有效的數量");
+                    return;
+                } else if (sellAmount > itemCount) {
+                    sellAmount = itemCount;
+                }
+            }         
+
+            // 計算賣出金額
+            let item = itemDatabase.find(i => i.id === itemId);
+            if (!item) {
+                alert("物品不存在");
+                return;
+            }
+            let totalPrice = item.price * sellAmount;
+    
+            // 移除物品
+            for (let i = 0; i < sellAmount; i++) {
+                let index = playerItems.indexOf(itemId);
+                if (index !== -1) {
+                    playerItems.splice(index, 1); // 移除一個該物品
+                }
+            }
+
+            // 增加金錢
+            playerMoney += totalPrice;
+            document.getElementById('playerMoney').textContent = playerMoney;
+
+            // 更新 `localStorage`
+            localStorage.setItem("playerItems", JSON.stringify(playerItems));
+            localStorage.setItem("playerMoney", playerMoney);
+
+            // 重新顯示物品列表
+            loadPlayerItem();
+        }
+
+        // 檢查是否被通緝中
+        function wantedCheck() {
+            const wantedLevel = parseInt(localStorage.getItem("wantedLevel")) || 0;
+            if (wantedLevel > 0) {
+                showDialogue("被守衛攔下");
+            }
+        }
+
+    </script>
+
+</body>
+</html>

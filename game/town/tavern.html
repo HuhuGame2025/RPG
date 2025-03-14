@@ -1,0 +1,605 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>酒館</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            background-image: url('../images/tavern.jpg');
+        }
+    </style>
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="../menu/character.html">🎭<span>角色</span></a>
+        <a href="../menu/quest.html">📜<span>任務</span></a>
+        <a href="../menu/inventory.html">💰<span>物品</span></a>
+        <a href="../menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div id="main" class="main-content">
+        <div class="header">    
+            <button class="exit-button" onclick="toTown()">〈 離開</button>
+            <h1>酒館</h1>
+        </div>
+
+        <p id="text">你走進了酒館，這裡是認識其他冒險者的好地方。你可以雇用他們成為傭兵，直到當前的任務完成為止。</p>
+        <p class="small">🪙 $<span id="playerMoney"></span></p>
+    
+        <!-- 選單 -->
+        <div class="menu" id="button-container">
+            <button onclick="sit()">找位子坐</button>
+            <button onclick="drinkingContest()">和在場的人拚酒量（$10）</button>
+        </div>
+
+        <!-- 傭兵列表 -->
+        <div id="companion-list"></div>
+        <br>
+
+        <!-- Top按紐 -->
+        <button class="top-button" onclick="goTop()"></button>
+    </div>
+
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content"></div>
+
+
+    <script src="../script.js"></script>
+    <script>
+       
+        // 畫面載入時
+        window.onload = function() {
+            rollCompanions(); // 抽選在場的人
+            loadPartyData();
+        };
+
+        // 同伴資料庫
+        const companions = [
+            { name: "雷納德", type: "傭兵", description: "老練的冒險者，飽經風霜的臉龐洋溢著溫暖的微笑。", cost: 0, con:13, str:13, dex:12, wis:14, cha:12, weaponId: "npcWeapon01", armorId: "npcArmor01" },
+            { name: "塔爾穆克", type: "傭兵", description: "身材魁武的獸人狂戰士，背著一把巨大的戰斧，眼神充滿怒火。", cost: 150, con:16, str:15, dex:10, wis:11, cha:8, weaponId: "npcWeapon02", armorId: "npcArmor02" },
+            { name: "賽恩", type: "傭兵", description: "蒙面的刺客，整張臉隱藏在面罩下，沉默寡言，散發著一絲危險氣息。", cost: 120, con:10, str:13, dex:18, wis:14, cha:10, weaponId: "npcWeapon03", armorId: "npcArmor03" },
+            { name: "艾德蒙", type: "傭兵", description: "看起來像個小混混，不太正經，喜歡自吹自擂，給人感覺不怎麼可靠。", cost: 100, con:12, str:12, dex:10, wis:8, cha:8, weaponId: "npcWeapon04", armorId: "npcArmor04" },
+            { name: "諾伊爾", type: "傭兵", description: "初出茅廬的年輕精靈，一臉純真，但比起協助你，他看起來更需要協助。", cost: 90, con:9, str:9, dex:14, wis:10, cha:18, weaponId: "npcWeapon05", armorId: "npcArmor05" }
+        ];
+
+        // 對話資料庫
+        const dialogueData = {
+            "雷納德": {
+                "start": {
+                    npc: "npc",
+                    text: "這個地方還是老樣子，能遇見充滿夢想和鬥志的年輕人。<br><br>你看起來很有潛力，正在為下一趟旅行尋找夥伴嗎？你應該會需要一名老手的協助。",
+                    choices: [
+                        { text: "你擅長什麼？", next: "了解" },
+                        { text: "我想僱用你（免費）", next: "", action: "hireCompanion()" },
+                        { text: "再見", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "我不會說自己樣樣精通，但至少是沒有哪一方面會拖垮你的隊伍。<br><br>只要你願意聽我的意見，那麼我的劍、我的經驗、我的人脈都可以為你所用。",
+                    choices: [
+                        { text: "了解了", next: "start" },
+                    ]
+                },
+                "僱用": {
+                    npc: "npc",
+                    text: "我很樂意加入你的隊伍，不需要任何報酬，因為看著新人成長的喜悅就是最好的報酬。<br><br>開始冒險之前別忘了好好休息一晚，養精蓄銳。<br><br>準備好的話我們就出發吧。",
+                    choices: [
+                        { text: "我們走", next: "", action: "removeDialogue()" },
+                    ]
+                },
+            },
+            "塔爾穆克": {
+                "start": {
+                    npc: "npc",
+                    text: "這算什麼酒？喝起來跟尿一樣，甚至比不上噁心的矮人烈酒。<br><br>你看什麼看啊？如果不是來雇用我的就閃遠一點，小心被我的斧頭割斷手臂。",
+                    choices: [
+                        { text: "你擅長什麼？", next: "了解" },
+                        { text: "我想僱用你（$120）", next: "", action: "hireCompanion()" },
+                        { text: "再見", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "看到這把斧頭了嗎？它砍死了每一個膽敢阻擋我的渾蛋，吸飽了他們的鮮血。<br><br>你想在這堆廢物之中找到能打的傭兵？我是你唯一的選擇。",
+                    choices: [
+                        { text: "了解了", next: "start" },
+                    ]
+                },
+                "僱用": {
+                    npc: "npc",
+                    text: "好，第一個要我打爛的傢伙在哪裡？我保證你的敵人全都會後悔爬出娘胎。",
+                    choices: [
+                        { text: "我們走", next: "", action: "removeDialogue()" },
+                    ]
+                },
+            },
+            "賽恩": {
+                "start": {
+                    npc: "npc",
+                    text: "除非有必要，別跟我說話。",
+                    choices: [
+                        { text: "你擅長什麼？", next: "了解" },
+                        { text: "我想僱用你（$100）", next: "", action: "hireCompanion()" },
+                        { text: "再見", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "終結你的敵人。<br><br>他們不會有時間反應，甚至不會意識到自己被什麼襲擊了。<br><br>但若你想要的是大張旗舞的正面對決，那不是我的作風。",
+                    choices: [
+                        { text: "了解了", next: "start" },
+                    ]
+                },
+                "僱用": {
+                    npc: "npc",
+                    text: "既然如此，你最好能跟得上我，我是不當保母的。",
+                    choices: [
+                        { text: "我們走", next: "", action: "removeDialogue()" },
+                    ]
+                },
+            },
+            "艾德蒙": {
+                "start": {
+                    npc: "npc",
+                    text: "嘿，你要請我喝酒嗎？你人真不錯啊！<br><br>沒有？你難道不知道我有多搶手嗎？多少人搶著要和我組隊啊！<br><br>看在你這麼菜，我特別給你一點優惠好了。機會難得，要不要？",
+                    choices: [
+                        { text: "你擅長什麼？", next: "了解" },
+                        { text: "我想僱用你（$80）", next: "", action: "hireCompanion()" },
+                        { text: "再見", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "呵呵，我的長處多到說不完，唯一的缺點就是沒錢。<br><br>看到那邊的獸人和精靈了嗎？我跑起來比那個獸人更快，而我揍人的力量比那個精靈更強，沒在吹牛。<br><br>對了，還有那個愛耍酷的刺客，我的長相絕對比他更帥。",
+                    choices: [
+                        { text: "了解了", next: "start" },
+                    ]
+                },
+                "僱用": {
+                    npc: "npc",
+                    text: "太好了，你不會後悔的！等我喝完這杯就出發，你先去幫我買單吧。",
+                    choices: [
+                        { text: "我們走", next: "", action: "removeDialogue()" },
+                    ]
+                },
+            },
+            "諾伊爾": {
+                "start": {
+                    npc: "npc",
+                    text: "人類的城鎮好熱鬧，不同種族的冒險者都聚在一起，沒有隔閡地相處。<br><br>而且大家都喜歡喝這種……味道刺激的茶。<br><br>那位綠皮膚的先生是哥布林嗎？我不知道他們能長得這麼高大，看來很多事不能只從書本裡學啊。",
+                    choices: [
+                        { text: "你擅長什麼？", next: "了解" },
+                        { text: "我想僱用你（$70）", next: "", action: "hireCompanion()" },
+                        { text: "再見", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "這個嘛……冒險者們好像都很擅長戰鬥，但我希望盡可能以戰鬥之外的方式解決問題。<br><br>當然，避不了一戰時我也會努力應敵的，我絕對不會丟下夥伴不管。",
+                    choices: [
+                        { text: "了解了", next: "start" },
+                    ]
+                },
+                "僱用": {
+                    npc: "npc",
+                    text: "真的嗎？謝謝你，能和人組隊真是太開心了！<br><br>我們要去哪裡？你帶路吧。",
+                    choices: [
+                        { text: "我們走", next: "", action: "removeDialogue()" },
+                    ]
+                },
+            },
+        };
+
+        // 顯示文本
+        const texts = {
+            drinkingContest: "大家都坐了下來，每人拿出 $10 當賭注，開始喝酒……",
+            drinkingWin: (prize) => `其他人都醉倒了，你撐到了最後，獲得所有的賭金 $${prize}！`,
+            drinkingLose: (name, prize) => `你不勝酒力醉倒了……而撐到最後的人是${name}，拿走了 $${prize} 賭金。`,
+            drinkingAllLose: "所有人都醉倒了，沒有人一個人撐到最後。",
+            drinkingEnd: "今天已經玩過了，明天再來吧。",
+            drinkingNoOne: "酒館裡目前沒有人在。",
+            sit: "你找了一個空位坐下。",
+            sitTogether: "你和同伴一起坐下。",
+        };
+
+        // 拚酒的狀態
+        const drinkingStatus = {
+            "player": {
+                "沒醉": "你感覺精神專注，還能繼續喝。",
+                "微醉": "你的腦袋開始變得輕飄飄的。",
+                "醉倒": "💤 你感到一陣頭暈，便陷入了沉睡。"
+            },
+            "雷納德": {
+                "沒醉": "雷納德輕鬆喝下那杯酒，帶著自信的表情。",
+                "微醉": "雷納德臉色微微泛紅，講起了他當年的英勇事蹟。",
+                "醉倒": "💤 雷納德失去了意識，倒在桌上睡著了。"
+            },
+            "塔爾穆克": {
+                "沒醉": "塔爾穆克一飲而盡，似乎根本不受酒精的影響。",
+                "微醉": "塔爾穆克的眼神開始迷濛，發出令人害怕的笑聲。",
+                "醉倒": "💤 塔爾穆克碩大的身體應聲倒地，接著發出了如雷的鼾聲。"
+            },
+            "賽恩": {
+                "沒醉": "賽恩的面罩遮住了表情，看不出有沒有醉意。",
+                "微醉": "賽恩的面罩遮住了表情，看不出有沒有醉意。",
+                "醉倒": "💤 賽恩突然間倒地不起。"
+            },
+            "艾德蒙": {
+                "沒醉": "艾德蒙把酒喝乾，抹抹嘴巴，挑釁地對你笑。",
+                "微醉": "艾德蒙搖搖晃晃地走過來，高喊著自己贏定了。",
+                "醉倒": "💤 艾德蒙一頭栽倒，酒杯掉落在地。"
+            },
+            "諾伊爾": {
+                "沒醉": "諾伊爾面帶微笑，從容地品嘗那杯酒。",
+                "微醉": "諾伊爾臉上浮現紅暈，猶豫著要不要繼續喝。",
+                "醉倒": "💤 諾伊爾趴下來，沉沉地進入了夢鄉。"
+            },
+        };
+
+        let tavernCompanions = []; // 酒館成員
+        let cost = 1; // 一杯酒 $1
+
+        // 抽選並顯示在場角色
+        function rollCompanions() {
+            tavernCompanions = [];
+
+            const menu = document.getElementById("companion-list");
+            menu.innerHTML = "";
+
+            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+
+            // 決定誰會出現
+            companions.forEach(companion => {
+                let isHired = hiredCompanions.some(hired => hired.name === companion.name);
+                // 已雇用角色不會出現，其他角色 50% 機率出現
+                if (!isHired && Math.random() < 0.5) { 
+                    tavernCompanions.push({ name: companion.name, description: companion.description, cost: companion.cost, con: companion.con, str: companion.Str, dex: companion.Dex });
+                }
+            });
+
+            // 儲存陣列
+            localStorage.setItem("tavernCompanions", JSON.stringify(tavernCompanions));
+
+            // 顯示在場角色列表
+            tavernCompanions.forEach(companion => {
+                let companionDiv = document.createElement("div");
+                companionDiv.classList.add("companion");
+                    
+                let isHired = hiredCompanions.some(hired => hired.name === companion.name);
+                    
+                companionDiv.innerHTML = `
+                    <hr>
+                    <div class="item">
+                        <h3>🪑 ${companion.name}</h3>
+                        <p>${companion.description}</p>
+                        <div class="menu">
+                            ${isHired ? 
+                                '<p class="note">雇用中</p>' 
+                                : 
+                                `<button onclick="getDialogueNpc('${companion.name}')">交談</button>`
+                            }
+                        </div>
+                    </div>
+                `;
+                menu.appendChild(companionDiv);
+            });
+
+            // 如果開始拚酒後離開或刷新頁面，視為拚酒結束
+            let drinkingStart = JSON.parse(localStorage.getItem("drinkingStart")) || false;
+            if (drinkingStart) {
+                localStorage.setItem("drinkingEnd", true);  // 拚酒結束，直到過夜後重置
+            }
+        }
+
+        // 判斷交談對象
+        function getDialogueNpc(name) {
+            localStorage.setItem("npcName", name);
+            showDialogue("start");
+        }
+
+        // 雇用傭兵
+        function hireCompanion() {
+            // 讀取NPC名字
+            const npcName = localStorage.getItem("npcName");
+
+            // 找到這個同伴的資料
+            let companion = companions.find(comp => comp.name === npcName);
+
+            // 限制最多 3 個同伴
+            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+            if (hiredCompanions.length >= 3) {
+                alert("隊伍人數已滿");
+                showDialogue("start");
+                return;
+            }
+
+            // 如果資金足夠
+            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+            if (playerMoney >= companion.cost) {
+                playerMoney -= companion.cost;
+                localStorage.setItem("playerMoney", playerMoney);
+                document.getElementById('playerMoney').textContent = playerMoney;
+        
+                addCompanion(companion); // 添加為同伴
+                rollCompanions(); // 刷新酒館同伴
+                showDialogue("僱用");
+                
+            } else {
+                alert("金錢不足");
+                showDialogue("start");
+            }
+        }
+
+        // 找位子坐
+        function sit() {
+            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+            let playerMoney = localStorage.getItem("playerMoney");
+
+            // 顯示坐下訊息
+            if (hiredCompanions.length > 0) {
+                document.getElementById("text").textContent = texts.sitTogether; // 和同伴坐下
+            } else {
+                document.getElementById("text").textContent = texts.sit; // 獨自坐下
+            }
+
+            // 計算酒錢
+            let totalCost = hiredCompanions.length +1;
+
+            // 添加喝酒按鈕
+            let buttonHTML = `<button id="drink-btn">🍺 喝酒（$1）</button>`;
+
+            // 如果有同伴，才添加「請大家喝酒」按鈕
+            if (hiredCompanions.length > 0) {
+                buttonHTML += `<button id="drink-together-btn">🍺 請大家喝酒（$${totalCost}）</button>`;
+            }
+
+            // 顯示按鈕
+            document.getElementById("button-container").innerHTML = buttonHTML;
+
+            document.getElementById("drink-btn").addEventListener("click", function () {
+                // 選擇喝酒
+                if (playerMoney >= cost) {
+                    playerMoney -= cost;
+                    document.getElementById('playerMoney').textContent = playerMoney;
+                    localStorage.setItem("playerMoney", playerMoney);
+                } else {
+                    alert("金錢不足");
+                    return;
+                }
+            });
+
+            document.getElementById("drink-together-btn").addEventListener("click", function () {
+                // 選擇請大家喝酒
+                if (playerMoney >= totalCost) {
+                    playerMoney -= totalCost;
+                    document.getElementById('playerMoney').textContent = playerMoney;
+                    localStorage.setItem("playerMoney", playerMoney);
+                } else {
+                    alert("金錢不足");
+                    return;
+                }
+            });
+            
+            // 顯示同伴
+            const menu = document.getElementById("companion-list");
+            menu.innerHTML = "";
+    
+            hiredCompanions.forEach(companion => {
+                let companionDiv = document.createElement("div");
+                companionDiv.innerHTML = `
+                    <div class="column-container item background">
+                        <div class="column-name">
+                            <h4>${companion.name}</h4>
+                        </div>
+                        <div class="column">
+                            ${companion.description}
+                        </div>
+                    </div>
+                `;
+                menu.appendChild(companionDiv);
+            });
+        }
+
+        // 拚酒遊戲
+        function drinkingContest() {
+            // 如果拚酒結束，顯示玩過了的提示
+            if (localStorage.getItem("drinkingEnd") === "true") {
+                document.getElementById("text").textContent = texts.drinkingEnd;
+                window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
+                return;
+            }
+
+            // 如果酒館沒有人，也沒有同伴，就不能玩
+            const hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+            if (tavernCompanions.length === 0 && hiredCompanions === 0) {
+                document.getElementById("text").textContent = texts.drinkingNoOne;
+                window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
+                return;
+            }
+
+            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+            let drinkingStart = JSON.parse(localStorage.getItem("drinkingStart")) || false;
+
+            // 花費 $10 賭注，只有第一輪需要
+            let bet = 10;
+            if (!drinkingStart) {
+                if (playerMoney >= bet) {
+                    playerMoney -= bet;
+                    document.getElementById('playerMoney').textContent = playerMoney;
+                    localStorage.setItem("playerMoney", playerMoney);
+                    localStorage.setItem("drinkingStart", true);  // 設為開始拚酒
+                } else {
+                    alert("金錢不足");
+                    return;
+                }
+            }
+    
+            // 加入主角
+            const playerName = localStorage.getItem("playerName");
+            const playerCon = parseInt(localStorage.getItem("playerCon"));
+            drinkingMember = [{ name: playerName, con: playerCon }];
+    
+            // 加入同伴
+            hiredCompanions.forEach(companion => {
+                if (companion.type === "傭兵") { // 只有類型是 "傭兵" 才加入
+                    drinkingMember.push({ name: companion.name, con: companion.con });
+                }
+            });
+
+            // 加入在場的傭兵
+            tavernCompanions.forEach(companion => {
+                drinkingMember.push({ name: companion.name, con: companion.con });
+            });
+            
+            // 計算獎金
+            let prize = bet * drinkingMember.length; // $10 乘以參加人數
+
+            // 清除傭兵列表
+            document.getElementById("companion-list").innerHTML = "";
+
+            // 顯示遊戲開始訊息
+            document.getElementById("text").textContent = texts.drinkingContest;
+    
+            // 顯示喝酒按鈕
+            document.getElementById("button-container").innerHTML = `
+                <button id="drink-btn">🍺 喝一杯（$1）</button>
+            `;
+
+            document.getElementById("drink-btn").addEventListener("click", function () {
+                // 付酒錢
+                if (playerMoney >= cost) {
+                    playerMoney -= cost;
+                    document.getElementById('playerMoney').textContent = playerMoney;
+                    localStorage.setItem("playerMoney", playerMoney);
+                } else {
+                    alert("金錢不足");
+                    return;
+                }
+
+                // 清除訊息
+                document.getElementById("text").textContent = "";
+
+                // 讀取先前的結果 (如果有)
+                let previousResults = JSON.parse(localStorage.getItem("drinkingResults")) || [];
+
+                localStorage.setItem("drinkingMember", JSON.stringify(drinkingMember));
+                console.log("拚酒的人：", drinkingMember);
+   
+                let results = [];
+
+                // 進行體質檢定
+                drinkingMember.forEach(person => {
+                    let roll = Math.floor(Math.random() * 20) + 1;
+                    let status;
+
+                     // 根據上一回合結果判斷這回合狀態
+                    let previousStatus = previousResults.find(result => result.name === person.name)?.status || "沒醉";
+                
+                    if (previousStatus === "微醉") { 
+                        // 如果已經微醉，再次失敗就會醉倒
+                        if (roll <= person.con) {
+                            status = "微醉";
+                        } else {
+                            status = "醉倒";
+                        }
+
+                    } else if (previousStatus === "醉倒") { 
+                        // 如果該角色已經醉倒，從陣列移除
+                        tavernCompanions = tavernCompanions.filter(p => p.name !== person.name); 
+                        return;  // 直接跳過這個角色，不加回 results
+
+                    } else {  
+                        // 初始狀態
+                        if (roll <= person.con) {
+                            status = "沒醉";
+                        } else {
+                            status = "微醉";
+                        }
+                    }
+
+                    // 每個角色的描述
+                    let description;
+                    if (person.name === playerName) { 
+                        description = drinkingStatus["player"][status]; // 主角
+                    } else {
+                        description = drinkingStatus[person.name][status]; // 同伴
+                    }
+                
+                    results.push({ name: person.name, roll: roll, status: status, description: description });
+                });
+
+                // 儲存結果
+                localStorage.setItem("drinkingResults", JSON.stringify(results));
+
+                // 顯示所有人的結果
+                const menu = document.getElementById("companion-list");
+                menu.innerHTML = "";
+    
+                results.forEach(person => {
+                    let personDiv = document.createElement("div");
+                    personDiv.innerHTML = `
+                        <div class="column-container item background">
+                            <div class="column-name">
+                                <h4>${person.name}</h4>
+                            </div>
+                            <div class="column">
+                                ${person.description}
+                            </div>
+                        </div>
+                    `;
+                    menu.appendChild(personDiv);
+                });
+
+                // 判斷勝負
+                let player = results.find(p => p.name === playerName);
+                let others = results.filter(p => p.name !== playerName);
+                let winner;
+    
+                if (player.status === "醉倒") {
+                    // 如果主角醉倒
+                    localStorage.setItem("drinkingEnd", true);  // 拚酒結束，直到過夜後重置
+                    
+                    // 檢查還有沒有人醒著
+                    let potentialWinners = others.filter(p => p.status !== "醉倒");
+
+                    if (potentialWinners.length === 0) { 
+                        // 如果所有人都醉倒，顯示全倒的訊息
+                        document.getElementById("text").textContent = texts.drinkingAllLose; // 顯示全倒訊息
+                    } else { 
+                        // 如果還有人醒著，隨機選一個當勝利者
+                        winner = potentialWinners[Math.floor(Math.random() * potentialWinners.length)];
+                        document.getElementById("text").textContent = texts.drinkingLose(winner.name, prize); // 顯示失敗訊息
+                    }
+
+                } else {
+                    // 如果主角還沒醉，檢查其他人是否都已醉倒
+                    let othersLose = others.every(p => p.status === "醉倒");
+                    if (othersLose) {
+                        // 主角勝利，顯示訊息並獲得金錢
+                        playerMoney += prize;
+                        document.getElementById('playerMoney').textContent = playerMoney;
+                        localStorage.setItem("playerMoney", playerMoney);
+                        localStorage.setItem("drinkingEnd", true);  // 拚酒結束，直到過夜後重置
+                        document.getElementById("text").textContent = texts.drinkingWin(prize); // 顯示勝利訊息
+                    }
+                }
+        
+                // 如果拚酒結束，清除按鈕
+                if (localStorage.getItem("drinkingEnd") === "true") {
+                    document.getElementById("button-container").innerHTML = "";
+                }
+
+                window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
+            });
+        }
+
+
+    </script>
+
+</body>
+</html>
