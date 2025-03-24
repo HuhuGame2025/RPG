@@ -395,7 +395,7 @@
                     document.getElementById("button-container").innerHTML = `
                         <button id="fight-btn">⚔️ 戰鬥</button>
                     `;
-                    document.getElementById("fight-btn").addSwitchListener("click", function () {
+                    document.getElementById("fight-btn").addEventListener("click", function () {
                         let encounter = {
                             situation: 2,
                             enemyAdj: "",

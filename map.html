@@ -1004,7 +1004,7 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="situation-btn">🏘️ 進入城鎮</button>
                 `;
-                document.getElementById("situation-btn").addSwitchListener("click", function () {
+                document.getElementById("situation-btn").addEventListener("click", function () {
                     // 檢查是否被通緝中
                     const wantedLevel = parseInt(localStorage.getItem("wantedLevel")) || 0;
                     if (wantedLevel > 0) {
@@ -1048,7 +1048,7 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="situation-btn">進入洞穴</button>
                 `;
-                document.getElementById("situation-btn").addSwitchListener("click", function () {
+                document.getElementById("situation-btn").addEventListener("click", function () {
                     localStorage.setItem("inEvent", event); // 儲存事件
                     localStorage.setItem("npcName", event); // 用對話系統執行事件
                     showDialogue("start"); // 從頭開始
@@ -1083,7 +1083,7 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="situation-btn">進入古堡</button>
                 `;
-                document.getElementById("situation-btn").addSwitchListener("click", function () {
+                document.getElementById("situation-btn").addEventListener("click", function () {
                     localStorage.setItem("inEvent", event); // 儲存事件
                     localStorage.setItem("npcName", event); // 用對話系統執行事件
                     showDialogue("start"); // 從頭開始
@@ -1103,7 +1103,7 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="situation-btn">⚔️ 偷襲</button>
                 `;
-                document.getElementById("situation-btn").addSwitchListener("click", function () {
+                document.getElementById("situation-btn").addEventListener("click", function () {
                     window.location.href = 'battle.html';
                 });
 
@@ -1129,7 +1129,7 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="situation-btn">⚔️ 幫助平民</button>
                 `;
-                document.getElementById("situation-btn").addSwitchListener("click", function () {
+                document.getElementById("situation-btn").addEventListener("click", function () {
                     localStorage.setItem("helpVictim", "true");
                     window.location.href = 'battle.html';
                 });
@@ -1142,7 +1142,7 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="situation-btn">交談</button>
                 `;
-                document.getElementById("situation-btn").addSwitchListener("click", function () {
+                document.getElementById("situation-btn").addEventListener("click", function () {
                     localStorage.setItem("npcName", "拉茲");
                     showDialogue("start");
                 });

@@ -528,7 +528,7 @@
 
             // 等吸血鬼來
             if (document.getElementById("vampire-btn")) {
-                document.getElementById("vampire-btn").addSwitchListener("click", function () {
+                document.getElementById("vampire-btn").addEventListener("click", function () {
                     // 定義吸血鬼
                     const vampires = [ "沃特", "馬卡斯", "嚴肅的吸血鬼", "飢餓的吸血鬼", "餓過頭的吸血鬼" ];
 
@@ -545,7 +545,7 @@
 
             // 睡覺
             if (document.getElementById("sleep-btn")) {
-                document.getElementById("sleep-btn").addSwitchListener("click", function () {
+                document.getElementById("sleep-btn").addEventListener("click", function () {
                     // 重置酒館
                     localStorage.removeItem("tavernClose"); // 重置打烊
                     localStorage.removeItem("drinkingStart");
@@ -580,7 +580,7 @@
             document.getElementById("button-container").innerHTML = `
                 <button id="talk-btn">和農奴交談</button>
             `;
-            document.getElementById("talk-btn").addSwitchListener("click", function () {
+            document.getElementById("talk-btn").addEventListener("click", function () {
                 localStorage.setItem("npcName", "斑戈");
                 showDialogue("start");
             });
@@ -602,13 +602,13 @@
                 ` : "" }
             `;
             // 交談
-            document.getElementById("talk-btn").addSwitchListener("click", function () {
+            document.getElementById("talk-btn").addEventListener("click", function () {
                 localStorage.setItem("npcName", "克萊蒙");
                 showDialogue("start");
             });
             // 工作
             if (document.getElementById("work-btn")) {
-                document.getElementById("work-btn").addSwitchListener("click", function () {
+                document.getElementById("work-btn").addEventListener("click", function () {
                     let event = "克萊蒙";
                     localStorage.setItem("inEvent", event); // 儲存事件
                     localStorage.setItem("npcName", event); // 用對話系統執行事件

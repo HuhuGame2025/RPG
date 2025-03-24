@@ -420,3 +420,4 @@ Event→Switch
 dungeon→event
 Dungeon→Event
 retreat→exitEvent
+之後再將addEventListener改回來

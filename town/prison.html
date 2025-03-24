@@ -600,7 +600,7 @@
             document.getElementById("button-container").innerHTML = `
                 <button id="sleep-btn">🛌 睡覺</button>
             `;
-            document.getElementById("sleep-btn").addSwitchListener("click", function () {
+            document.getElementById("sleep-btn").addEventListener("click", function () {
                 // 犯罪值減少
                 let playerCrime = parseInt(localStorage.getItem("playerCrime")) || 0;
                 playerCrime --;
@@ -655,7 +655,7 @@
                     document.getElementById("button-container").insertAdjacentHTML("beforeend", `
                         <button id="escape-btn">離開牢房</button>
                     `);
-                    document.getElementById("escape-btn").addSwitchListener("click", function () {
+                    document.getElementById("escape-btn").addEventListener("click", function () {
                         escape("離開牢房");
                     });
                 } else if (cell !== 1) {
@@ -688,7 +688,7 @@
                 document.getElementById("item-list").insertAdjacentHTML("beforeend", `
                     <button id="picklock-btn">用鐵絲開鎖</button>
                 `);
-                document.getElementById("picklock-btn").addSwitchListener("click", function () {
+                document.getElementById("picklock-btn").addEventListener("click", function () {
                     let event = "逃獄";
                     localStorage.setItem("inEvent", event); // 儲存事件
                     localStorage.setItem("npcName", event); // 用對話系統執行事件
@@ -710,7 +710,7 @@
                 document.getElementById("item-list").insertAdjacentHTML("beforeend", `
                     <button id="unlock-btn">用鑰匙開鎖</button>
                 `);
-                document.getElementById("unlock-btn").addSwitchListener("click", function () {
+                document.getElementById("unlock-btn").addEventListener("click", function () {
                     let event = "逃獄";
                     localStorage.setItem("inEvent", event); // 儲存事件
                     localStorage.setItem("npcName", event); // 用對話系統執行事件
