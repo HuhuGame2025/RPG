@@ -388,7 +388,7 @@
                     "左側一樓": {
                         text: "塔裡是一個圓形監牢，生鏽的鐵籠中躺著幾具枯骨，有一道通往塔頂的樓梯。<br><br>上方持續傳來呼吸聲。",
                         choices: [
-                            { text: "搜索枯骨", next: "搜索枯骨", condition: "!isTrue('古堡枯骨搜刮')", action: "(getItem('$25'), switch('古堡枯骨搜刮'))" },
+                            { text: "搜索枯骨", next: "搜索枯骨", condition: "!isTrue('古堡枯骨搜刮')", action: "(getItem('$25'), turnSwitch('古堡枯骨搜刮'))" },
                             { text: "上樓", next: "走上左側樓梯" },
                             { text: "離開高塔", next: "start" },
                         ]
@@ -396,7 +396,7 @@
                         "左側一樓_無聲": {
                             text: "塔裡是一個圓形監牢，生鏽的鐵籠中躺著幾具枯骨，有一道通往塔頂的樓梯。",
                             choices: [
-                                { text: "搜索枯骨", next: "搜索枯骨", condition: "!isTrue('古堡枯骨搜刮')", action: "(getItem('$25'), switch('古堡枯骨搜刮'))" },
+                                { text: "搜索枯骨", next: "搜索枯骨", condition: "!isTrue('古堡枯骨搜刮')", action: "(getItem('$25'), turnSwitch('古堡枯骨搜刮'))" },
                                 { text: "上樓", next: "左側塔頂" },
                                 { text: "離開高塔", next: "遇到獅鷲", condition: "!isTrue('古堡獅鷲戰鬥')" },
                                 { text: "離開高塔", next: "start", condition: "isTrue('古堡獅鷲戰鬥')" },
@@ -418,7 +418,7 @@
                     "左側塔頂": {
                         text: "你來到了塔頂，眼前是一個巨大的鳥巢，周圍散落著吃剩的骨頭。<br><br>鳥巢的主人已經不在了。",
                         choices: [
-                            { text: "搜索鳥巢", next: "搜索鳥巢", condition: "!isTrue('古堡鳥巢搜刮')", action: "(getItem('loot09', 3), getItem('key02', 1), switch('古堡鳥巢搜刮'))" },
+                            { text: "搜索鳥巢", next: "搜索鳥巢", condition: "!isTrue('古堡鳥巢搜刮')", action: "(getItem('loot09', 3), getItem('key02', 1), turnSwitch('古堡鳥巢搜刮'))" },
                             { text: "下樓", next: "左側一樓_無聲" },
                         ]
                     },
@@ -448,7 +448,7 @@
                         text: "塔裡擺放著幾副站立的盔甲，旁邊堆放著一些生鏽的武器，有一道通往塔頂的樓梯。",
                         choices: [
                             { text: "調查盔甲", next: "調查盔甲" },
-                            { text: "搜刮武器", next: "搜刮武器", condition: "!isTrue('古堡搜索武器')", action: "(getItem('lootWeapon03', 2), switch('古堡搜索武器'))" },
+                            { text: "搜刮武器", next: "搜刮武器", condition: "!isTrue('古堡搜索武器')", action: "(getItem('lootWeapon03', 2), turnSwitch('古堡搜索武器'))" },
                             { text: "上樓", next: "骷髏襲擊" },
                             { text: "離開高塔", next: "start" },
                         ]
@@ -456,7 +456,7 @@
                         "右側一樓_無盔甲": {
                             text: "塔裡散落著枯骨，旁邊堆放著一些生鏽的武器，有一道通往塔頂的樓梯。",
                             choices: [
-                                { text: "搜刮武器", next: "搜刮武器", condition: "!isTrue('古堡搜索武器')", action: "(getItem('lootWeapon03', 2), switch('古堡搜索武器'))" },
+                                { text: "搜刮武器", next: "搜刮武器", condition: "!isTrue('古堡搜索武器')", action: "(getItem('lootWeapon03', 2), turnSwitch('古堡搜索武器'))" },
                                 { text: "上樓", next: "右側二樓", condition: "!isTrue('古堡掀布')" },
                                 { text: "上樓", next: "右側二樓_掀布", condition: "isTrue('古堡掀布') && !isTrue('古堡釋放小孩')" },
                                 { text: "上樓", next: "右側二樓_釋放", condition: "isTrue('古堡釋放小孩')" },
@@ -508,7 +508,7 @@
                             text: "不想看到無辜小孩喪命的話，就放下武器！<br><br>我的主人不打算殺你，相反地，他很想見你一面。<br><br>只要你乖乖聽話就沒有人會死。",
                             choices: [
                                 { text: "放下武器", next: "放下武器" },
-                                { text: "攻擊", next: "攻擊吸血鬼", action:"switch('馬卡斯已死')" },
+                                { text: "攻擊", next: "攻擊吸血鬼", action:"turnSwitch('馬卡斯已死')" },
                             ]
                         },
                         "放下武器": {
@@ -548,7 +548,7 @@
                     "右側二樓": {
                         text: "這裡是陰暗的二樓，窗戶全都被木板封住了。<br><br>中央有一個被黑布罩著的巨大方形物體。",
                         choices: [
-                            { text: "掀開黑布", next: "掀布", action: "switch('古堡掀布')" },
+                            { text: "掀開黑布", next: "掀布", action: "turnSwitch('古堡掀布')" },
                             { text: "上樓", next: "右側塔頂" },
                             { text: "下樓", next: "右側一樓_無盔甲" },
                         ]
@@ -601,7 +601,7 @@
                             npc: "馬卡斯",
                             text: "沒錯，就是這一把。<br><br>趁吸血鬼還沒來，快幫我打開這個籠子，拜託了。",
                             choices: [
-                                { text: "（打開牢籠）", next: "釋放小孩", action: "switch('古堡釋放小孩')" },
+                                { text: "（打開牢籠）", next: "釋放小孩", action: "turnSwitch('古堡釋放小孩')" },
                             ]
                         },
                         "我去找": {

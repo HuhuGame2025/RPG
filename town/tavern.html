@@ -129,7 +129,7 @@
                     choices: [
                         { text: "你擅長什麼？", next: "了解" },
                         { text: "我想僱用你（$150）", next: "僱用", action: "hireCompanion()" },
-                        { text: "我想僱用你，用血支付", next: "僱用_用血支付", condition: "isTrue('允許賽恩吸血')", action: "(switch('用血支付賽恩'), hireCompanion())" },
+                        { text: "我想僱用你，用血支付", next: "僱用_用血支付", condition: "isTrue('允許賽恩吸血')", action: "(turnSwitch('用血支付賽恩'), hireCompanion())" },
                         { text: "再見", next: "", action: "removeDialogue()" },
                     ]
                 },

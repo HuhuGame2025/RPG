@@ -4,7 +4,7 @@
         let lastScrollTop = 0;
         const buttonBar = document.getElementById("buttonBar");
 
-        window.addSwitchListener("scroll", function() {
+        window.addEventListener("scroll", function() {
             let currentScroll = Math.max(window.scrollY, 0); // 避免 scrollY 變負數
 
             if (currentScroll > lastScrollTop) {
@@ -371,11 +371,11 @@
     }
 
     // 打開開關（事件中的戰鬥或搜刮）
-        // 打開：switch("bossFight");
-        // 關閉：switch("chestLoot", false);
-        // 讀取triggerSwitch並打開：switch();
-        // 讀取triggerSwitch並關閉：switch(undefined, false);
-    function switch(switchId, status = true) {
+        // 打開：turnSwitch("bossFight");
+        // 關閉：turnSwitch("chestLoot", false);
+        // 讀取triggerSwitch並打開：turnSwitch();
+        // 讀取triggerSwitch並關閉：turnSwitch(undefined, false);
+    function turnSwitch(switchId, status = true) {
         // 如果沒有指定 switchId，就讀取目前觸發的開關
         if (!switchId) {
             switchId = localStorage.getItem("triggerSwitch");
@@ -686,7 +686,7 @@
 
         // 如果是賽恩，取消「用血支付賽恩」的標記
         if (companion.name === "賽恩") {
-            switch("用血支付賽恩", false);
+            turnSwitch("用血支付賽恩", false);
         }
     }
 

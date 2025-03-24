@@ -153,14 +153,14 @@
                         npc: "npc",
                         text: "很棒吧？我還加了蠕蟲汁和幾種內臟提升腥味。<br><br>這一杯是送你的，如果你還想再喝，可以留下來幫我的忙。",
                         choices: [
-                            { text: "知道了", next: "", action: "(switch('開放釀造坊工作'), removeDialogue(), goToBrewhouse())" },
+                            { text: "知道了", next: "", action: "(turnSwitch('開放釀造坊工作'), removeDialogue(), goToBrewhouse())" },
                         ]
                     },
                     "吐出來": {
                         npc: "npc",
                         text: "啊，這麼浪費……<br><br>嗆到了吧？就算好喝也不要喝得那麼急嘛。<br><br>這一杯是送你的，如果你還想再喝，可以留下來幫我的忙。",
                         choices: [
-                            { text: "知道了", next: "", action: "(switch('開放釀造坊工作'), removeDialogue(), goToBrewhouse())" },
+                            { text: "知道了", next: "", action: "(turnSwitch('開放釀造坊工作'), removeDialogue(), goToBrewhouse())" },
                         ]
                     },
                     "關於哥布林": {
@@ -227,7 +227,7 @@
                     "打掃倉庫2": {
                         text: "你來到倉庫，這裡混雜著各種原料的味道，但你沒有覺得特別臭。<br><br>你將整間倉庫打掃了一遍，克萊蒙還是說有味道，於是你又打掃了一遍。<br><br>幾乎打掃了一整天後，克萊蒙才終於滿意，給了你一瓶血葡萄酒。",
                         choices: [
-                            { text: "收下", next: "", action: "(switch('在莊園工作'), exitEvent(), switch('釀造坊打掃倉庫'), getItem('lootSupply02'), removeDialogue())" },
+                            { text: "收下", next: "", action: "(turnSwitch('在莊園工作'), exitEvent(), turnSwitch('釀造坊打掃倉庫'), getItem('lootSupply02'), removeDialogue())" },
                         ]
                     },
                     "偷綠血": {
@@ -254,7 +254,7 @@
                     "幽靈菇2": {
                         text: "你取出幽靈菇，一朵一朵切碎，放進陶缽磨成粉。<br><br>全部做完花了你一整天的時間，你的手痠到不行。<br><br>克萊蒙看了後點點頭，按照約定給了你一瓶血葡萄酒。",
                         choices: [
-                            { text: "收下", next: "", action: "(switch('在莊園工作'), exitEvent(), switch('釀造坊處理幽靈菇'), getItem('lootSupply02'), removeDialogue())" },
+                            { text: "收下", next: "", action: "(turnSwitch('在莊園工作'), exitEvent(), turnSwitch('釀造坊處理幽靈菇'), getItem('lootSupply02'), removeDialogue())" },
                         ]
                     },
                     "偷幽靈菇": {
@@ -281,7 +281,7 @@
                         npc: "npc",
                         text: "啊，太棒了，我必須好好研究怎麼重現這樣的血味。<br><br>要是領主看上你，把你調走了，我一定會想念這個味道的……<br><br>對了，這是答應給你的血葡萄酒，有空再過來喔。",
                         choices: [
-                            { text: "謝謝", next: "", action: "(switch('在莊園工作'), exitEvent(), getItem('lootSupply02'), removeDialogue())" },
+                            { text: "謝謝", next: "", action: "(turnSwitch('在莊園工作'), exitEvent(), getItem('lootSupply02'), removeDialogue())" },
                         ]
                     },
             },
@@ -537,7 +537,7 @@
                     let event = randomVampire;
                     localStorage.setItem("inEvent", event); // 儲存事件
                     localStorage.setItem("npcName", event); // 用對話系統執行事件
-                    switch('血奴被吸血');
+                    turnSwitch('血奴被吸血');
                     goToDorm();
                     showDialogue("start");
                 });
@@ -559,8 +559,8 @@
                     localStorage.removeItem("currentKey"); // 清除對話 key
 
                     // 重置莊園變數
-                    switch('在莊園工作', false);
-                    switch('血奴被吸血', false);
+                    turnSwitch('在莊園工作', false);
+                    turnSwitch('血奴被吸血', false);
 
                     resetHP(); // 完全恢復
                     goToDorm();

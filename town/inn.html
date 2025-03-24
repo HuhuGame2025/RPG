@@ -75,7 +75,7 @@
                         "抵抗": {
                             text: "賽恩似乎嘆了口氣，接著慢慢後退，離開了你。",
                             choices: [
-                                { text: "繼續睡", next: "", action: "(switch('賽恩不再夜襲'), exitEvent(), removeDialogue())" },
+                                { text: "繼續睡", next: "", action: "(turnSwitch('賽恩不再夜襲'), exitEvent(), removeDialogue())" },
                             ]
                         },
                         "允許": {
@@ -133,7 +133,7 @@
                         npc: "npc",
                         text: "回去睡吧，我不會再襲擊你了。",
                         choices: [
-                            { text: "那就好", next: "", action: "(switch('賽恩不再夜襲'), exitEvent(), removeDialogue(), showTeamHealth())" },
+                            { text: "那就好", next: "", action: "(turnSwitch('賽恩不再夜襲'), exitEvent(), removeDialogue(), showTeamHealth())" },
                             { text: "以後想吸血就直接說", next: "以後直說" },
                             { text: "我可以用血支付你的酬勞", next: "以後直說" },
                         ]
@@ -142,7 +142,7 @@
                             npc: "npc",
                             text: "你是無知才會這麼說。<br><br>如果你經常被我這種吸血鬼咬，你會被轉化成我的血奴，失去反抗我的能力。",
                             choices: [
-                                { text: "那當我沒說", next: "", action: "(switch('賽恩不再夜襲'), exitEvent(), removeDialogue(), showTeamHealth())" },
+                                { text: "那當我沒說", next: "", action: "(turnSwitch('賽恩不再夜襲'), exitEvent(), removeDialogue(), showTeamHealth())" },
                                 { text: "只要你拿捏好就行了", next: "拿捏好就行" },
                             ]
                         },
@@ -150,7 +150,7 @@
                             npc: "npc",
                             text: "閉嘴，你不明白。<br><br>我無法克制嗜血的慾望，你在我眼中只是食物，你應該感到畏懼……",
                             choices: [
-                                { text: "那還是算了", next: "", action: "(switch('賽恩不再夜襲'), exitEvent(), removeDialogue(), showTeamHealth())" },
+                                { text: "那還是算了", next: "", action: "(turnSwitch('賽恩不再夜襲'), exitEvent(), removeDialogue(), showTeamHealth())" },
                                 { text: "我相信你不會傷害我", next: "不會傷害我" },
                             ]
                         },
@@ -164,7 +164,7 @@
                         "退錢": {
                             text: "賽恩拿出你先前付給他的 $120，要你拿回去，接著就轉身離開了。",
                             choices: [
-                                { text: "繼續睡", next: "", action: "(switch('允許賽恩吸血'), switch('用血支付賽恩'), exitEvent(), removeDialogue(), showTeamHealth())" },
+                                { text: "繼續睡", next: "", action: "(turnSwitch('允許賽恩吸血'), turnSwitch('用血支付賽恩'), exitEvent(), removeDialogue(), showTeamHealth())" },
                             ]
                         },
                 
@@ -180,7 +180,7 @@
                         text: "醒了嗎？我來索取酬勞。",
                         choices: [
                             { text: "來吧", next: "來吧", condition: "!isTrue('欠賽恩一次')", action: "bloodSucked()" },
-                            { text: "來吧", next: "來吧2", condition: "isTrue('欠賽恩一次')", action: "(bloodSucked(), bloodSucked(), switch('欠賽恩一次', false))" },
+                            { text: "來吧", next: "來吧2", condition: "isTrue('欠賽恩一次')", action: "(bloodSucked(), bloodSucked(), turnSwitch('欠賽恩一次', false))" },
                             { text: "今天不行", next: "不行" },
                         ]
                     },
@@ -201,7 +201,7 @@
                         text: "什麼叫不行？你承諾了，我不會做白工的。",
                         choices: [
                             { text: "我知道了，來吧", next: "來吧", condition: "!isTrue('欠賽恩一次')", action: "bloodSucked()" },
-                            { text: "我知道了，來吧", next: "來吧2", condition: "isTrue('欠賽恩一次')", action: "(bloodSucked(), bloodSucked(), switch('欠賽恩一次', false))" },
+                            { text: "我知道了，來吧", next: "來吧2", condition: "isTrue('欠賽恩一次')", action: "(bloodSucked(), bloodSucked(), turnSwitch('欠賽恩一次', false))" },
                             { text: "抱歉，我今天真的不舒服", next: "不舒服", condition: "!isTrue('欠賽恩一次')" },
                             { text: "那你走吧", next: "叫他走" },
                         ]
@@ -210,7 +210,7 @@
                         npc: "npc",
                         text: "是嗎？<br><br>那好，但下次你必須補償我。",
                         choices: [
-                            { text: "好", next: "", action: "(switch('欠賽恩一次'), removeDialogue())" },
+                            { text: "好", next: "", action: "(turnSwitch('欠賽恩一次'), removeDialogue())" },
                         ]
                     },
                     "叫他走": {
