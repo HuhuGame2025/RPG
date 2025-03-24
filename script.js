@@ -1300,7 +1300,7 @@
             let itemElement = itemDiv.querySelector(".column-container");
             let hidedElement = itemDiv.querySelector(".hided");
 
-            itemElement.addSwitchListener("click", () => {
+            itemElement.addEventListener("click", () => {
                 hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
             });
 
