@@ -237,7 +237,7 @@
                     text: "一群盜賊走了出來，警告你如果再往前一步，他們就要不客氣了。",
                     choices: [
                         { text: "戰鬥", next: "入口", action: "battle(2, '盜賊', 4)" },
-                        { text: "撤退", next: "", action: "retreat()" },
+                        { text: "撤退", next: "", action: "exitEvent()" },
                     ]
                 },
                 "入口": {
@@ -245,7 +245,7 @@
                     choices: [
                         { text: "走進木門", next: "木門" },
                         { text: "鑽進岩石縫", next: "岩石縫" },
-                        { text: "撤出洞穴", next: "", action: "retreat()" },
+                        { text: "撤出洞穴", next: "", action: "exitEvent()" },
                     ]
                 },
                     "木門": {
@@ -259,7 +259,7 @@
                         choices: [
                             { text: "偷襲", next: "岔路口", action: "battle(4, '盜賊', 2)" },
                             { text: "悄悄繞過去", next: "岔路口" },
-                            { text: "撤出洞穴", next: "", action: "retreat()" },
+                            { text: "撤出洞穴", next: "", action: "exitEvent()" },
                         ]
                 },
                 "岔路口": {
@@ -267,7 +267,7 @@
                     choices: [
                         { text: "走有火把的路", next: "大坑" },
                         { text: "走黑暗的路", next: "黑暗處" },
-                        { text: "撤出洞穴", next: "", action: "retreat()" },
+                        { text: "撤出洞穴", next: "", action: "exitEvent()" },
                     ]
                 },
                     "大坑": {
@@ -340,7 +340,7 @@
                         npc: "盜賊",
                         text: "呵呵呵！我發財了，再也不用聽那幫渾蛋的命令了！",
                         choices: [
-                            { text: "撤出洞穴", next: "", action: "(completedDungeons('盜賊巢穴'), retreat())" },
+                            { text: "撤出洞穴", next: "", action: "(completedEvents('盜賊巢穴'), exitEvent())" },
                         ]
                     },
                     "拒絕分贓": {
@@ -353,7 +353,7 @@
                     "戰勝": {
                         text: "你擊敗了盜賊們，也獲得了他們的寶物，是時候離開了。",
                         choices: [
-                            { text: "撤出洞穴", next: "", action: "(completedDungeons('盜賊巢穴'), retreat())" },
+                            { text: "撤出洞穴", next: "", action: "(completedEvents('盜賊巢穴'), exitEvent())" },
                         ]
                     },
             },
@@ -362,11 +362,11 @@
                 "start": {
                     text: "這裡是空無一人的中庭，前方是雄偉的主樓，左右兩側各有一座高塔。",
                     choices: [
-                        { text: "前往左側高塔", next: "左側門外", condition: "!isEnd('古堡獅鷲戰鬥')" },
-                        { text: "前往左側高塔", next: "左側門外_無聲", condition: "isEnd('古堡獅鷲戰鬥')" },
+                        { text: "前往左側高塔", next: "左側門外", condition: "!isTrue('古堡獅鷲戰鬥')" },
+                        { text: "前往左側高塔", next: "左側門外_無聲", condition: "isTrue('古堡獅鷲戰鬥')" },
                         { text: "前往右側高塔", next: "右側門外" },
                         { text: "前往主樓", next: "主樓門外" },
-                        { text: "撤出古堡", next: "", action: "retreat()" },
+                        { text: "撤出古堡", next: "", action: "exitEvent()" },
                     ]
                 },
 
@@ -388,7 +388,7 @@
                     "左側一樓": {
                         text: "塔裡是一個圓形監牢，生鏽的鐵籠中躺著幾具枯骨，有一道通往塔頂的樓梯。<br><br>上方持續傳來呼吸聲。",
                         choices: [
-                            { text: "搜索枯骨", next: "搜索枯骨", condition: "!isEnd('古堡枯骨搜刮')", action: "(getItem('$25'), endEvent('古堡枯骨搜刮'))" },
+                            { text: "搜索枯骨", next: "搜索枯骨", condition: "!isTrue('古堡枯骨搜刮')", action: "(getItem('$25'), switch('古堡枯骨搜刮'))" },
                             { text: "上樓", next: "走上左側樓梯" },
                             { text: "離開高塔", next: "start" },
                         ]
@@ -396,10 +396,10 @@
                         "左側一樓_無聲": {
                             text: "塔裡是一個圓形監牢，生鏽的鐵籠中躺著幾具枯骨，有一道通往塔頂的樓梯。",
                             choices: [
-                                { text: "搜索枯骨", next: "搜索枯骨", condition: "!isEnd('古堡枯骨搜刮')", action: "(getItem('$25'), endEvent('古堡枯骨搜刮'))" },
+                                { text: "搜索枯骨", next: "搜索枯骨", condition: "!isTrue('古堡枯骨搜刮')", action: "(getItem('$25'), switch('古堡枯骨搜刮'))" },
                                 { text: "上樓", next: "左側塔頂" },
-                                { text: "離開高塔", next: "遇到獅鷲", condition: "!isEnd('古堡獅鷲戰鬥')" },
-                                { text: "離開高塔", next: "start", condition: "isEnd('古堡獅鷲戰鬥')" },
+                                { text: "離開高塔", next: "遇到獅鷲", condition: "!isTrue('古堡獅鷲戰鬥')" },
+                                { text: "離開高塔", next: "start", condition: "isTrue('古堡獅鷲戰鬥')" },
                             ]
                         },
                     "搜索枯骨": {
@@ -418,7 +418,7 @@
                     "左側塔頂": {
                         text: "你來到了塔頂，眼前是一個巨大的鳥巢，周圍散落著吃剩的骨頭。<br><br>鳥巢的主人已經不在了。",
                         choices: [
-                            { text: "搜索鳥巢", next: "搜索鳥巢", condition: "!isEnd('古堡鳥巢搜刮')", action: "(getItem('loot09', 3), getItem('key02', 1), endEvent('古堡鳥巢搜刮'))" },
+                            { text: "搜索鳥巢", next: "搜索鳥巢", condition: "!isTrue('古堡鳥巢搜刮')", action: "(getItem('loot09', 3), getItem('key02', 1), switch('古堡鳥巢搜刮'))" },
                             { text: "下樓", next: "左側一樓_無聲" },
                         ]
                     },
@@ -431,7 +431,7 @@
                     "遇到獅鷲": {
                         text: "當你走出高塔時，一隻獅鷲從天而降，對著你憤怒地咆嘯。",
                         choices: [
-                            { text: "準備戰鬥", next: "start", action: "(battle(2, '獅鷲', 1), triggerEvent('古堡獅鷲戰鬥'))" },
+                            { text: "準備戰鬥", next: "start", action: "(battle(2, '獅鷲', 1), triggerSwitch('古堡獅鷲戰鬥'))" },
                         ]
                     },
 
@@ -439,8 +439,8 @@
                     "右側門外": {
                         text: "右側高塔沒有上鎖。",
                         choices: [
-                            { text: "進入高塔", next: "右側一樓", condition: "!isEnd('古堡骷髏守衛戰鬥')" },
-                            { text: "進入高塔", next: "右側一樓_無盔甲", condition: "isEnd('古堡骷髏守衛戰鬥')" },
+                            { text: "進入高塔", next: "右側一樓", condition: "!isTrue('古堡骷髏守衛戰鬥')" },
+                            { text: "進入高塔", next: "右側一樓_無盔甲", condition: "isTrue('古堡骷髏守衛戰鬥')" },
                             { text: "返回中庭", next: "start" },
                         ]
                     },
@@ -448,7 +448,7 @@
                         text: "塔裡擺放著幾副站立的盔甲，旁邊堆放著一些生鏽的武器，有一道通往塔頂的樓梯。",
                         choices: [
                             { text: "調查盔甲", next: "調查盔甲" },
-                            { text: "搜刮武器", next: "搜刮武器", condition: "!isEnd('古堡搜索武器')", action: "(getItem('lootWeapon03', 2), endEvent('古堡搜索武器'))" },
+                            { text: "搜刮武器", next: "搜刮武器", condition: "!isTrue('古堡搜索武器')", action: "(getItem('lootWeapon03', 2), switch('古堡搜索武器'))" },
                             { text: "上樓", next: "骷髏襲擊" },
                             { text: "離開高塔", next: "start" },
                         ]
@@ -456,10 +456,10 @@
                         "右側一樓_無盔甲": {
                             text: "塔裡散落著枯骨，旁邊堆放著一些生鏽的武器，有一道通往塔頂的樓梯。",
                             choices: [
-                                { text: "搜刮武器", next: "搜刮武器", condition: "!isEnd('古堡搜索武器')", action: "(getItem('lootWeapon03', 2), endEvent('古堡搜索武器'))" },
-                                { text: "上樓", next: "右側二樓", condition: "!isEnd('古堡掀布')" },
-                                { text: "上樓", next: "右側二樓_掀布", condition: "isEnd('古堡掀布') && !isEnd('古堡釋放小孩')" },
-                                { text: "上樓", next: "右側二樓_釋放", condition: "isEnd('古堡釋放小孩')" },
+                                { text: "搜刮武器", next: "搜刮武器", condition: "!isTrue('古堡搜索武器')", action: "(getItem('lootWeapon03', 2), switch('古堡搜索武器'))" },
+                                { text: "上樓", next: "右側二樓", condition: "!isTrue('古堡掀布')" },
+                                { text: "上樓", next: "右側二樓_掀布", condition: "isTrue('古堡掀布') && !isTrue('古堡釋放小孩')" },
+                                { text: "上樓", next: "右側二樓_釋放", condition: "isTrue('古堡釋放小孩')" },
                                 { text: "離開高塔", next: "start" },
                             ]
                         },
@@ -474,7 +474,7 @@
                         "調查盔甲": {
                             text: "你掀開盔甲的頭盔，看見了裡面的骷髏頭。",
                             choices: [
-                                { text: "攻擊骷髏", next: "右側一樓_無盔甲", action: "(battle(2, '骷髏守衛', 4), triggerEvent('古堡骷髏守衛戰鬥'))" },
+                                { text: "攻擊骷髏", next: "右側一樓_無盔甲", action: "(battle(2, '骷髏守衛', 4), triggerSwitch('古堡骷髏守衛戰鬥'))" },
                                 { text: "後退", next: "back" },
                             ]
                         },
@@ -487,7 +487,7 @@
                         "骷髏襲擊": {
                             text: "當你走向樓梯時，那些盔甲突然拔出武器，對你發動攻擊。",
                             choices: [
-                                { text: "準備戰鬥", next: "右側一樓_無盔甲", action: "(battle(3, '骷髏守衛', 4), triggerEvent('古堡骷髏守衛戰鬥'))" },
+                                { text: "準備戰鬥", next: "右側一樓_無盔甲", action: "(battle(3, '骷髏守衛', 4), triggerSwitch('古堡骷髏守衛戰鬥'))" },
                             ]
                         },
 
@@ -508,7 +508,7 @@
                             text: "不想看到無辜小孩喪命的話，就放下武器！<br><br>我的主人不打算殺你，相反地，他很想見你一面。<br><br>只要你乖乖聽話就沒有人會死。",
                             choices: [
                                 { text: "放下武器", next: "放下武器" },
-                                { text: "攻擊", next: "攻擊吸血鬼", action:"endEvent('馬卡斯已死')" },
+                                { text: "攻擊", next: "攻擊吸血鬼", action:"switch('馬卡斯已死')" },
                             ]
                         },
                         "放下武器": {
@@ -521,14 +521,14 @@
                             text: "在你衝向吸血鬼的那一刻，利刃劃開了馬卡斯的喉嚨，他還來不及喊叫就倒在了地上。<br><br>吸血鬼立刻化成蝙蝠飛走，不見蹤影。",
                             choices: [
                                 { text: "查看馬卡斯", next: "查看馬卡斯" },
-                                { text: "離開古堡", next: "離開古堡", action: "(completedDungeons('古堡'), retreat())" },
+                                { text: "離開古堡", next: "離開古堡", action: "(completedEvents('古堡'), exitEvent())" },
                             ]
                         },
                         "查看馬卡斯": {
                             text: "馬卡斯的喉嚨流出鮮血，他的身體冰冷，心臟已經停止跳動。",
                             choices: [
                                 { text: "檢查他的隨身物品", next: "搜刮馬卡斯" },
-                                { text: "離開古堡", next: "離開古堡", action: "(completedDungeons('古堡'), retreat())" },
+                                { text: "離開古堡", next: "離開古堡", action: "(completedEvents('古堡'), exitEvent())" },
                             ]
                         },
                         "搜刮馬卡斯": {
@@ -541,14 +541,14 @@
                         "拿走戒指": {
                             text: "你從馬卡斯手上取下了戒指。",
                             choices: [
-                                { text: "離開古堡", next: "離開古堡", action: "(completedDungeons('古堡'), retreat())" },
+                                { text: "離開古堡", next: "離開古堡", action: "(completedEvents('古堡'), exitEvent())" },
                             ]
                         },
 
                     "右側二樓": {
                         text: "這裡是陰暗的二樓，窗戶全都被木板封住了。<br><br>中央有一個被黑布罩著的巨大方形物體。",
                         choices: [
-                            { text: "掀開黑布", next: "掀布", action: "endEvent('古堡掀布')" },
+                            { text: "掀開黑布", next: "掀布", action: "switch('古堡掀布')" },
                             { text: "上樓", next: "右側塔頂" },
                             { text: "下樓", next: "右側一樓_無盔甲" },
                         ]
@@ -585,7 +585,7 @@
                             npc: "馬卡斯",
                             text: "真的嗎？太厲害了！<br><br>那你可以打開這個籠子嗎？我看過鑰匙，但是被吸血鬼拿走了，我不知道鑰匙在哪裡……",
                             choices: [
-                                { text: "是這把鐵鑰匙嗎？", next: "給鑰匙", condition: "isEnd('古堡鳥巢搜刮')" },
+                                { text: "是這把鐵鑰匙嗎？", next: "給鑰匙", condition: "isTrue('古堡鳥巢搜刮')" },
                                 { text: "我去找", next: "我去找" },
                             ]
                         },
@@ -593,7 +593,7 @@
                             npc: "馬卡斯",
                             text: "請問……你找到鑰匙了嗎？",
                             choices: [
-                                { text: "是這把鐵鑰匙嗎？", next: "給鑰匙", condition: "isEnd('古堡鳥巢搜刮')" },
+                                { text: "是這把鐵鑰匙嗎？", next: "給鑰匙", condition: "isTrue('古堡鳥巢搜刮')" },
                                 { text: "我去找", next: "我去找" },
                             ]
                         },
@@ -601,7 +601,7 @@
                             npc: "馬卡斯",
                             text: "沒錯，就是這一把。<br><br>趁吸血鬼還沒來，快幫我打開這個籠子，拜託了。",
                             choices: [
-                                { text: "（打開牢籠）", next: "釋放小孩", action: "endEvent('古堡釋放小孩')" },
+                                { text: "（打開牢籠）", next: "釋放小孩", action: "switch('古堡釋放小孩')" },
                             ]
                         },
                         "我去找": {
@@ -627,12 +627,12 @@
                     "右側塔頂": {
                         text: "你來到了塔頂，從這裡可以清楚看見另一座高塔。",
                         choices: [
-                            { text: "觀察另一座塔", next: "看見左側獅鷲", condition: "!isEnd('古堡獅鷲戰鬥')" },
-                            { text: "觀察另一座塔", next: "看見左側", condition: "isEnd('古堡獅鷲戰鬥')" },
+                            { text: "觀察另一座塔", next: "看見左側獅鷲", condition: "!isTrue('古堡獅鷲戰鬥')" },
+                            { text: "觀察另一座塔", next: "看見左側", condition: "isTrue('古堡獅鷲戰鬥')" },
                             { text: "觀察主樓", next: "看見主樓" },
-                            { text: "下樓", next: "右側二樓", condition: "!isEnd('古堡掀布')" },
-                            { text: "下樓", next: "右側二樓_掀布", condition: "isEnd('古堡掀布') && !isEnd('古堡釋放小孩')" },
-                            { text: "下樓", next: "右側二樓_釋放", condition: "isEnd('古堡釋放小孩')" },
+                            { text: "下樓", next: "右側二樓", condition: "!isTrue('古堡掀布')" },
+                            { text: "下樓", next: "右側二樓_掀布", condition: "isTrue('古堡掀布') && !isTrue('古堡釋放小孩')" },
+                            { text: "下樓", next: "右側二樓_釋放", condition: "isTrue('古堡釋放小孩')" },
                         ]
                     },
                         "看見左側獅鷲": {
@@ -655,7 +655,7 @@
                         },
 
                 // 主樓
-                    "主樓": {
+                    "主樓門外": {
                         text: "主樓的大門鎖住了。",
                         choices: [
                             { text: "返回中庭", next: "start" },
@@ -664,7 +664,7 @@
                     "昏過去": {
                         text: "你支撐不住，昏了過去……",
                         choices: [
-                            { text: "醒來", next: "醒來" },
+                            { text: "醒來", next: "醒來", action: "loadBackground('castleInterior')" },
                         ]
                     },
                     "醒來": {
@@ -679,8 +679,8 @@
                         choices: [
                             { text: "你是誰？", next: "你是誰" },
                             { text: "我的同伴在哪？", next: "同伴在哪", condition: "isCompanion() && !isCompanion('賽恩')" },
-                            { text: "我的同伴在哪？", next: "同伴在哪", condition: "isCompanion('賽恩') && !isEnd('允許賽恩吸血')" },
-                            { text: "我的同伴在哪？", next: "同伴在哪_提到賽恩", condition: "isCompanion('賽恩') && isEnd('允許賽恩吸血')" },
+                            { text: "我的同伴在哪？", next: "同伴在哪", condition: "isCompanion('賽恩') && !isTrue('允許賽恩吸血')" },
+                            { text: "我的同伴在哪？", next: "同伴在哪_提到賽恩", condition: "isCompanion('賽恩') && isTrue('允許賽恩吸血')" },
                             { text: "馬卡斯在哪？", next: "馬卡斯在哪" },
                             { text: "我被咬了嗎？", next: "被咬了嗎" },
                             { text: "我有話要說", next: "有話要說" },
@@ -692,8 +692,8 @@
                             choices: [
                                 { text: "你是誰？", next: "你是誰" },
                                 { text: "我的同伴在哪？", next: "同伴在哪", condition: "isCompanion() && !isCompanion('賽恩')" },
-                                { text: "我的同伴在哪？", next: "同伴在哪", condition: "isCompanion('賽恩') && !isEnd('允許賽恩吸血')" },
-                                { text: "我的同伴在哪？", next: "同伴在哪_提到賽恩", condition: "isCompanion('賽恩') && isEnd('允許賽恩吸血')" },
+                                { text: "我的同伴在哪？", next: "同伴在哪", condition: "isCompanion('賽恩') && !isTrue('允許賽恩吸血')" },
+                                { text: "我的同伴在哪？", next: "同伴在哪_提到賽恩", condition: "isCompanion('賽恩') && isTrue('允許賽恩吸血')" },
                                 { text: "馬卡斯在哪？", next: "馬卡斯在哪" },
                                 { text: "我被咬了嗎？", next: "被咬了嗎" },
                                 { text: "我有話要說", next: "有話要說" },
@@ -769,7 +769,7 @@
                         npc: "賽爾瑞斯",
                         text: "來人，把這個血奴帶下去。",
                         choices: [
-                            { text: "（繼續）", next: "送到牧場2" },
+                            { text: "（繼續）", next: "送到牧場2", action: "loadBackground('underground')" },
                         ]
                     },
                     "送到牧場2": {
@@ -782,7 +782,7 @@
                         npc: "吸血鬼守衛",
                         text: "到了，這裡就是血奴住的地方。<br><br>你可以自由活動，但要作息正常，維持健康。<br><br>每晚會有一位吸血鬼來飲用你的血，不要想耍什麼把戲，否則我們就把你餵給獅鷲。",
                         choices: [
-                            { text: "（繼續）", next: "", action: "goTo('town/underground')" },
+                            { text: "（繼續）", next: "", action: "(exitEvent(), goTo('town/underground'))" },
                         ]
                     },
 
@@ -990,7 +990,7 @@
                 let playerFame = parseInt(localStorage.getItem("playerFame"));
                 playerFame ++ ; // 名聲上升
                 localStorage.setItem("playerFame", playerFame);
-                localStorage.removeItem("helpVictim"); // 清除「幫助平民」事件
+                localStorage.removeItem("helpVictim"); // 清除「幫助平民」開關
 
             // 位於城鎮
             } else if (locationIcon === icons.town) {
@@ -1004,7 +1004,7 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="situation-btn">🏘️ 進入城鎮</button>
                 `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
+                document.getElementById("situation-btn").addSwitchListener("click", function () {
                     // 檢查是否被通緝中
                     const wantedLevel = parseInt(localStorage.getItem("wantedLevel")) || 0;
                     if (wantedLevel > 0) {
@@ -1021,22 +1021,22 @@
             
             // 位於盜賊巢穴
             } else if (playerPos.x === locations.thieves.x && playerPos.y === locations.thieves.y) {
-                let dungeon = "盜賊巢穴";
+                let event = "盜賊巢穴";
                 localStorage.setItem("backgroundStyle", "url('images/cave.jpg')"); // 變更背景圖
 
-                // 檢查是否已完成副本
-                const completedDungeons = JSON.parse(localStorage.getItem("completedDungeons")) || [];
-                let isCompleted = completedDungeons.find(d => d === dungeon);
+                // 檢查是否已完成事件
+                const completedEvents = JSON.parse(localStorage.getItem("completedEvents")) || [];
+                let isCompleted = completedEvents.find(d => d === event);
                 if (isCompleted) {
                     // 顯示探索過的訊息
                     document.getElementById("situation").textContent = texts.thievesCompleted;
                     return;
                 }
 
-                // 檢查是否已在副本中
-                const inDungeon = localStorage.getItem("inDungeon");
-                if (inDungeon === dungeon) {
-                    localStorage.setItem("npcName", dungeon);
+                // 檢查是否已在事件中
+                const inEvent = localStorage.getItem("inEvent");
+                if (inEvent === event) {
+                    localStorage.setItem("npcName", event);
                     showDialogue(); // 從上次的進度繼續
                     return;
                 }
@@ -1048,30 +1048,30 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="situation-btn">進入洞穴</button>
                 `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
-                    localStorage.setItem("inDungeon", dungeon); // 儲存副本
-                    localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+                document.getElementById("situation-btn").addSwitchListener("click", function () {
+                    localStorage.setItem("inEvent", event); // 儲存事件
+                    localStorage.setItem("npcName", event); // 用對話系統執行事件
                     showDialogue("start"); // 從頭開始
                 });
             
             // 位於古堡
             } else if (locationIcon === icons.castle) {
-                let dungeon = "古堡";
+                let event = "古堡";
                 localStorage.setItem("backgroundStyle", "url('images/castle.jpg')"); // 變更背景圖
 
-                // 檢查是否已完成副本
-                const completedDungeons = JSON.parse(localStorage.getItem("completedDungeons")) || [];
-                let isCompleted = completedDungeons.find(d => d === dungeon);
+                // 檢查是否已完成事件
+                const completedEvents = JSON.parse(localStorage.getItem("completedEvents")) || [];
+                let isCompleted = completedEvents.find(d => d === event);
                 if (isCompleted) {
                     // 顯示探索過的訊息
                     document.getElementById("situation").textContent = texts.castleCompleted;
                     return;
                 }
 
-                // 檢查是否已在副本中
-                const inDungeon = localStorage.getItem("inDungeon");
-                if (inDungeon === dungeon) {
-                    localStorage.setItem("npcName", dungeon);
+                // 檢查是否已在事件中
+                const inEvent = localStorage.getItem("inEvent");
+                if (inEvent === event) {
+                    localStorage.setItem("npcName", event);
                     showDialogue(); // 從上次的進度繼續
                     return;
                 }
@@ -1083,9 +1083,9 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="situation-btn">進入古堡</button>
                 `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
-                    localStorage.setItem("inDungeon", dungeon); // 儲存副本
-                    localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+                document.getElementById("situation-btn").addSwitchListener("click", function () {
+                    localStorage.setItem("inEvent", event); // 儲存事件
+                    localStorage.setItem("npcName", event); // 用對話系統執行事件
                     showDialogue("start"); // 從頭開始
                 });
             
@@ -1103,7 +1103,7 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="situation-btn">⚔️ 偷襲</button>
                 `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
+                document.getElementById("situation-btn").addSwitchListener("click", function () {
                     window.location.href = 'battle.html';
                 });
 
@@ -1129,7 +1129,7 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="situation-btn">⚔️ 幫助平民</button>
                 `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
+                document.getElementById("situation-btn").addSwitchListener("click", function () {
                     localStorage.setItem("helpVictim", "true");
                     window.location.href = 'battle.html';
                 });
@@ -1142,7 +1142,7 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="situation-btn">交談</button>
                 `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
+                document.getElementById("situation-btn").addSwitchListener("click", function () {
                     localStorage.setItem("npcName", "拉茲");
                     showDialogue("start");
                 });

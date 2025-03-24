@@ -205,7 +205,7 @@
                     let itemElement = itemDiv.querySelector(".column-container");
                     let noteElement = itemDiv.querySelector(".note");
 
-                    itemElement.addEventListener("click", () => {
+                    itemElement.addSwitchListener("click", () => {
                         noteElement.style.display = (noteElement.style.display === "none") ? "block" : "none";
                     });
 

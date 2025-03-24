@@ -4,7 +4,7 @@
         let lastScrollTop = 0;
         const buttonBar = document.getElementById("buttonBar");
 
-        window.addEventListener("scroll", function() {
+        window.addSwitchListener("scroll", function() {
             let currentScroll = Math.max(window.scrollY, 0); // 避免 scrollY 變負數
 
             if (currentScroll > lastScrollTop) {
@@ -29,9 +29,12 @@
     }
 
     // 讀取背景圖
-    function loadBackground() {
-        const savedBackground = localStorage.getItem("backgroundStyle");
-        if (savedBackground) {
+    function loadBackground(image) {
+        let savedBackground = localStorage.getItem("backgroundStyle");
+        if (image) {
+            document.body.style.backgroundImage = "url('images/" + image +".jpg')";
+            localStorage.setItem("backgroundStyle", "url('images/" + image +".jpg')");
+        } else if (savedBackground) {
             document.body.style.backgroundImage = savedBackground;
         } else {
             document.body.style.backgroundImage = "url('images/field.jpg')"; // 預設為原野背景
@@ -63,9 +66,9 @@
             key = localStorage.getItem("previousKey");
         }
 
-        // 檢查是不是在執行副本
-        let dungeon = localStorage.getItem("inDungeon");
-        if (npcName === dungeon) {
+        // 檢查是不是在執行事件
+        let event = localStorage.getItem("inEvent");
+        if (npcName === event) {
             let lastKey = localStorage.getItem("currentKey"); // 讀取儲存的 key
             if (!key) {
                 // 如果沒有指定 key（刷新頁面時）
@@ -94,7 +97,7 @@
         // 顯示對話 UI
         document.getElementById("dialogue").style.display = "block";
         const dialogueContainer = document.getElementById("dialogue");
-        if (dialogue.npc) { // 如果副本中有指定NPC
+        if (dialogue.npc) { // 如果事件中有指定NPC
             // 對話的格式
             dialogueContainer.innerHTML = `
                 <br>
@@ -106,7 +109,7 @@
             `;
         
         } else {
-            // 副本的格式
+            // 事件的格式
             dialogueContainer.innerHTML = `
                 <br>
                 <div class="dialogue-text"><span id="npc-text"></span></div>
@@ -292,6 +295,138 @@
             replaceText("賽爾瑞斯", newSelreth);
             observeTextChanges("賽爾瑞斯", newSelreth);
         }                
+    }
+
+// 事件相關
+
+    // 屬性擲骰
+    function roll(attribute, successKey, failKey) {
+        // 讀取玩家屬性
+        const playerAttributes = {
+            con: parseInt(localStorage.getItem("playerCon")) || 0,
+            str: parseInt(localStorage.getItem("playerStr")) || 0,
+            dex: parseInt(localStorage.getItem("playerDex")) || 0,
+            wis: parseInt(localStorage.getItem("playerWis")) || 0,
+            cha: parseInt(localStorage.getItem("playerCha")) || 0,
+            totalstr: parseInt(localStorage.getItem("playerTotalStr")) || 0,
+            totaldex: parseInt(localStorage.getItem("playerTotalDex")) || 0,
+            totalcha: parseInt(localStorage.getItem("playerTotalCha")) || 0,
+            totalarm: parseInt(localStorage.getItem("playerTotalArm")) || 0
+        };
+
+        // 確保輸入的屬性有效
+        if (!(attribute in playerAttributes)) {
+            console.warn(`無效的屬性: ${attribute}`);
+            return false;
+        }
+
+        // 擲 1d20 骰子
+        const roll = Math.floor(Math.random() * 20) + 1;
+        console.log(`擲骰結果: ${roll}, 屬性值: ${playerAttributes[attribute]}`);
+
+        // 根據結果顯示對話
+        if (roll <= playerAttributes[attribute]) {
+            showDialogue(successKey);
+        } else {
+            showDialogue(failKey);
+        }
+    }
+
+    // 檢查同伴在不在
+    function isCompanion(memberName) {
+        const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+        if (memberName) {
+            // 如果有指定同伴，回傳該同伴是否在隊伍中
+            let member = teamMember.some(m => m.name === memberName);
+            if (member) {
+                return true;
+            }
+        } else {
+            // 如果沒有指定，回傳是否有同伴
+            if (teamMember.length > 1) {
+                return true;
+            }
+        }
+    }
+
+    // 檢查有沒有某個物品
+    function isItem(itemId) {
+        const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+        let item = playerItems.some(i => i === itemId);
+        if (item) {
+            return true;
+        }
+    }
+
+    // 檢查是否已打開開關（事件中的戰鬥或搜刮）
+    function isTrue(switchId) {
+        const endedSwitchs = JSON.parse(localStorage.getItem("endedSwitchs")) || [];
+        return endedSwitchs.includes(switchId); // 如果完成，回傳true
+    }
+
+    // 觸發開關（事件中的戰鬥）
+    function triggerSwitch(switchId) {
+        // 先儲存id，等開關結束或戰鬥勝利後才標記完成
+        localStorage.setItem("triggerSwitch", switchId);
+    }
+
+    // 打開開關（事件中的戰鬥或搜刮）
+        // 打開：switch("bossFight");
+        // 關閉：switch("chestLoot", false);
+        // 讀取triggerSwitch並打開：switch();
+        // 讀取triggerSwitch並關閉：switch(undefined, false);
+    function switch(switchId, status = true) {
+        // 如果沒有指定 switchId，就讀取目前觸發的開關
+        if (!switchId) {
+            switchId = localStorage.getItem("triggerSwitch");
+            localStorage.removeItem("triggerSwitch"); // 清除觸發開關
+        }
+
+        // 讀取已結束的開關列表
+        let endedSwitchs = JSON.parse(localStorage.getItem("endedSwitchs")) || [];
+
+        if (status) {
+            // 標記開關為完成（避免重複加入）
+            if (!endedSwitchs.includes(switchId)) {
+                endedSwitchs.push(switchId);
+            }
+        } else {
+            // 取消標記開關（從已完成列表移除）
+            endedSwitchs = endedSwitchs.filter(e => e !== switchId);
+        }
+
+        // 更新 localStorage
+        localStorage.setItem("endedSwitchs", JSON.stringify(endedSwitchs));
+    }
+
+    // 退出事件
+    function exitEvent() {
+        localStorage.removeItem("inEvent"); // 清除事件
+        removeDialogue(); // 清除對話
+    
+        // 如果有 showSituation 這個函式才執行
+        if (typeof showSituation === "function") {
+            showSituation();
+        }
+    }
+
+    // 完成事件
+    function completedEvents(event) {
+        let completedEvents = JSON.parse(localStorage.getItem("completedEvents")) || [];
+        completedEvents.push(event);
+        localStorage.setItem("completedEvents", JSON.stringify(completedEvents));
+    }
+
+    // 讀取事件進度
+    function loadEvent() {
+        // 如果在事件中就讀取進度
+        const inEvent = localStorage.getItem("inEvent");
+        if (inEvent) {
+            localStorage.setItem("npcName", inEvent); // 用對話系統執行事件
+            showDialogue(); // 從上次的進度繼續
+        }
+        console.log(inEvent);
+        return inEvent;
     }
 
 // 隊伍相關
@@ -551,7 +686,7 @@
 
         // 如果是賽恩，取消「用血支付賽恩」的標記
         if (companion.name === "賽恩") {
-            endEvent("用血支付賽恩", false);
+            switch("用血支付賽恩", false);
         }
     }
 
@@ -691,10 +826,10 @@
         localStorage.removeItem("unlockCell4");
         localStorage.removeItem("currentKey") // 清除key，重置一天進度
 
-        // 設定副本
-        let dungeon = "坐牢";
-        localStorage.setItem("inDungeon", dungeon); // 儲存副本
-        localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+        // 設定事件
+        let event = "坐牢";
+        localStorage.setItem("inEvent", event); // 儲存事件
+        localStorage.setItem("npcName", event); // 用對話系統執行事件
 
         // 跳轉到監獄頁面（根據當前頁面判斷路徑）
         const pageName = window.location.pathname.split("/").pop();
@@ -706,7 +841,7 @@
     }
 
     // 被俘虜
-    function captured(dungeon) {
+    function captured(event) {
         // 所有同伴退出隊伍
         removeCompanion("companion3");
         removeCompanion("companion2");
@@ -722,8 +857,8 @@
         // 重置牢內變數
         localStorage.removeItem("currentKey") // 清除key，重置一天進度
 
-        localStorage.setItem("inDungeon", dungeon); // 儲存副本
-        localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+        localStorage.setItem("inEvent", event); // 儲存事件
+        localStorage.setItem("npcName", event); // 用對話系統執行事件
 
         // 跳轉到監獄頁面（根據當前頁面判斷路徑）
         const pageName = window.location.pathname.split("/").pop();
@@ -1165,7 +1300,7 @@
             let itemElement = itemDiv.querySelector(".column-container");
             let hidedElement = itemDiv.querySelector(".hided");
 
-            itemElement.addEventListener("click", () => {
+            itemElement.addSwitchListener("click", () => {
                 hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
             });
 
@@ -1291,137 +1426,5 @@
         } else {
             window.location.href = "../encounter.html";
         }
-    }
-
-// 副本相關
-
-    // 屬性檢定
-    function roll(attribute, successKey, failKey) {
-        // 讀取玩家屬性
-        const playerAttributes = {
-            con: parseInt(localStorage.getItem("playerCon")) || 0,
-            str: parseInt(localStorage.getItem("playerStr")) || 0,
-            dex: parseInt(localStorage.getItem("playerDex")) || 0,
-            wis: parseInt(localStorage.getItem("playerWis")) || 0,
-            cha: parseInt(localStorage.getItem("playerCha")) || 0,
-            totalstr: parseInt(localStorage.getItem("playerTotalStr")) || 0,
-            totaldex: parseInt(localStorage.getItem("playerTotalDex")) || 0,
-            totalcha: parseInt(localStorage.getItem("playerTotalCha")) || 0,
-            totalarm: parseInt(localStorage.getItem("playerTotalArm")) || 0
-        };
-
-        // 確保輸入的屬性有效
-        if (!(attribute in playerAttributes)) {
-            console.warn(`無效的屬性: ${attribute}`);
-            return false;
-        }
-
-        // 擲 1d20 骰子
-        const roll = Math.floor(Math.random() * 20) + 1;
-        console.log(`擲骰結果: ${roll}, 屬性值: ${playerAttributes[attribute]}`);
-
-        // 根據結果顯示對話
-        if (roll <= playerAttributes[attribute]) {
-            showDialogue(successKey);
-        } else {
-            showDialogue(failKey);
-        }
-    }
-
-    // 檢查同伴在不在
-    function isCompanion(memberName) {
-        const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
-        if (memberName) {
-            // 如果有指定同伴，回傳該同伴是否在隊伍中
-            let member = teamMember.some(m => m.name === memberName);
-            if (member) {
-                return true;
-            }
-        } else {
-            // 如果沒有指定，回傳是否有同伴
-            if (teamMember.length > 1) {
-                return true;
-            }
-        }
-    }
-
-    // 檢查有沒有某個物品
-    function isItem(itemId) {
-        const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-        let item = playerItems.some(i => i === itemId);
-        if (item) {
-            return true;
-        }
-    }
-
-    // 檢查是否已完成一次性事件（副本中的戰鬥或搜刮）
-    function isEnd(eventId) {
-        const endedEvents = JSON.parse(localStorage.getItem("endedEvents")) || [];
-        return endedEvents.includes(eventId); // 如果完成，回傳true
-    }
-
-    // 觸發一次性事件（副本中的戰鬥）
-    function triggerEvent(eventId) {
-        // 先儲存id，等事件結束或戰鬥勝利後才標記完成
-        localStorage.setItem("triggerEvent", eventId);
-    }
-
-    // 標記一次性事件完成（副本中的戰鬥或搜刮）
-        // 完成 endEvent("bossFight");
-        // 取消標記 endEvent("chestLoot", false);
-        // 讀取triggerEvent並標記 endEvent();
-        // 讀取triggerEvent並取消標記 endEvent(undefined, false);
-    function endEvent(eventId, status = true) {
-        // 如果沒有指定 eventId，就讀取目前觸發的事件
-        if (!eventId) {
-            eventId = localStorage.getItem("triggerEvent");
-            localStorage.removeItem("triggerEvent"); // 清除觸發事件
-        }
-
-        // 讀取已結束的事件列表
-        let endedEvents = JSON.parse(localStorage.getItem("endedEvents")) || [];
-
-        if (status) {
-            // 標記事件為完成（避免重複加入）
-            if (!endedEvents.includes(eventId)) {
-                endedEvents.push(eventId);
-            }
-        } else {
-            // 取消標記事件（從已完成列表移除）
-            endedEvents = endedEvents.filter(e => e !== eventId);
-        }
-
-        // 更新 localStorage
-        localStorage.setItem("endedEvents", JSON.stringify(endedEvents));
-    }
-
-    // 撤出副本
-    function retreat() {
-        localStorage.removeItem("inDungeon"); // 清除副本
-        removeDialogue(); // 清除對話
-    
-        // 如果有 showSituation 這個函式才執行
-        if (typeof showSituation === "function") {
-            showSituation();
-        }
-    }
-
-    // 完成副本
-    function completedDungeons(dungeon) {
-        let completedDungeons = JSON.parse(localStorage.getItem("completedDungeons")) || [];
-        completedDungeons.push(dungeon);
-        localStorage.setItem("completedDungeons", JSON.stringify(completedDungeons));
-    }
-
-    // 讀取進度
-    function loadDungeon() {
-        // 如果在副本中就讀取進度
-        const inDungeon = localStorage.getItem("inDungeon");
-        if (inDungeon) {
-            localStorage.setItem("npcName", inDungeon); // 用對話系統執行副本
-            showDialogue(); // 從上次的進度繼續
-        }
-        console.log(inDungeon);
-        return inDungeon;
     }
 

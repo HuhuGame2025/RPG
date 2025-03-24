@@ -57,7 +57,7 @@
             loadPartyData(); // 讀取隊伍資料
             showText('player'); // 顯示健康程度
             showCountDown(); // 顯示倒數天數
-            loadDungeon() || endDay(); // 讀取進度，如果沒在副本中就結束一天
+            loadEvent() || endDay(); // 讀取進度，如果沒在事件中就結束一天
             npcPreferences(); // NPC偏好設定
 
             localStorage.setItem("backgroundStyle", "url('../images/prison.jpg')"); // 儲存背景圖
@@ -440,9 +440,9 @@
 
         // 新的一天
         function newDay() {
-            let dungeon = "坐牢";
-            localStorage.setItem("inDungeon", dungeon); // 儲存副本
-            localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+            let event = "坐牢";
+            localStorage.setItem("inEvent", event); // 儲存事件
+            localStorage.setItem("npcName", event); // 用對話系統執行事件
             showDialogue("start");
         }
 
@@ -589,7 +589,7 @@
 
         // 一天結束
         function endDay() {
-            localStorage.removeItem("inDungeon"); // 清除副本
+            localStorage.removeItem("inEvent"); // 清除事件
             removeDialogue(); // 清除對話
 
             loadPartyData(); // 讀取隊伍資料
@@ -600,7 +600,7 @@
             document.getElementById("button-container").innerHTML = `
                 <button id="sleep-btn">🛌 睡覺</button>
             `;
-            document.getElementById("sleep-btn").addEventListener("click", function () {
+            document.getElementById("sleep-btn").addSwitchListener("click", function () {
                 // 犯罪值減少
                 let playerCrime = parseInt(localStorage.getItem("playerCrime")) || 0;
                 playerCrime --;
@@ -621,7 +621,7 @@
                 localStorage.removeItem("unlockCell3");
                 localStorage.removeItem("unlockCell4");
 
-                // 重置副本進度
+                // 重置事件進度
                 localStorage.removeItem("currentKey"); // 清除對話 key
 
                 // 所有同伴退出隊伍
@@ -655,7 +655,7 @@
                     document.getElementById("button-container").insertAdjacentHTML("beforeend", `
                         <button id="escape-btn">離開牢房</button>
                     `);
-                    document.getElementById("escape-btn").addEventListener("click", function () {
+                    document.getElementById("escape-btn").addSwitchListener("click", function () {
                         escape("離開牢房");
                     });
                 } else if (cell !== 1) {
@@ -688,10 +688,10 @@
                 document.getElementById("item-list").insertAdjacentHTML("beforeend", `
                     <button id="picklock-btn">用鐵絲開鎖</button>
                 `);
-                document.getElementById("picklock-btn").addEventListener("click", function () {
-                    let dungeon = "逃獄";
-                    localStorage.setItem("inDungeon", dungeon); // 儲存副本
-                    localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+                document.getElementById("picklock-btn").addSwitchListener("click", function () {
+                    let event = "逃獄";
+                    localStorage.setItem("inEvent", event); // 儲存事件
+                    localStorage.setItem("npcName", event); // 用對話系統執行事件
 
                     // 50% 機率成功
                     let randomValue = Math.random();
@@ -710,10 +710,10 @@
                 document.getElementById("item-list").insertAdjacentHTML("beforeend", `
                     <button id="unlock-btn">用鑰匙開鎖</button>
                 `);
-                document.getElementById("unlock-btn").addEventListener("click", function () {
-                    let dungeon = "逃獄";
-                    localStorage.setItem("inDungeon", dungeon); // 儲存副本
-                    localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+                document.getElementById("unlock-btn").addSwitchListener("click", function () {
+                    let event = "逃獄";
+                    localStorage.setItem("inEvent", event); // 儲存事件
+                    localStorage.setItem("npcName", event); // 用對話系統執行事件
 
                     // 必定成功
                     showUnlockResult(cell, "success");
@@ -754,9 +754,9 @@
 
         // 逃獄
         function escape(phase) {
-            let dungeon = "逃獄";
-            localStorage.setItem("inDungeon", dungeon); // 儲存副本
-            localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+            let event = "逃獄";
+            localStorage.setItem("inEvent", event); // 儲存事件
+            localStorage.setItem("npcName", event); // 用對話系統執行事件
 
             let randomValue = Math.random();
 

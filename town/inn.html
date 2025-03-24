@@ -42,7 +42,7 @@
     <!-- 對話區域 -->
     <div id="dialogue" class="main-content"></div>
 
-    <!-- 突發事件 -->
+    <!-- 突發開關 -->
     <p id="text"></p>
     <div class="menu">
         <div id="button-container"></div>
@@ -54,7 +54,7 @@
         window.onload = function() {
             loadPartyData(); // 讀取隊伍資料
             showTeamHealth(); // 顯示隊伍健康程度
-            loadDungeon(); // 讀取進度
+            loadEvent(); // 讀取進度
             npcPreferences(); // NPC偏好設定
             
             localStorage.setItem("backgroundStyle", "url('../images/inn.jpg')"); // 儲存背景圖
@@ -75,7 +75,7 @@
                         "抵抗": {
                             text: "賽恩似乎嘆了口氣，接著慢慢後退，離開了你。",
                             choices: [
-                                { text: "繼續睡", next: "", action: "(endEvent('賽恩不再夜襲'), retreat(), removeDialogue())" },
+                                { text: "繼續睡", next: "", action: "(switch('賽恩不再夜襲'), exitEvent(), removeDialogue())" },
                             ]
                         },
                         "允許": {
@@ -133,7 +133,7 @@
                         npc: "npc",
                         text: "回去睡吧，我不會再襲擊你了。",
                         choices: [
-                            { text: "那就好", next: "", action: "(endEvent('賽恩不再夜襲'), retreat(), removeDialogue(), showTeamHealth())" },
+                            { text: "那就好", next: "", action: "(switch('賽恩不再夜襲'), exitEvent(), removeDialogue(), showTeamHealth())" },
                             { text: "以後想吸血就直接說", next: "以後直說" },
                             { text: "我可以用血支付你的酬勞", next: "以後直說" },
                         ]
@@ -142,7 +142,7 @@
                             npc: "npc",
                             text: "你是無知才會這麼說。<br><br>如果你經常被我這種吸血鬼咬，你會被轉化成我的血奴，失去反抗我的能力。",
                             choices: [
-                                { text: "那當我沒說", next: "", action: "(endEvent('賽恩不再夜襲'), retreat(), removeDialogue(), showTeamHealth())" },
+                                { text: "那當我沒說", next: "", action: "(switch('賽恩不再夜襲'), exitEvent(), removeDialogue(), showTeamHealth())" },
                                 { text: "只要你拿捏好就行了", next: "拿捏好就行" },
                             ]
                         },
@@ -150,7 +150,7 @@
                             npc: "npc",
                             text: "閉嘴，你不明白。<br><br>我無法克制嗜血的慾望，你在我眼中只是食物，你應該感到畏懼……",
                             choices: [
-                                { text: "那還是算了", next: "", action: "(endEvent('賽恩不再夜襲'), retreat(), removeDialogue(), showTeamHealth())" },
+                                { text: "那還是算了", next: "", action: "(switch('賽恩不再夜襲'), exitEvent(), removeDialogue(), showTeamHealth())" },
                                 { text: "我相信你不會傷害我", next: "不會傷害我" },
                             ]
                         },
@@ -164,7 +164,7 @@
                         "退錢": {
                             text: "賽恩拿出你先前付給他的 $120，要你拿回去，接著就轉身離開了。",
                             choices: [
-                                { text: "繼續睡", next: "", action: "(endEvent('允許賽恩吸血'), endEvent('用血支付賽恩'), retreat(), removeDialogue(), showTeamHealth())" },
+                                { text: "繼續睡", next: "", action: "(switch('允許賽恩吸血'), switch('用血支付賽恩'), exitEvent(), removeDialogue(), showTeamHealth())" },
                             ]
                         },
                 
@@ -179,8 +179,8 @@
                         npc: "npc",
                         text: "醒了嗎？我來索取酬勞。",
                         choices: [
-                            { text: "來吧", next: "來吧", condition: "!isEnd('欠賽恩一次')", action: "bloodSucked()" },
-                            { text: "來吧", next: "來吧2", condition: "isEnd('欠賽恩一次')", action: "(bloodSucked(), bloodSucked(), endEvent('欠賽恩一次', false))" },
+                            { text: "來吧", next: "來吧", condition: "!isTrue('欠賽恩一次')", action: "bloodSucked()" },
+                            { text: "來吧", next: "來吧2", condition: "isTrue('欠賽恩一次')", action: "(bloodSucked(), bloodSucked(), switch('欠賽恩一次', false))" },
                             { text: "今天不行", next: "不行" },
                         ]
                     },
@@ -200,9 +200,9 @@
                         npc: "npc",
                         text: "什麼叫不行？你承諾了，我不會做白工的。",
                         choices: [
-                            { text: "我知道了，來吧", next: "來吧", condition: "!isEnd('欠賽恩一次')", action: "bloodSucked()" },
-                            { text: "我知道了，來吧", next: "來吧2", condition: "isEnd('欠賽恩一次')", action: "(bloodSucked(), bloodSucked(), endEvent('欠賽恩一次', false))" },
-                            { text: "抱歉，我今天真的不舒服", next: "不舒服", condition: "!isEnd('欠賽恩一次')" },
+                            { text: "我知道了，來吧", next: "來吧", condition: "!isTrue('欠賽恩一次')", action: "bloodSucked()" },
+                            { text: "我知道了，來吧", next: "來吧2", condition: "isTrue('欠賽恩一次')", action: "(bloodSucked(), bloodSucked(), switch('欠賽恩一次', false))" },
+                            { text: "抱歉，我今天真的不舒服", next: "不舒服", condition: "!isTrue('欠賽恩一次')" },
                             { text: "那你走吧", next: "叫他走" },
                         ]
                     },
@@ -210,7 +210,7 @@
                         npc: "npc",
                         text: "是嗎？<br><br>那好，但下次你必須補償我。",
                         choices: [
-                            { text: "好", next: "", action: "(endEvent('欠賽恩一次'), removeDialogue())" },
+                            { text: "好", next: "", action: "(switch('欠賽恩一次'), removeDialogue())" },
                         ]
                     },
                     "叫他走": {
@@ -311,15 +311,15 @@
             localStorage.removeItem("drinkingResults");
             localStorage.removeItem("drinkingEnd");
             
-            // 重置副本進度
+            // 重置事件進度
             localStorage.removeItem("currentKey"); // 清除對話 key
 
             resetHP(); // 完全恢復
-            checkAccident(); // 檢查是否有突發事件
+            checkAccident(); // 檢查是否有突發開關
             showTeamHealth(); // 顯示隊伍健康程度
         }
 
-        // 檢查是否有突發事件（只會發生一件，按照優先順序寫）
+        // 檢查是否有突發開關（只會發生一件，按照優先順序寫）
         function checkAccident() {
             const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
@@ -329,7 +329,7 @@
                 let nightWithSain = parseInt(localStorage.getItem("nightWithSain")) || 0;
             
                 // 賽恩首次襲擊
-                if (member && !isEnd('賽恩不再夜襲') && !isEnd('用血支付賽恩')) {
+                if (member && !isTrue('賽恩不再夜襲') && !isTrue('用血支付賽恩')) {
                     // 計算和賽恩過幾夜
                     if (nightWithSain < 3) { 
                         nightWithSain ++;
@@ -338,17 +338,17 @@
                     
                     // 第三次和賽恩過夜時襲擊
                     if (nightWithSain === 3) {  
-                        let dungeon = "賽恩";
+                        let event = "賽恩";
                         
-                        localStorage.setItem("inDungeon", dungeon);
-                        localStorage.setItem("npcName", dungeon);
+                        localStorage.setItem("inEvent", event);
+                        localStorage.setItem("npcName", event);
                         showDialogue("start");
                         return;
                     }
                 }
                 
                 // 用血支付賽恩
-                if (member && isEnd('用血支付賽恩')) {
+                if (member && isTrue('用血支付賽恩')) {
                     if (Math.random() <= 0.5) {  // 50% 機率吸血
                         localStorage.setItem("npcName", "賽恩");
                         showDialogue("日常吸血");
@@ -395,7 +395,7 @@
                     document.getElementById("button-container").innerHTML = `
                         <button id="fight-btn">⚔️ 戰鬥</button>
                     `;
-                    document.getElementById("fight-btn").addEventListener("click", function () {
+                    document.getElementById("fight-btn").addSwitchListener("click", function () {
                         let encounter = {
                             situation: 2,
                             enemyAdj: "",
@@ -424,7 +424,7 @@
                 // 如果是賽恩，吸 2 HP
                 playerHP -= 2;
 
-            } else if (npcName !== "賽恩" && member && isEnd('用血支付賽恩')) {
+            } else if (npcName !== "賽恩" && member && isTrue('用血支付賽恩')) {
                 // 如果是其他吸血鬼，但賽恩在隊伍中，且已與賽恩談好用血支付，他會阻止吸血
                 showDialogue("賽恩阻止");
 

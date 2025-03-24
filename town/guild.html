@@ -476,7 +476,7 @@
                 // 吸血鬼擄走的孩子
                 } else if (mission.id === "quest02") {
                     // 如果馬卡斯已死，就標記為完成
-                    if (isEnd('馬卡斯已死')) {
+                    if (isTrue('馬卡斯已死')) {
                         mission.status = "success";
                     } else {
                         mission.status = "";
@@ -610,7 +610,7 @@
                 localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
 
                 // 改變按鈕
-                let button = event.target;
+                let button = switch.target;
                 button.outerHTML = `<p class="note">進行中</p>`; // 替換按鈕
             }
 

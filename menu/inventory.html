@@ -225,7 +225,7 @@
                     let itemElement = itemDiv.querySelector(".column-container");
                     let hidedElement = itemDiv.querySelector(".hided");
 
-                    itemElement.addEventListener("click", () => {
+                    itemElement.addSwitchListener("click", () => {
                         hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
                     });
 

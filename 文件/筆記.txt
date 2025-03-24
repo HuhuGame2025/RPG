@@ -1,3 +1,14 @@
+事件→開關
+isEnd→isOn
+endEvent→switch
+event→switch
+Event→Switch
+
+
+副本→事件
+dungeon→event
+Dungeon→Event
+
 逃獄路線：
 1. 硬闖大門（完成）
 2. 變成老鼠逃往下水道

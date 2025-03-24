@@ -129,7 +129,7 @@
                     choices: [
                         { text: "你擅長什麼？", next: "了解" },
                         { text: "我想僱用你（$150）", next: "僱用", action: "hireCompanion()" },
-                        { text: "我想僱用你，用血支付", next: "僱用_用血支付", condition: "isEnd('允許賽恩吸血')", action: "(endEvent('用血支付賽恩'), hireCompanion())" },
+                        { text: "我想僱用你，用血支付", next: "僱用_用血支付", condition: "isTrue('允許賽恩吸血')", action: "(switch('用血支付賽恩'), hireCompanion())" },
                         { text: "再見", next: "", action: "removeDialogue()" },
                     ]
                 },
@@ -372,7 +372,7 @@
             document.getElementById("button-container").innerHTML = `
                 <button id="order-btn">送出菜單</button>
             `;
-            document.getElementById("order-btn").addEventListener("click", function () {
+            document.getElementById("order-btn").addSwitchListener("click", function () {
                 checkOrder();
             });
         }
@@ -464,7 +464,7 @@
                 document.getElementById("button-container").innerHTML = `
                     <button id="eat-btn">享用</button>
                 `;
-                document.getElementById("eat-btn").addEventListener("click", function () {
+                document.getElementById("eat-btn").addSwitchListener("click", function () {
                     // 加總料理的治療量
                     let totalHeal = orderedMeals.reduce((sum, meal) => sum + meal.heal, 0);
 
@@ -505,10 +505,10 @@
                         <button id="order-btn">繼續點餐</button>
                         <button id="leave-btn">離開座位</button>
                     `;
-                    document.getElementById("order-btn").addEventListener("click", function () {
+                    document.getElementById("order-btn").addSwitchListener("click", function () {
                         order();
                     });
-                    document.getElementById("leave-btn").addEventListener("click", function () {
+                    document.getElementById("leave-btn").addSwitchListener("click", function () {
                         location.reload();  // 重新加載當前頁面
                     });
 
@@ -621,7 +621,7 @@
                 <button id="drink-btn">🍺 喝一杯（$1）</button>
             `;
 
-            document.getElementById("drink-btn").addEventListener("click", function () {
+            document.getElementById("drink-btn").addSwitchListener("click", function () {
                 // 付酒錢
                 if (playerMoney >= cost) {
                     playerMoney -= cost;

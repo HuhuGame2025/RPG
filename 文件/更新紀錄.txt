@@ -408,3 +408,15 @@ encounter.html 有5種遇敵方式：
 「被吸血鬼俘虜的小孩」委託
 完成古堡副本，在副本中有機會被吸血鬼抓到地下莊園當血奴，或是被選為領主的僕人
 地下莊園逃脫法：在沃特的杯子裡加入哥布林血讓他嘔吐，主角就會被趕出莊園
+
+02
+更改函式名稱：
+事件→開關
+isEnd→isTrue
+endEvent→switch
+event→switch
+Event→Switch
+副本→事件
+dungeon→event
+Dungeon→Event
+retreat→exitEvent
