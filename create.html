@@ -1,0 +1,232 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>創建角色</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preload" href="images/field.jpg" as="image">
+    <link rel="preload" href="images/forest.jpg" as="image">
+    <link rel="preload" href="images/town.jpg" as="image">
+    <link rel="preload" href="images/inn.jpg" as="image">
+    <link rel="preload" href="images/guild.jpg" as="image">
+    <link rel="preload" href="images/tavern.jpg" as="image">
+    <link rel="preload" href="images/prison.jpg" as="image">
+    <link rel="preload" href="images/cabin.jpg" as="image">
+    <link rel="preload" href="images/cave.jpg" as="image">
+    <link rel="preload" href="images/camp.jpg" as="image">
+    <style>
+        body {
+            background-color: #000 !important; /* 背景顏色 */
+        }
+
+    </style>
+</head>
+<body>
+  
+    <div class="main-content">
+        <div class="header">    
+            <button class="exit-button" onclick="goBack()">〈 返回</button>
+            <h1>創建角色</h1>
+        </div>
+        <br>
+
+        <!-- 角色名稱 -->
+        <div class="container">
+            <label for="name">角色名稱：</label>
+            <input type="text" id="name" placeholder="輸入角色名稱" required>
+        </div>
+        <br>
+
+        <!-- 屬性調整區域 -->
+        <div class="stat-container">
+            <label for="con">🫀 體質：</label>
+            <button onclick="adjustStat('con', -1)">-</button>
+            <span id="con" class="stat-value">10</span>
+            <button onclick="adjustStat('con', 1)">+</button>
+            <span class="note" id="con-description"></span> <!-- 顯示描述 -->
+        </div>
+
+        <div class="stat-container">
+            <label for="str">⚔️ 力量：</label>
+            <button onclick="adjustStat('str', -1)">-</button>
+            <span id="str" class="stat-value">10</span>
+            <button onclick="adjustStat('str', 1)">+</button>
+            <span class="note" id="str-description"></span> <!-- 顯示描述 -->
+        </div>
+
+        <div class="stat-container">
+            <label for="dex">🏃 敏捷：</label>
+            <button onclick="adjustStat('dex', -1)">-</button>
+            <span id="dex" class="stat-value">10</span>
+            <button onclick="adjustStat('dex', 1)">+</button>
+            <span class="note" id="dex-description"></span> <!-- 顯示描述 -->
+        </div>
+
+        <div class="stat-container">
+            <label for="wis">👁️ 感知：</label>
+            <button onclick="adjustStat('wis', -1)">-</button>
+            <span id="wis" class="stat-value">10</span>
+            <button onclick="adjustStat('wis', 1)">+</button>
+            <span class="note" id="wis-description"></span> <!-- 顯示描述 -->
+        </div>
+
+        <div class="stat-container">
+            <label for="cha">✨ 魅力：</label>
+            <button onclick="adjustStat('cha', -1)">-</button>
+            <span id="cha" class="stat-value">10</span>
+            <button onclick="adjustStat('cha', 1)">+</button>
+            <span class="note" id="cha-description"></span> <!-- 顯示描述 -->
+        </div>
+
+        <!-- 顯示剩餘可分配點數 -->
+        <p>剩餘可分配點數：<span id="remainingPoints">0</span></p>
+
+        <!-- 創建角色按鈕 -->
+        <div class="menu">
+            <br>
+            <button onclick="createCharacter()">開始新的旅程</button>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // 當前的屬性值
+        let stats = {
+            str: 10,
+            dex: 10,
+            con: 10,
+            wis: 10,
+            cha: 10,
+        };
+
+        // 剩餘可分配點數
+        let remainingPoints = 0;
+
+        // 設定最大和最小值
+        const MIN_STAT = 5;
+        const MAX_STAT = 15;
+        const TOTAL_MAX = 50;
+
+        // 設定屬性描述函數
+        function getStatDescription(stat, value) {
+            let description = "";
+            switch (stat) {
+                case "con":
+                    if (value < 8) {
+                        description = "弱不禁風";
+                    } else if (value <= 12) {
+                        description = "中等";
+                    } else {
+                        description = "身強體壯";
+                    }
+                    break;
+                case "str":
+                    if (value < 8) {
+                        description = "軟弱無力";
+                    } else if (value <= 12) {
+                        description = "普通";
+                    } else {
+                        description = "孔武有力";
+                    }
+                    break;
+                case "dex":
+                    if (value < 8) {
+                        description = "動作笨拙";
+                    } else if (value <= 12) {
+                        description = "正常";
+                    } else {
+                        description = "身手矯捷";
+                    }
+                    break;
+                case "wis":
+                    if (value < 8) {
+                        description = "少一根筋";
+                    } else if (value <= 12) {
+                        description = "一般";
+                    } else {
+                        description = "明察秋毫";
+                    }
+                    break;
+                case "cha":
+                    if (value < 8) {
+                        description = "惹人厭惡";
+                    } else if (value <= 12) {
+                        description = "平凡";
+                    } else {
+                        description = "令人著迷";
+                    }
+                    break;
+            }
+            return description;
+        }
+
+        // 調整屬性值的函數
+        function adjustStat(stat, delta) {
+            // 檢查新值是否符合限制
+            const newValue = stats[stat] + delta;
+
+            // 計算總和
+            const total = stats.str + stats.dex + stats.con + stats.wis + stats.cha;
+
+            // 檢查新值是否在範圍內，且總和不超過30
+            if (newValue >= MIN_STAT && newValue <= MAX_STAT && total + delta <= TOTAL_MAX) {
+                stats[stat] = newValue;
+                document.getElementById(stat).textContent = newValue;
+                document.getElementById(stat + "-description").textContent = getStatDescription(stat, newValue);
+                remainingPoints -= delta;
+                document.getElementById("remainingPoints").textContent = remainingPoints;
+            }
+        }
+
+        // 創建角色的函數
+        function createCharacter() {
+            // 取得玩家的輸入資料
+            const name = document.getElementById("name").value;
+
+            // 確認角色資料是否填寫
+            if (name === "") {
+                alert("請輸入角色名稱");
+                return;
+            }
+
+            // 清除舊的遊戲資料
+            localStorage.clear();
+
+            // 儲存角色資料至 localStorage
+            localStorage.setItem("playerName", name);
+            localStorage.setItem("playerType", "冒險者");
+            localStorage.setItem("playerCon", stats.con);
+            localStorage.setItem("playerStr", stats.str);
+            localStorage.setItem("playerDex", stats.dex);
+            localStorage.setItem("playerWis", stats.wis);
+            localStorage.setItem("playerCha", stats.cha);
+            localStorage.setItem("playerTotalStr", stats.str);
+            localStorage.setItem("playerTotalDex", stats.dex);
+            localStorage.setItem("playerTotalCha", stats.cha);
+            localStorage.setItem("playerTotalArm", 0);
+            localStorage.setItem("playerHP", stats.con * 3);
+            localStorage.setItem("playerMaxHP", stats.con * 3);
+            localStorage.setItem("playerMoney", 1000); // 起始資金
+            localStorage.setItem("playerFame", 0); // 名聲
+            localStorage.setItem("wantedLevel", 0); // 通緝等級
+            
+            // 將主角加入隊伍
+            partyToTeamMember();
+
+            equip("player", "lootclothes01"); // 穿布衣
+
+            // 導向主遊戲頁面
+            window.location.href = "map.html"; // 假設這是遊戲主頁面的名稱
+        }
+
+        // 初始化頁面顯示描述
+        document.getElementById("con-description").textContent = getStatDescription("con", stats.con);
+        document.getElementById("str-description").textContent = getStatDescription("str", stats.str);
+        document.getElementById("dex-description").textContent = getStatDescription("dex", stats.dex);
+        document.getElementById("wis-description").textContent = getStatDescription("wis", stats.dex);
+        document.getElementById("cha-description").textContent = getStatDescription("cha", stats.dex);
+
+    </script>
+</body>
+</html>

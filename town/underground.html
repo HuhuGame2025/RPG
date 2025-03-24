@@ -1,0 +1,633 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地底莊園</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+        }
+
+    </style>
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="../menu/character.html">🎭<span>角色</span></a>
+        <a href="../menu/quest.html">📜<span>任務</span></a>
+        <a href="../menu/inventory.html">💰<span>物品</span></a>
+        <a href="../menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div id= "main" class="main-content">
+        <div class="header">
+            <button id="exit-button" class="exit-button hide" onclick="location.reload()">〈 離開</button>
+            <h1 id="title">地底莊園</h1>
+        </div>
+
+        <p id="text">這是一座位於地下深處的莊園，沒有陽光，只有植物和真菌散發的微光。</p>
+
+        <!-- 同伴列表 -->
+        <div id="companion-list"></div>
+
+        <!-- 地點選單 -->
+        <div id="location-menu" class="location-menu">
+            <button onclick="goToDorm()">🛌<br>宿舍</button>
+            <button onclick="goToFarm()">🌱<br>農場</button>
+            <button onclick="goToBrewhouse()">🧺<br>釀造坊</button>
+            <button onclick="goToDorm()">🪜<br>出口</button>
+        </div>
+
+         <!-- 選單 -->
+        <div id="button-container" class="menu">
+        </div>
+    </div>
+
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content"></div>
+
+    <script src="../script.js" defer></script>
+    <script>
+        // 畫面載入時
+        window.onload = function() {
+            loadPartyData(); // 讀取隊伍資料
+            loadDungeon(); // 讀取進度
+            npcPreferences(); // NPC偏好設定
+
+            localStorage.setItem("backgroundStyle", "url('../images/underground.jpg')"); // 儲存背景圖
+            loadBackground(); // 讀取背景
+        };
+
+        // 顯示文本
+        const texts = {
+            good: "精力充沛",
+            dead: "體力透支，無法繼續冒險",
+            bad: "還能勉強再撐一下",
+            okay: "目前還有體力",
+            manor: "這是一座位於地下深處的莊園，沒有陽光，只有植物和真菌散發的微光。",
+            dorm: "每個血奴有一間簡樸的個人房，會定時發放營養均衡的食物，戶外有寬敞的空間可以運動。",
+            farm: "這裡種植了大量的血葡萄，遠遠看過去一片鮮紅。一群哥布林農奴正在田裡工作。",
+            brewhouse: "這是釀造藥水的地方，一位吸血鬼釀造師正在指揮哥布林混合原料。",
+        };
+        
+        // 對話資料庫
+        const dialogueData = {
+            "斑戈": {
+                "start": {
+                    npc: "npc",
+                    text: "你是新來的血奴？隨意逛逛沒關係，不要跌倒擦傷了，主人會怪我們。",
+                    choices: [
+                        { text: "為什麼種這麼多血葡萄？", next: "關於作物" },
+                        { text: "為什麼是哥布林在耕種？", next: "關於哥布林" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "再見", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "關於作物": {
+                    npc: "npc",
+                    text: "這東西有多大的賺頭你知道嗎？這是治療藥水的原料。<br><br>對，你們人類最愛喝的藥水都是在這裡生產的，而且只有地底能生產。<br><br>這就是為什麼你們的公會永遠不敢動吸血鬼領主啊，哈哈！",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "關於哥布林": {
+                    npc: "npc",
+                    text: "為什麼不是獸人？或狼人？他們怎麼看都更適合來幹這種粗活。<br><br>大概是因為某些人一直在賣便宜的哥布林奴隸，還有冒險者一直在替他們抓吧。<br><br>嘿，等一下，你是不是有點眼熟？你以前是冒險者嗎？",
+                    choices: [
+                        { text: "你認錯了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "我是這裡的老大，負責管這群懶惰的廢物。<br><br>嚴格說來，我的階級應該比你更高吧，你只是一隻牲畜。<br><br>但主人把你們當寶貝呵護，因為你們流的血是紅的，不像我們這種綠血又髒又臭，比大便還不如。",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+            },
+
+            "克萊蒙": {
+                "start": {
+                    npc: "npc",
+                    text: "別碰任何東西，你洗過手了嗎？",
+                    choices: [
+                        { text: "你們在製作什麼？", next: "關於產品", condition: "!isEnd('開放釀造坊工作')" },
+                        { text: "你們在製作什麼？", next: "關於產品2", condition: "isEnd('開放釀造坊工作')" },
+                        { text: "這些哥布林怎麼樣？", next: "關於哥布林" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "再見", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                    "關於產品": {
+                        npc: "npc",
+                        text: "你是新來的吧？這裡是我的工坊，生產最高品質的治療藥水。<br><br>血葡萄含有豐富的生命魔力，能快速治癒傷勢，加上我的獨門配方更加有效。<br><br>當然，這裡也生產血葡萄酒，如果你沒嚐過一定要試試。",
+                        choices: [
+                            { text: "我想試試", next: "我想試試" },
+                            { text: "下次吧", next: "start" },
+                        ]
+                    },
+                    "關於產品2": {
+                        npc: "npc",
+                        text: "你是新來的吧？這裡是我的工坊，生產最高品質的治療藥水。<br><br>血葡萄含有豐富的生命魔力，能治癒傷勢，加上我的獨門配方效果更顯著。<br><br>當然，這裡也生產血葡萄酒。",
+                        choices: [
+                            { text: "原來如此", next: "start" },
+                        ]
+                    },
+                    "我想試試": {
+                        npc: "npc",
+                        text: "來，先感受它的香氣，再小口小口地飲用。<br><br>這一杯是送你的，如果你還想要，可以來幫我做點事。",
+                        choices: [
+                            { text: "（喝血葡萄酒）", next: "喝酒" },
+                        ]
+                    },
+                    "喝酒": {
+                        text: "你喝下那杯鮮紅的液體，一股血腥味充滿了你的口腔和鼻腔，讓你忍不住作嘔。",
+                        choices: [
+                            { text: "吞下去", next: "吞下去" },
+                            { text: "吐出來", next: "吐出來" },
+                        ]
+                    },
+                    "吞下去": {
+                        npc: "npc",
+                        text: "很棒吧？我還加了蠕蟲汁和幾種內臟提升腥味。<br><br>這一杯是送你的，如果你還想再喝，可以留下來幫我的忙。",
+                        choices: [
+                            { text: "知道了", next: "", action: "(endEvent('開放釀造坊工作'), removeDialogue(), goToBrewhouse())" },
+                        ]
+                    },
+                    "吐出來": {
+                        npc: "npc",
+                        text: "啊，這麼浪費……<br><br>嗆到了吧？就算好喝也不要喝得那麼急嘛。<br><br>這一杯是送你的，如果你還想再喝，可以留下來幫我的忙。",
+                        choices: [
+                            { text: "知道了", next: "", action: "(endEvent('開放釀造坊工作'), removeDialogue(), goToBrewhouse())" },
+                        ]
+                    },
+                    "關於哥布林": {
+                        npc: "npc",
+                        text: "這些笨蛋就是沒辦法按照比例去調配，我不得不在這裡親自監督。<br><br>希望領主能給我一些人類手下，至少人類看起來和聞起來都比較令人愉悅，像你一樣。",
+                        choices: [
+                            { text: "原來如此", next: "start" },
+                        ]
+                    },
+                    "了解": {
+                        npc: "npc",
+                        text: "我的本職是煉金術師，變成吸血鬼以後，就開始研究能代替人血的飲品。<br><br>畢竟很難確保獵物的血沒有被污染，或是脖子洗得夠乾淨……別擔心，不是說你。<br><br>最後的成品就是血葡萄酒，雖然效果比不上真正的血，但風味絕不遜色。",
+                        choices: [
+                            { text: "原來如此", next: "start" },
+                        ]
+                    },
+                "工作": {
+                    npc: "npc",
+                    text: "你想幫忙嗎？好，你要處理骯髒的東西，還是有毒的東西？",
+                    choices: [
+                        { text: "骯髒的東西", next: "骯髒的" },
+                        { text: "有毒的東西", next: "有毒的" },
+                        { text: "我給你血怎麼樣？", next: "給你血" },
+                    ]
+                },
+                //"工作2": {
+                //    npc: "npc",
+                //    text: "你想幫忙嗎？還有些骯髒的東西需要處理。",
+                //    choices: [
+                //        { text: "我來處理", next: "骯髒的" },
+                //        { text: "我給你血怎麼樣？", next: "給你血" },
+                //    ]
+                //},
+                //"工作3": {
+                //    npc: "npc",
+                //    text: "你想幫忙嗎？還有些有毒的東西需要處理。",
+                //    choices: [
+                //        { text: "我來處理", next: "有毒的" },
+                //        { text: "我給你血怎麼樣？", next: "給你血" },
+                //    ]
+                //},
+                //"工作4": {
+                //    npc: "npc",
+                //    text: "你來啦？我這裡已經沒什麼事需要幫忙了。",
+                //    choices: [
+                //        { text: "我給你血怎麼樣？", next: "給你血" },
+                //    ]
+                //},
+                    "骯髒的": {
+                        npc: "npc",
+                        text: "有個笨手笨腳的哥布林在倉庫打破了一罐藥水。<br><br>最糟的是，他踩到玻璃碎片，流了幾滴血。你知道綠血的味道，只要一點點就臭氣熏天。<br><br>請你幫我打掃到沒有任何臭味為止。",
+                        choices: [
+                            { text: "好的", next: "打掃倉庫" },
+                        ]
+                    },
+                    "打掃倉庫": {
+                        text: "你來到倉庫，這裡混雜著各種藥水的味道，但你並沒有覺得特別臭。<br><br>被打翻的藥水和玻璃碎片仍留在地上，其中一塊碎片沾上了綠色的液體。",
+                        choices: [
+                            { text: "開始打掃", next: "打掃倉庫2" },
+                            { text: "拿走沾到綠血的碎片", next: "偷綠血", action: "getItem('specialItem15')" },
+
+                        ]
+                    },
+                    "打掃倉庫2": {
+                        text: "你來到倉庫，這裡混雜著各種原料的味道，但你沒有覺得特別臭。<br><br>你將整間倉庫打掃了一遍，克萊蒙還是說有味道，於是你又打掃了一遍。<br><br>幾乎打掃了一整天後，克萊蒙才終於滿意，給了你一瓶血葡萄酒。",
+                        choices: [
+                            { text: "收下", next: "", action: "(endEvent('在莊園工作'), retreat(), endEvent('釀造坊打掃倉庫'), getItem('lootSupply02'), removeDialogue())" },
+                        ]
+                    },
+                    "偷綠血": {
+                        text: "你拿了一個密封罐，把沾到綠血的碎片裝進去帶走。",
+                        choices: [
+                            { text: "開始打掃", next: "打掃倉庫2" },
+                        ]
+                    },
+
+                    "有毒的": {
+                        npc: "npc",
+                        text: "我在開發新的魔藥，收集了一些幽靈菇，請你幫我磨成粉。<br><br>但別吃下去，生吃幽靈菇可能導致：頭暈目眩、看見幻覺、發瘋、出現無法解釋的行為。<br><br>清楚了嗎？",
+                        choices: [
+                            { text: "好的", next: "幽靈菇" },
+                        ]
+                    },
+                    "幽靈菇": {
+                        text: "順著克萊蒙的指示，你看見了一大桶幽靈菇。<br><br>克萊蒙轉身去忙其他事，留你自己工作。",
+                        choices: [
+                            { text: "開始磨粉", next: "幽靈菇2" },
+                            { text: "偷一朵幽靈菇", next: "偷幽靈菇", action: "getItem('specialItem16')" },
+                        ]
+                    },
+                    "幽靈菇2": {
+                        text: "你取出幽靈菇，一朵一朵切碎，放進陶缽磨成粉。<br><br>全部做完花了你一整天的時間，你的手痠到不行。<br><br>克萊蒙看了後點點頭，按照約定給了你一瓶血葡萄酒。",
+                        choices: [
+                            { text: "收下", next: "", action: "(endEvent('在莊園工作'), retreat(), endEvent('釀造坊處理幽靈菇'), getItem('lootSupply02'), removeDialogue())" },
+                        ]
+                    },
+                    "偷幽靈菇": {
+                        text: "你偷偷藏起了一朵幽靈菇，沒被看見。",
+                        choices: [
+                            { text: "開始磨粉", next: "幽靈菇2" },
+                        ]
+                    },
+
+                    "給你血": {
+                        npc: "npc",
+                        text: "給我血？真可愛。<br><br>你是我們的血奴，我不需要你的同意就能喝你的血。<br><br>不過你主動提出讓我很高興，我又怎麼能讓你失望呢？",
+                        choices: [
+                            { text: "（繼續）", next: "給你血2", action: "addPlayerHP(-5)" },
+                        ]
+                    },
+                    "給你血2": {
+                        text: "克萊蒙脫下眼鏡，咬了你的脖子，開始喝你的血。<br><br>哥布林走進來看見這一幕，愣住了，又小心翼翼地退出去。",
+                        choices: [
+                            { text: "（繼續）", next: "給你血3" },
+                        ]
+                    },
+                    "給你血3": {
+                        npc: "npc",
+                        text: "啊，太棒了，我必須好好研究怎麼重現這樣的血味。<br><br>要是領主看上你，把你調走了，我一定會想念這個味道的……<br><br>對了，這是答應給你的血葡萄酒，有空再過來喔。",
+                        choices: [
+                            { text: "謝謝", next: "", action: "(endEvent('在莊園工作'), retreat(), getItem('lootSupply02'), removeDialogue())" },
+                        ]
+                    },
+            },
+
+            "沃特": {
+                "start": {
+                    npc: "npc",
+                    text: "嗨，你好，我是來……用餐的。<br><br>那個，可以麻煩你把血倒在杯子裡嗎？我有消毒過的針。",
+                    choices: [
+                        { text: "好", next: "好" },
+                        { text: "為什麼？", next: "為什麼" },
+                    ]
+                },
+                "為什麼": {
+                    npc: "npc",
+                    text: "呃……我不習慣碰觸別人。你應該覺得很怪吧？<br><br>不要讓其他吸血鬼知道我沒有咬你，好嗎？他們會一直笑我……",
+                    choices: [
+                        { text: "好", next: "好" },
+                    ]
+                },
+                "好": {
+                    text: "沃特遞給你高腳杯和一根針，然後轉過身去，給你一點空間。",
+                    choices: [
+                        { text: "刺破手指", next: "倒血", action: "addPlayerHP(-5)" },
+                        { text: "倒入血葡萄酒", next: "倒酒", condition: "isItem('lootSupply02')", action: "loseItem('lootSupply02')" },
+                    ]
+                },
+                "倒血": {
+                    text: "你用針刺破手指，讓你的血流進杯子裡，盛滿一杯。",
+                    choices: [
+                        { text: "交給沃特", next: "交給沃特" },
+                        { text: "混入綠血", next: "混入綠血", condition: "isItem('specialItem15')", action: "loseItem('specialItem15')" },
+                        { text: "混入幽靈菇", next: "混入幽靈菇", condition: "isItem('specialItem16')", action: "loseItem('specialItem15')" },
+                    ]
+                },
+                "倒酒": {
+                    text: "趁沃特背對著你，你將血葡萄酒倒入杯中，希望他分辨不出來。",
+                    choices: [
+                        { text: "交給沃特", next: "交給沃特" },
+                        { text: "混入綠血", next: "混入綠血", condition: "isItem('specialItem15')", action: "loseItem('specialItem15')" },
+                        { text: "混入幽靈菇", next: "混入幽靈菇", condition: "isItem('specialItem16')", action: "loseItem('specialItem15')" },
+                    ]
+                },
+                "混入綠血": {
+                    text: "你把沾到哥布林血的玻璃碎片放進去攪一攪。",
+                    choices: [
+                        { text: "交給沃特", next: "交給沃特_綠血" },
+                    ]
+                },
+                "混入幽靈菇": {
+                    text: "你從幽靈菇上摳了一點粉末，加進杯裡。",
+                    choices: [
+                        { text: "交給沃特", next: "交給沃特_幽靈菇" },
+                    ]
+                },
+
+                "交給沃特": {
+                    text: "沃特接過高腳杯，慢慢地喝下。",
+                    choices: [
+                        { text: "（繼續）", next: "交給沃特2" },
+                    ]
+                },
+                "交給沃特2": {
+                    npc: "npc",
+                    text: "嗯，很好喝。<br><br>真是謝謝你，給你添麻煩了……希望下次來還可以遇到你。<br><br>那我走了，晚安。",
+                    choices: [
+                        { text: "晚安", next: "", action: "(retreat(), removeDialogue(), showTeamHealth())" },
+                    ]
+                },
+                "交給沃特_綠血": {
+                    text: "沃特接過高腳杯，喝了第一口，就皺起了眉頭。",
+                    choices: [
+                        { text: "（繼續）", next: "交給沃特_綠血2" },
+                    ]
+                },
+                "交給沃特_綠血2": {
+                    npc: "npc",
+                    text: "咳咳咳！這……這個味道……呃……<br><br>對不起，我喝不下去……",
+                    choices: [
+                        { text: "（繼續）", next: "交給沃特_綠血3" },
+                    ]
+                },
+                "交給沃特_綠血3": {
+                    text: "沃特跑出去嘔吐，引起了一陣騷動。<br><br>其他吸血鬼開始用嫌棄的眼光看你，有人說你有哥布林血統，有人說你是假冒人類的哥布林。",
+                    choices: [
+                        { text: "（繼續）", next: "交給沃特_綠血4" },
+                    ]
+                },
+                "交給沃特_綠血4": {
+                    text: "沒有吸血鬼願意吸你的血了。<br><br>最後，你被趕出莊園，恢復了自由之身。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "(completedDungeons('古堡'), retreat(), goTo('../map'), removeDialogue())" },
+                    ]
+                },
+                "交給沃特_幽靈菇": {
+                    text: "沃特接過高腳杯，慢慢地喝了一口，接著就狂飲起來。",
+                    choices: [
+                        { text: "（繼續）", next: "交給沃特_幽靈菇2" },
+                    ]
+                },
+                "交給沃特_幽靈菇2": {
+                    npc: "npc",
+                    text: "好……好棒……哈哈……",
+                    choices: [
+                        { text: "（繼續）", next: "交給沃特_幽靈菇3" },
+                    ]
+                },
+                "交給沃特_幽靈菇3": {
+                    text: "他放下杯子，舔著滿嘴的鮮血，狂亂的眼神飄向了你。",
+                    choices: [
+                        { text: "繼續觀察", next: "繼續觀察" },
+                        { text: "起身逃跑", next: "起身逃跑" },
+                    ]
+                },
+                "繼續觀察": {
+                    text: "沃特撲向你，像野獸一樣咬住你的脖子，瘋狂地吸血。<br><br>他的力氣大得驚人，不是人類能抵抗的。",
+                    choices: [
+                        { text: "尖叫", next: "尖叫" },
+                    ]
+                },
+                "尖叫": {
+                    text: "聽到你的尖叫，吸血鬼守衛衝進來，費了一番功夫才把沃特的牙齒從你身上拉開。<br><br>但你已經失血到頭暈眼花，或許再晚一點就要被活活吸乾了。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "(addPlayerHP(-15), retreat(), removeDialogue(), showTeamHealth())" },
+                    ]
+                },
+                "起身逃跑": {
+                    text: "你奪門而出，沃特大吼大叫地追著你，像是失去了理智。<br><br>其他血奴四處逃竄，但有一個不幸被沃特抓住，成了你的替代品。<br><br>最後，吸血鬼守衛趕到，好不容易才從沃特嘴下救出那個血奴。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "(retreat(), removeDialogue(), showTeamHealth())" },
+                    ]
+                },
+            },
+
+            "馬卡斯": {
+                "start": {
+                    npc: "npc",
+                    text: "你準備好服侍主人了嗎，血奴？",
+                    choices: [
+                        { text: "準備好了", next: "吸血" },
+                        { text: "我拒絕", next: "拒絕吸血" },
+                        { text: "我有些問題想問", next: "問問題" },
+                    ]
+                },
+                "問問題": {
+                    npc: "npc",
+                    text: "時間還早，就陪你聊聊吧。",
+                    choices: [
+                        { text: "你來這裡做什麼？", next: "來做什麼" },
+                        { text: "吸血鬼領主在哪？", next: "關於領主" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "和我說說吸血鬼的事", next: "關於吸血鬼" },
+                        { text: "沒有問題了", next: "start" },
+                    ]
+                },
+                "來做什麼": {
+                    npc: "npc",
+                    text: "這還用說？當然是來品嚐你的鮮血了。<br><br>別忘了是我選上你的，自從第一次見到你時我就很期待了。",
+                    choices: [
+                        { text: "還有其他問題", next: "問問題" },
+                    ]
+                },
+                "關於領主": {
+                    npc: "npc",
+                    text: "領主大人才不會來這種地方，這裡的血奴是用來供養他的後裔的。<br><br>只有出類拔萃的血奴能被選為領主大人的僕人，獲得服侍他的殊榮。",
+                    choices: [
+                        { text: "原來如此", next: "問問題" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "你不會以為我真的是個小孩吧？當我為領主大人征戰四方時，你的祖父母都還在包尿布呢。<br><br>領主大人在我十二歲時救了我，賜我新的生命，從那之後我已經陪伴了他一百年左右。<br><br>無論再過幾百年，我永遠都會為他效忠。",
+                    choices: [
+                        { text: "原來如此", next: "問問題" },
+                    ]
+                },
+                "關於吸血鬼": {
+                    npc: "npc",
+                    text: "首先，不要把你在野外遇到的下等吸血鬼和我們相提並論，那些只是被劣質血感染的可憐蟲。<br><br>我們是由賽爾瑞斯領主大人所挑選的貴族，他賜予我們強大的血脈，將我們變成他的後裔。<br><br>吸血鬼貴族擁有超凡力量，永生不死，是這世上無敵的存在。",
+                    choices: [
+                        { text: "原來如此", next: "問問題" },
+                    ]
+                },
+                "吸血": {
+                    text: "馬卡斯咬了你一口，他咬出來的傷口很小，但沒有因為他體型小就喝得比較少。<br><br>喝飽了血以後，他像飼主一樣拍拍你的頭，就離開了。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "(addPlayerHP(-5), retreat(), removeDialogue(), showTeamHealth())" },
+                    ]
+                },
+                "拒絕吸血": {
+                    text: "馬卡斯無視你的拒絕，一手掐住你的脖子，直接咬上來。<br><br>他的力氣非常大，與嬌小的外表截然不同。<br><br>像是作為懲罰，他讓你流失了比平時更多的血，然後扔下你離開了。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "(addPlayerHP(-7), retreat(), removeDialogue(), showTeamHealth())" },
+                    ]
+                },
+            },
+
+            "嚴肅的吸血鬼": {
+                "start": {
+                    text: "一個嚴肅的吸血鬼走進來，禮貌地請你坐下。<br><br>他咬了一個整齊的傷口，吸過血後還用手帕擦乾淨，不留下血跡。<br><br>離開前他再度禮貌地向你告辭。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "(addPlayerHP(-5), retreat(), removeDialogue(), showTeamHealth())" },
+                    ]
+                },
+            },
+
+            "飢餓的吸血鬼": {
+                "start": {
+                    text: "一個飢餓的吸血鬼走進來，迫不及待地張嘴咬你。<br><br>他連句話也不想和你說，只把你當成一餐飯，飽餐一頓就離開了。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "(addPlayerHP(-5), retreat(), removeDialogue(), showTeamHealth())" },
+                    ]
+                },
+            },
+
+            "餓過頭的吸血鬼": {
+                "start": {
+                    text: "一個吸血鬼搖搖晃晃地跑進來，顯然已經餓過頭了，一見到你就撲上來。<br><br>他粗暴地咬開你的脖子，讓你流了很多血，直到守衛提醒他別殺死血奴，他才不情不願地住手。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "(addPlayerHP(-10), retreat(), removeDialogue(), showTeamHealth())" },
+                    ]
+                },
+            },
+        };
+
+        // 前往宿舍
+        function goToDorm() {
+            // 隱藏地點選單
+            document.getElementById("location-menu").style.display = "none";    
+            document.getElementById("exit-button").style.display = "block"; // 顯示返回按鈕
+            document.getElementById("title").textContent = "宿舍"; // 更換標題
+            document.getElementById("text").textContent = texts.dorm; // 顯示地點說明
+            showTeamHealth(); // 顯示健康程度
+
+            // 顯示按鈕
+            document.getElementById("button-container").innerHTML = `
+                ${!isEnd('血奴被吸血') ?`
+                    <button id="vampire-btn">等吸血鬼來</button>
+                ` : "" }
+                ${isEnd('血奴被吸血') ?`
+                    <button id="sleep-btn">🛌 睡覺</button>
+                ` : "" }
+            `;
+
+            // 等吸血鬼來
+            if (document.getElementById("vampire-btn")) {
+                document.getElementById("vampire-btn").addEventListener("click", function () {
+                    // 定義吸血鬼
+                    const vampires = [ "沃特", "馬卡斯", "嚴肅的吸血鬼", "飢餓的吸血鬼", "餓過頭的吸血鬼" ];
+
+                    // 隨機選擇一個吸血鬼
+                    const randomVampire = vampires[Math.floor(Math.random() * vampires.length)];
+                    let dungeon = randomVampire;
+                    localStorage.setItem("inDungeon", dungeon); // 儲存副本
+                    localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+                    endEvent('血奴被吸血');
+                    goToDorm();
+                    showDialogue("start");
+                });
+            }
+
+            // 睡覺
+            if (document.getElementById("sleep-btn")) {
+                document.getElementById("sleep-btn").addEventListener("click", function () {
+                    // 重置酒館
+                    localStorage.removeItem("tavernClose"); // 重置打烊
+                    localStorage.removeItem("drinkingStart");
+                    localStorage.removeItem("drinkingResults");
+                    localStorage.removeItem("drinkingEnd");
+            
+                    // 通緝等級每天下降 1 級
+                    addWantedLevel(-1);
+
+                    // 重置副本進度
+                    localStorage.removeItem("currentKey"); // 清除對話 key
+
+                    // 重置莊園變數
+                    endEvent('在莊園工作', false);
+                    endEvent('血奴被吸血', false);
+
+                    resetHP(); // 完全恢復
+                    goToDorm();
+                });
+            }
+        }
+
+        // 前往農場
+        function goToFarm() {
+            // 隱藏地點選單
+            document.getElementById("location-menu").style.display = "none";    
+            document.getElementById("exit-button").style.display = "block"; // 顯示返回按鈕
+            document.getElementById("title").textContent = "農場"; // 更換標題
+            document.getElementById("text").textContent = texts.farm; // 顯示地點說明
+
+            // 顯示按鈕
+            document.getElementById("button-container").innerHTML = `
+                <button id="talk-btn">和農奴交談</button>
+            `;
+            document.getElementById("talk-btn").addEventListener("click", function () {
+                localStorage.setItem("npcName", "斑戈");
+                showDialogue("start");
+            });
+        }
+
+        // 前往釀造坊
+        function goToBrewhouse() {
+            // 隱藏地點選單
+            document.getElementById("location-menu").style.display = "none";    
+            document.getElementById("exit-button").style.display = "block"; // 顯示返回按鈕
+            document.getElementById("title").textContent = "釀造坊"; // 更換標題
+            document.getElementById("text").textContent = texts.brewhouse; // 顯示地點說明
+
+            // 顯示按鈕
+            document.getElementById("button-container").innerHTML = `
+                <button id="talk-btn">和釀造師交談</button>
+                ${isEnd('開放釀造坊工作') && !isEnd('在莊園工作') ?`
+                    <button id="work-btn">工作來獲得血葡萄酒</button>
+                ` : "" }
+            `;
+            // 交談
+            document.getElementById("talk-btn").addEventListener("click", function () {
+                localStorage.setItem("npcName", "克萊蒙");
+                showDialogue("start");
+            });
+            // 工作
+            if (document.getElementById("work-btn")) {
+                document.getElementById("work-btn").addEventListener("click", function () {
+                    let dungeon = "克萊蒙";
+                    localStorage.setItem("inDungeon", dungeon); // 儲存副本
+                    localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+                
+                    showDialogue("工作");
+
+                    //if (!isEnd('釀造坊打掃倉庫') && !isEnd('釀造坊處理幽靈菇')) {
+                    //    showDialogue("工作");
+                    //} else if (isEnd('釀造坊打掃倉庫') && isEnd('釀造坊處理幽靈菇')) {
+                    //    showDialogue("工作4");
+                    //} else if (isEnd('釀造坊處理幽靈菇')) {
+                    //    showDialogue("工作2");
+                    //} else if (isEnd('釀造坊打掃倉庫')) {
+                    //    showDialogue("工作3");
+                    //}                
+                });
+            }
+        }
+    </script>
+
+</body>
+</html>

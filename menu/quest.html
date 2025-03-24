@@ -1,0 +1,90 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任務</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            background-color: #000 !important; /* 背景顏色 */
+        }
+        
+
+
+    </style>
+</head>
+<body>
+    <!-- 返回按鈕 -->
+    <div class="button-bar header" id="buttonBar">
+        <button class="exit-button" onclick="goBack()">　〈 返回</button>
+        <h3>任務</h3>
+    </div>
+
+    <div class="main-content">
+        <!-- 任務列表 -->
+        <div id="list"></div>
+        <br>
+
+        <!-- Top按紐 -->
+        <button class="top-button" onclick="goTop()"></button>
+    </div>
+
+    <script src="../script.js"></script>
+    <script>
+    
+        // 頁面載入時
+        window.onload = function() {
+            getTakenMissions() // 讀取任務
+            npcPreferences(); // NPC偏好設定
+        };
+
+        // 讀取已承接的任務
+        function getTakenMissions() {
+            // 清空列表
+            const list = document.getElementById("list");
+            list.innerHTML = "";
+
+            let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
+
+            takenMissions.forEach(mission => {
+                let missionDiv = document.createElement("div");
+                missionDiv.classList.add("mission");
+
+                missionDiv.innerHTML = `
+                    <hr>
+                    <div class="item">
+                        <h3>📜 ${mission.name}</h3>
+                        ${mission.description}
+                        <p>報酬： $${mission.price}</p>
+                        <div class="menu">
+                            <button onclick="quitMission('${mission.id}')">放棄</button>
+                        </div>
+                    </div>
+                `;
+                list.appendChild(missionDiv);
+            });
+        }
+
+        // 放棄任務
+        function quitMission(missionId) {
+            // 先讓玩家確認是否要放棄
+            const isConfirmed = confirm("確定放棄任務嗎？");
+            if (!isConfirmed) {
+                return; // 如果玩家按「取消」，就不執行後續動作
+            }
+
+            let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
+
+            // 根據 id 移除任務
+            takenMissions = takenMissions.filter(m => m.id !== missionId);
+            localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
+
+            // 重新讀取
+            getTakenMissions();
+        }
+
+    </script>
+
+</body>
+</html>

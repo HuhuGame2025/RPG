@@ -1,0 +1,829 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>監獄</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+        }
+
+    </style>
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="../menu/character.html">🎭<span>角色</span></a>
+        <a href="../menu/quest.html">📜<span>任務</span></a>
+        <a href="../menu/inventory.html">💰<span>物品</span></a>
+        <a href="../menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div id= "main" class="main-content">
+        <div class="header">
+            <h1>監獄</h1>
+        </div>
+
+        <p id="text">這裡是你的牢房。</p>
+
+        <!-- 主角 -->
+        <div id="player" class="background">
+            <div class="column-container item">
+                <div class="column-name">
+                    <h4 id="playerName"></h4>
+                    <h4 class="hp"><span id="playerHP"></span> / <span id="playerMaxHP"></span></h4>
+                </div>
+                <div class="column">
+                    <span id="player-action" class="battle-text"></span>
+                </div>
+            </div>
+        </div>
+
+         <!-- 選單 -->
+        <div id="button-container" class="menu">
+            <button onclick="newDay()">醒來</button>
+        </div>
+    </div>
+
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content"></div>
+
+    <script src="../script.js" defer></script>
+    <script>
+        // 畫面載入時
+        window.onload = function() {
+            loadPartyData(); // 讀取隊伍資料
+            showText('player'); // 顯示健康程度
+            showCountDown(); // 顯示倒數天數
+            loadDungeon() || endDay(); // 讀取進度，如果沒在副本中就結束一天
+            npcPreferences(); // NPC偏好設定
+
+            localStorage.setItem("backgroundStyle", "url('../images/prison.jpg')"); // 儲存背景圖
+            loadBackground(); // 讀取背景
+
+        };
+
+        // 顯示文本
+        const texts = {
+            good: "精力充沛",
+            dead: "體力透支，無法繼續冒險",
+            bad: "還能勉強再撐一下",
+            okay: "目前還有體力",
+            releaseCountDown: (day) => `這裡是你的牢房，再過 ${day} 天出獄。`,
+            deathCountDown: (day) => `這裡是你的牢房，再過 ${day} 天就要執行絞刑。`,
+        };
+        
+        // 對話資料庫
+        const dialogueData = {
+            "坐牢": {
+                "start": {
+                    text: "監獄中的一天開始了，白天囚犯必須到採石場工作，到處都有守衛在巡邏。",
+                    choices: [
+                        { text: "開始工作", next: "", action: "work()" },
+                    ]
+                },
+
+                // 工作
+                "守衛看著": {
+                    text: "你拿起十字鎬，勤奮地挖石頭。<br><br>守衛正在盯著你這邊。",
+                    choices: [
+                        { text: "⛏️ 繼續工作", next: "", action: "work()" },
+                        { text: "🔍 到處調查", next: "", action: "search('搜索')" },
+                    ]
+                },
+                "守衛背對": {
+                    text: "你拿起十字鎬，勤奮地挖石頭。<br><br>守衛正在教訓你旁邊的囚犯，背對著你。",
+                    choices: [
+                        { text: "⛏️ 繼續工作", next: "", action: "work()" },
+                        { text: "🔍 到處調查", next: "", action: "search('搜索')" },
+                        { text: "翻守衛的口袋", next: "", action: "search('扒竊')" },
+                    ]
+                },
+                "守衛在附近": {
+                    text: "你拿起十字鎬，勤奮地挖石頭。<br><br>守衛在附近巡視。",
+                    choices: [
+                        { text: "⛏️ 繼續工作", next: "", action: "work()" },
+                        { text: "🔍 到處調查", next: "", action: "search('搜索')" },
+                    ]
+                },
+                "守衛不在": {
+                    text: "你拿起十字鎬，勤奮地挖石頭。<br><br>守衛離開了，現在沒有人盯著你。",
+                    choices: [
+                        { text: "⛏️ 繼續工作", next: "", action: "work()" },
+                        { text: "🔍 到處調查", next: "", action: "search('搜索')" },
+                    ]
+                },
+
+                // 調查
+                "發現鐵絲": {
+                    text: "你找到了一條鐵絲。",
+                    choices: [
+                        { text: "抬頭看", next: "", action: "guardReact()" },
+                    ]
+                },
+                "發現石頭": {
+                    text: "你撿到了一顆尖銳的石頭，情急時可以當武器。",
+                    choices: [
+                        { text: "抬頭看", next: "", action: "guardReact()" },
+                    ]
+                },
+                "發現錢": {
+                    text: "你發現了 ${price} 。",
+                    choices: [
+                        { text: "抬頭看", next: "", action: "guardReact()" },
+                    ]
+                },
+                "發現鑰匙": {
+                    text: "你發現了一串牢房的鑰匙。",
+                    choices: [
+                        { text: "抬頭看", next: "", action: "guardReact()" },
+                    ]
+                },
+                "沒發現": {
+                    text: "你並沒有發現什麼有用的東西。",
+                    choices: [
+                        { text: "⛏️ 繼續工作", next: "", action: "work()" },
+                    ]
+                },
+
+                // 守衛反應
+                "守衛發現": {
+                    text: "守衛怒斥一聲，鞭打你，沒收了你手上的物品。",
+                    choices: [
+                        { text: "⛏️ 繼續工作", next: "", action: "work()" },
+                    ]
+                },
+                "守衛沒發現": {
+                    text: "很幸運，沒人察覺到你在做什麼。",
+                    choices: [
+                        { text: "⛏️ 繼續工作", next: "", action: "work()" },
+                    ]
+                },
+
+                // 休息
+                "休息": {
+                    text: "休息時間到了，囚犯們拿到水和食物，維持體力以便下午繼續工作。",
+                    choices: [
+                        { text: "休息後繼續工作", next: "", action: "work()" },
+                    ]
+                },
+                "睡覺": {
+                    text: "一天的工作結束了，囚犯們被趕回牢房。",
+                    choices: [
+                        { text: "回到牢房", next: "", action: "endDay()" },
+                    ]
+                },
+            },
+
+            "逃獄": {
+                // 開鎖
+                "開鎖成功": {
+                    text: "你解開了牢房的門鎖。",
+                    choices: [
+                        { text: "離開牢房", next: "", action: "escape('離開牢房')" },
+                        { text: "留在牢房", next: "", action: "endDay()" },
+                    ]
+                },
+                "開鎖失敗": {
+                    text: "你撬不開這道鎖，弄壞了鐵絲。",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "endDay()" },
+                    ]
+                },
+
+                // 離開牢房
+                "走廊被發現": {
+                    text: "你踏出牢房時，巡邏的守衛正好從轉角走來，看到了你。",
+                    choices: [
+                        { text: "準備戰鬥", next: "走廊安全", action: "battle(2, '守衛', 1, 'town/prison.html')" },
+                    ]
+                },
+                "走廊安全": {
+                    text: "你來到了無人的走廊上。",
+                    choices: [
+                        { text: "查看 II 號牢房", next: "II 號牢房", action: "showKey(2)" },
+                        { text: "查看 III 號牢房", next: "III 號牢房", action: "showKey(3)" },
+                        { text: "查看 IV 號牢房", next: "IV 號牢房", action: "showKey(4)" },
+                        { text: "查看 V 號牢房", next: "V 號牢房" },
+                        { text: "前往監獄大門", next: "", action: "escape('前往大門')" },
+                        { text: "前往倉庫", next: "", action: "escape('前往倉庫')" },
+                        { text: "前往下水道", next: "", action: "escape('前往下水道')" },
+                        { text: "回到牢房", next: "", action: "endDay()" },
+                    ]
+                },
+
+                // 查看牢房
+                "II 號牢房": {
+                    npc: "II 號牢房囚犯",
+                    text: "嘿，你幫我開門，我們可以一起解決那些守衛。",
+                    choices: [
+                        { text: "離開", next: "走廊安全" },
+                    ]
+                },
+                "III 號牢房": {
+                    npc: "III 號牢房囚犯",
+                    text: "你是怎麼出去的？我也要出去！拜託！",
+                    choices: [
+                        { text: "離開", next: "走廊安全" },
+                    ]
+                },
+                "IV 號牢房": {
+                    npc: "艾德蒙",
+                    text: "噓……不要跟我說話，我不想惹上麻煩。",
+                    choices: [
+                        { text: "你怎麼會在這裡？", next: "問艾德蒙" },
+                        { text: "離開", next: "走廊安全" },
+                    ]
+                },
+                    "問艾德蒙": {
+                        npc: "艾德蒙",
+                        text: "關你屁事？不用你管。<br><br>這裡我很熟，我想出去的時候就會出去了，明白嗎？",
+                        choices: [
+                            { text: "離開", next: "被艾德蒙叫住", action: "showKey(4)" },
+                        ]
+                    },
+                    "被艾德蒙叫住": {
+                        npc: "艾德蒙",
+                        text: "喂喂喂！你走之前，留一把鑰匙還是什麼都好……<br><br>不要誤會，我不是在求你放我出去喔。",
+                        choices: [
+                            { text: "離開", next: "走廊安全" },
+                        ]
+                    },
+                "V 號牢房": {
+                    text: "這間牢房的門是特別的，看不到裡面，也沒有鑰匙孔。",
+                    choices: [
+                        { text: "離開", next: "走廊安全" },
+                    ]
+                },
+                "空牢房": {
+                    text: "牢房裡沒有人。",
+                    choices: [
+                        { text: "離開", next: "走廊安全" },
+                    ]
+                },
+
+                // 幫人開鎖
+                "幫人開鎖成功": {
+                    text: "你解開了牢房的門鎖，囚犯決定和你一起逃脫。",
+                    choices: [
+                        { text: "離開", next: "走廊安全", action: "prisonerJoin('囚犯')" },
+                    ]
+                },
+                "幫人開鎖失敗": {
+                    text: "你撬不開這道鎖，弄壞了鐵絲。",
+                    choices: [
+                        { text: "（繼續）", next: "走廊安全" },
+                    ]
+                },
+                "幫艾德蒙開鎖成功": {
+                    text: "你解開了牢房的門鎖。",
+                    choices: [
+                        { text: "離開", next: "艾德蒙加入", action: "prisonerJoin('艾德蒙')" },
+                    ]
+                },
+                "艾德蒙加入": {
+                    npc: "艾德蒙",
+                    text: "不錯嘛！哈哈，現在換我幫你了。",
+                    choices: [
+                        { text: "離開", next: "走廊安全" },
+                    ]
+                },
+
+                // 前往大門
+                "大門被發現": {
+                    text: "你朝大門的方向前進，在沒有掩蔽處的路上撞見了守衛。",
+                    choices: [
+                        { text: "準備戰鬥", next: "大門安全", action: "battle(2, '守衛', null, 'town/prison.html')" },
+                    ]
+                },
+                "大門安全": {
+                    text: "你來到了監獄大門前，有 4 名守衛看守著大門，想從這裡出去勢必要通過他們。<br><br>一旦衝出去，監獄就會進入警戒狀態，也就無法回頭了。",
+                    choices: [
+                        { text: "正面硬闖", next: "逃出大門", action: "battle(2, '守衛', 4, 'town/prison.html')" },
+                        { text: "回到走廊", next: "走廊安全" },
+                    ]
+                },
+                "逃出大門": {
+                    text: "你衝出監獄大門，奔向了自由，但城裡的守衛仍會繼續搜捕你。",
+                    choices: [
+                        { text: "回到外面", next: "", action: "escapeSuccess()" },
+                    ]
+                },
+
+                // 前往倉庫
+                "倉庫被發現": {
+                    text: "你朝倉庫的方向前進，卻正面撞上了守衛。",
+                    choices: [
+                        { text: "準備戰鬥", next: "大門安全", action: "battle(2, '守衛', null, 'town/prison.html')" },
+                    ]
+                },
+                "倉庫安全": {
+                    text: "你來到了倉庫，這裡存放著囚犯們被沒收的物品。",
+                    choices: [
+                        { text: "找到你的物品", next: "拿回物品", action: "itemsBack()" },
+                        { text: "回到走廊", next: "走廊安全" },
+                    ]
+                },
+                "倉庫安全_已拿回物品": {
+                    text: "你來到了倉庫，這裡存放著囚犯們被沒收的物品。",
+                    choices: [
+                        { text: "回到走廊", next: "走廊安全" },
+                    ]
+                },
+                "拿回物品": {
+                    text: "你找到一個箱子，裡面裝著你入獄時被沒收的物品和金錢。",
+                    choices: [
+                        { text: "回到走廊", next: "走廊安全" },
+                    ]
+                },
+
+                // 前往下水道
+                "下水道被發現": {
+                    text: "你朝下水道的方向前進，突然，一個守衛從後方叫住了你。",
+                    choices: [
+                        { text: "準備戰鬥", next: "大門安全", action: "battle(2, '守衛', 1, 'town/prison.html')" },
+                    ]
+                },
+                "下水道安全": {
+                    text: "你到了下水道入口，這裡被鐵柵欄圍了起來。",
+                    choices: [
+                        { text: "向鐵柵欄探頭", next: "看見商人" },
+                        { text: "回到走廊", next: "走廊安全" },
+                    ]
+                },
+                "看見商人": {
+                    text: "在陰暗的下水道中有一個佝僂的矮小身影，他注意到了你，朝你走過來。<br><br>是一個拖著背包的哥布林。",
+                    choices: [
+                        { text: "交談", next: "交談" },
+                        { text: "後退", next: "下水道安全" },
+                    ]
+                },
+
+                // 商人
+                "交談": {
+                    npc: "齊布",
+                    text: "你想要什麼？",
+                    choices: [
+                        { text: "讓我看看你的貨", next: "交易", action: "showShop(null, ['lootWeapon01', 'supply01', 'key01']);" },
+                        { text: "你是誰？", next: "關於是誰" },
+                        //{ text: "你在這裡做什麼？", next: "關於做什麼" },
+                        { text: "沒事", next: "下水道安全" },
+                    ]
+                },
+                "交易": {
+                    npc: "齊布",
+                    text: "來吧，在這裡沒什麼選擇，要買就別嫌貴。",
+                    choices: [
+                        { text: "不買了", next: "交談" },
+                    ]
+                },
+                "關於是誰": {
+                    npc: "齊布",
+                    text: "是拉茲老大叫我來的，因為你們這些死囚太絕望了，只要能弄到東西，不管多少錢你們都會付。<br><br>可是呢，我是有良心的，而且賺那麼多錢的意義在哪？還不是都被老大拿走。",
+                    choices: [
+                        { text: "原來如此", next: "交談" },
+                    ]
+                },
+                //"關於做什麼": {
+                //    npc: "齊布",
+                //    text: "我幫犯人傳話，一次 $10 。<br><br>你有什麼遺言嗎？或是藏寶的地點啊、劫獄的暗號啊，要我幫你轉告給誰嗎？",
+                //    choices: [
+                //        { text: "傳話", next: "", action: "passMessage()" },
+                //        { text: "不用了", next: "交談" },
+                //    ]
+                //},
+            },
+        };
+
+        // 可招募的囚犯資料庫
+        const prisoners = [
+            { name: "囚犯", type: "囚犯", description: "監獄裡的囚犯，為了逃獄暫時和你合作。", con:10, str:10, dex:10, wis:8, cha:8 },
+            { name: "艾德蒙", type: "囚犯", description: "不知道他做了什麼而被關在這裡，看來像是監獄的常客，為了逃獄暫時和你合作。", con:12, str:12, dex:10, wis:8, cha:8 },
+        ];
+
+        // 顯示健康程度
+        function showText(memberId) {
+            // 讀取隊伍資訊
+            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            const member = teamMember.find(m => m.id === memberId);
+
+            // 顯示文本
+            let actionElement = document.getElementById(`${memberId}-action`);
+            if (!actionElement) {
+                console.warn(`找不到ID為 ${memberId}-action 的元素`);
+                return;
+            }
+
+            if (member.HP === member.MaxHP) {
+                actionElement.textContent = texts.good; // 滿血
+            } else if (member.HP <= 0) {
+                actionElement.textContent = texts.dead; // 死亡
+            } else if (member.HP <= member.MaxHP * 0.5) {
+                actionElement.textContent = texts.bad; // 重傷
+            } else {
+                actionElement.textContent = texts.okay; // 輕傷
+            }
+        }
+
+        // 顯示倒數天數
+        function showCountDown() {
+            const prisonCountDown = parseInt(localStorage.getItem("prisonCountDown")) || 0;
+            const deathPenalty = localStorage.getItem("deathPenalty");
+            if (deathPenalty) {
+                document.getElementById("text").textContent = texts.deathCountDown(prisonCountDown);
+            } else {
+                document.getElementById("text").textContent = texts.releaseCountDown(prisonCountDown);
+            }
+        }
+
+        // 新的一天
+        function newDay() {
+            let dungeon = "坐牢";
+            localStorage.setItem("inDungeon", dungeon); // 儲存副本
+            localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+            showDialogue("start");
+        }
+
+        // 工作
+        function work() {
+            // 檢查這是第幾次，上午 2 次，下午 2 次
+            let timesCount = parseInt(localStorage.getItem("timesCount")) || 0;
+            timesCount ++;
+            localStorage.setItem("timesCount", timesCount);
+
+            if (timesCount === 3) {
+                showDialogue("休息");
+                return;
+            } else if (timesCount === 6) {
+                showDialogue("睡覺");
+                return;
+            }
+            
+            // 隨機決定守衛行動
+            let guardAction;
+            let randomValue = Math.random();
+            
+            if (randomValue < 0.1) {
+                guardAction = 1;
+                showDialogue("守衛看著");
+            } else if (randomValue < 0.3) {
+                guardAction = 2;
+                showDialogue("守衛背對");
+            } else if (randomValue < 0.7) {
+                guardAction = 3;
+                showDialogue("守衛在附近");
+            } else {
+                guardAction = 4;
+                showDialogue("守衛不在");
+            }
+
+            localStorage.setItem("guardAction", guardAction);
+        }
+
+        // 調查
+        function search(type) {
+            // 隨機決定調查結果
+            let searchResult;
+            let findMoney;
+            let randomValue = Math.random();
+            
+            // 如果是到處搜索
+            if (type === "搜索") {
+                if (randomValue <= 0.3) {
+                    searchResult = 1;
+                    getItem("loot10", 1);
+                    showDialogue("發現鐵絲");
+
+                } else if (randomValue <= 0.6) {
+                    searchResult = 2;
+                    getItem("lootWeapon13", 1);
+                    showDialogue("發現石頭");
+
+                } else if (randomValue <= 0.8) {
+                    searchResult = 3;
+                    findMoney = Math.floor(Math.random() * 5);
+                    getItem("$" + findMoney);
+                    showDialogue("發現錢", findMoney);
+
+                } else {
+                    searchResult = null;
+                    showDialogue("沒發現");
+                }
+
+            // 如果是翻守衛口袋
+            } else if (type === "扒竊") {
+                if (randomValue <= 0.5) {
+                    searchResult = 4;
+                    getItem("key01", 1);
+                    showDialogue("發現鑰匙");
+
+                } else {
+                    searchResult = 3;
+                    findMoney = 10 + Math.floor(Math.random() * 20); // $10 ~ $30
+                    getItem("$" + findMoney);
+                    showDialogue("發現錢", findMoney);
+                }
+            }
+
+            localStorage.setItem("searchResult", searchResult);
+            localStorage.setItem("findMoney", findMoney);
+        }
+
+        // 守衛反應
+        function guardReact() {
+            let caught;
+            const guardAction = parseInt(localStorage.getItem("guardAction"));
+            const searchResult = parseInt(localStorage.getItem("searchResult"));
+            const findMoney = parseInt(localStorage.getItem("findMoney")) || 0;
+
+            if (guardAction === 1) {
+                // 守衛面對主角，一定會發現
+                caught = "true";
+
+            } else if (guardAction === 2) {
+                // 守衛背對主角，30% 機率發現
+                let randomValue = Math.random();
+                if (randomValue <= 0.3) {
+                    caught = "true";
+                } else {
+                    caught = "false";
+                }
+
+            } else if (guardAction === 3) {
+                // 守衛在附近，15% 機率發現
+                let randomValue = Math.random();
+                if (randomValue <= 0.15) {
+                    caught = "true";
+                } else {
+                    caught = "false";
+                }
+
+            } else if (guardAction === 4) {
+                // 守衛不在，不會發現
+                caught = "false";
+            }
+
+            // 處理結果
+            if (caught === "true") {
+                // 被發現，沒收物品
+                if (searchResult === 1) {
+                    loseItem("loot10", 1);
+                } else if (searchResult === 2) {
+                    loseItem("lootWeapon13", 1);
+                } else if (searchResult === 3) {
+                    loseItem("$" + findMoney);
+                } else if (searchResult === 4) {
+                    loseItem("key01", 1);
+                }
+
+                addPlayerHP(-1) ; // 被鞭打
+                showDialogue("守衛發現");
+
+            } else {
+                // 沒被發現
+                showDialogue("守衛沒發現");
+            }
+        }
+
+        // 一天結束
+        function endDay() {
+            localStorage.removeItem("inDungeon"); // 清除副本
+            removeDialogue(); // 清除對話
+
+            loadPartyData(); // 讀取隊伍資料
+            showText('player'); // 顯示健康程度
+            showCountDown(); // 顯示倒數天數
+            
+            // 顯示睡覺按鈕
+            document.getElementById("button-container").innerHTML = `
+                <button id="sleep-btn">🛌 睡覺</button>
+            `;
+            document.getElementById("sleep-btn").addEventListener("click", function () {
+                // 犯罪值減少
+                let playerCrime = parseInt(localStorage.getItem("playerCrime")) || 0;
+                playerCrime --;
+                localStorage.setItem("playerCrime", playerCrime);
+
+                // 刑期減少
+                let prisonCountDown = parseInt(localStorage.getItem("prisonCountDown")) || 0;
+                prisonCountDown --;
+                localStorage.setItem("prisonCountDown", prisonCountDown);
+            
+                // 重置監獄內變數
+                localStorage.removeItem("timesCount");
+                localStorage.removeItem("guardAction");
+                localStorage.removeItem("searchResult");
+                localStorage.removeItem("findMoney");
+                localStorage.removeItem("unlockCell1");
+                localStorage.removeItem("unlockCell2");
+                localStorage.removeItem("unlockCell3");
+                localStorage.removeItem("unlockCell4");
+
+                // 重置副本進度
+                localStorage.removeItem("currentKey"); // 清除對話 key
+
+                // 所有同伴退出隊伍
+                removeCompanion("companion3");
+                removeCompanion("companion2");
+                removeCompanion("companion1");
+
+                // 重置酒館
+                localStorage.removeItem("tavernClose"); // 重置打烊
+                localStorage.removeItem("drinkingStart");
+                localStorage.removeItem("drinkingResults");
+                localStorage.removeItem("drinkingEnd");
+
+                resetHP(); // 完全恢復
+                loadPartyData(); // 讀取隊伍資料
+                showText('player'); // 顯示健康程度
+                showCountDown(); // 顯示倒數天數
+                newDay();
+            });
+
+            showKey(); // 顯示開鎖工具
+        }
+
+        // 顯示開鎖工具
+        function showKey(cell = 1) {
+            // 檢查這間牢房是否已解鎖
+            const unlockCell = localStorage.getItem("unlockCell" + cell);
+            if (unlockCell) {
+                if (cell === 1) {
+                    // 如果是自己的牢房，添加離開牢房的按鈕
+                    document.getElementById("button-container").insertAdjacentHTML("beforeend", `
+                        <button id="escape-btn">離開牢房</button>
+                    `);
+                    document.getElementById("escape-btn").addEventListener("click", function () {
+                        escape("離開牢房");
+                    });
+                } else if (cell !== 1) {
+                    // 如果是別人的牢房，解鎖後人就不在牢房裡了
+                    showDialogue("空牢房");
+                }
+                return; // 不顯示開鎖工具
+            }
+
+            // 檢查並建立 item-list 容器
+            document.getElementById("dialogue").style.display = "block";
+            let container = document.getElementById("dialogue"); // 插入到對話區域
+            let itemList = document.getElementById("item-list");
+            if (!itemList) { // 如果沒有容器就建立
+                itemList = document.createElement("div");
+                itemList.id = "item-list";
+                itemList.classList.add("menu");
+                container.appendChild(itemList);
+            }
+            itemList.innerHTML = ""; // 先清空容器
+
+            // 讀取主角物品
+            const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            let item;
+
+            // 如果有鐵絲
+            item = playerItems.find(i => i === "loot10")
+            if (item) {
+                // 顯示開鎖按鈕
+                document.getElementById("item-list").insertAdjacentHTML("beforeend", `
+                    <button id="picklock-btn">用鐵絲開鎖</button>
+                `);
+                document.getElementById("picklock-btn").addEventListener("click", function () {
+                    let dungeon = "逃獄";
+                    localStorage.setItem("inDungeon", dungeon); // 儲存副本
+                    localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+
+                    // 50% 機率成功
+                    let randomValue = Math.random();
+                    if (randomValue <= 0.5) {
+                        showUnlockResult(cell, "success");
+                    } else {
+                        showUnlockResult(cell, "fail");
+                    }
+                });
+            }
+
+            // 如果有鑰匙
+            item = playerItems.find(i => i === "key01")
+            if (item) {
+                // 顯示開鎖按鈕
+                document.getElementById("item-list").insertAdjacentHTML("beforeend", `
+                    <button id="unlock-btn">用鑰匙開鎖</button>
+                `);
+                document.getElementById("unlock-btn").addEventListener("click", function () {
+                    let dungeon = "逃獄";
+                    localStorage.setItem("inDungeon", dungeon); // 儲存副本
+                    localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+
+                    // 必定成功
+                    showUnlockResult(cell, "success");
+                });
+            }
+        }
+
+        // 顯示開鎖結果
+        function showUnlockResult(cell = 1, result) {
+            // 成功
+            if (result === "success") { 
+                if (cell === 1) { 
+                    // 主角的牢房
+                    localStorage.setItem("unlockCell1", "true");
+                    showDialogue("開鎖成功");
+                } else if (cell === 4) { 
+                    // 艾德蒙的牢房
+                    localStorage.setItem("unlockCell4", "true");
+                    showDialogue("幫艾德蒙開鎖成功");
+                } else {
+                    // 其他人的牢房
+                    localStorage.setItem("unlockCell" + cell, "true");
+                    showDialogue("幫人開鎖成功");
+                }
+
+            //失敗
+            } else if (result === "fail") { 
+                loseItem("loot10", 1); // 弄壞鐵絲
+                if (cell === 1) { 
+                    // 主角的牢房
+                    showDialogue("開鎖失敗");
+                } else {
+                    // 其他人的牢房
+                    showDialogue("幫人開鎖失敗");
+                }
+            }
+        }
+
+        // 逃獄
+        function escape(phase) {
+            let dungeon = "逃獄";
+            localStorage.setItem("inDungeon", dungeon); // 儲存副本
+            localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+
+            let randomValue = Math.random();
+
+            if (phase === '離開牢房') {
+                if (randomValue <= 0.3) {
+                    showDialogue('走廊被發現'); // 30% 機率被發現
+                } else {
+                    showDialogue('走廊安全');
+                }
+
+            } else if (phase === '前往大門') {
+                if (randomValue <= 0.6) {
+                    showDialogue('大門被發現'); // 60% 機率被發現
+                } else {
+                    showDialogue('大門安全');
+                }
+
+            } else if (phase === '前往倉庫') {
+                if (randomValue <= 0.3) {
+                    showDialogue('倉庫被發現'); // 30% 機率被發現
+                } else {
+                    // 檢查有沒有被沒收的物品
+                    const backupMoney = parseInt(localStorage.getItem("playerMoney-backup")) || 0;
+                    const backupItems = JSON.parse(localStorage.getItem("playerItems-backup")) || [];
+                    if (backupMoney > 0 || backupItems) {
+                        showDialogue('倉庫安全');
+                    } else {
+                        showDialogue('倉庫安全_已拿回物品');
+                    }
+                }
+
+            } else if (phase === '前往下水道') {
+                if (randomValue <= 0.1) {
+                    showDialogue('下水道被發現'); // 10% 機率被發現
+                } else {
+                    showDialogue('下水道安全');
+                }
+            }
+        }
+
+        // 囚犯加入隊伍
+        function prisonerJoin(npcName) {
+            // 找到這個同伴的資料
+            let companion = prisoners.find(p => p.name === npcName);
+            addCompanion(companion); // 添加為同伴
+        }
+
+        // 逃獄成功
+        function escapeSuccess() {
+            // 主角的身分改為冒險者
+            localStorage.setItem("playerType", "冒險者");
+            partyToTeamMember();
+
+            // 通緝等級設為當前犯罪值
+            const playerCrime = parseInt(localStorage.getItem("playerCrime")) || 0;
+            localStorage.setItem("wantedLevel", playerCrime);
+
+            // 所有同伴退出隊伍
+            removeCompanion("companion3");
+            removeCompanion("companion2");
+            removeCompanion("companion1");
+
+            // 跳轉到城鎮
+            window.location.href = "../town.html";
+        }
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,282 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-6">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>遭遇</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+
+
+    <!-- 主要內容區域 -->
+    <div class="main-content">
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+
+        // 載入頁面後執行
+        window.onload = function() {
+            loadPartyData(); // 載入隊伍資料
+            initializeTeam(); // 上場成員初始化
+            rollSituation(); // 抽選遇敵方式
+            rollEnemy(); // 抽選敵人
+            scene(); // 跳轉頁面
+        };
+
+        // 上場成員初始化
+        function initializeTeam() {
+            // 讀取隊伍成員
+            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            
+            // 將活著的成員加入上場成員
+            let presentMember = teamMember.filter(member => member.HP > 0);
+
+            // 儲存上場成員
+            localStorage.setItem("presentMember", JSON.stringify(presentMember));
+
+            // 將上場成員設為可行動成員
+            localStorage.setItem("actableMember", JSON.stringify(presentMember));
+
+            // 清空逃跑隊伍
+            localStorage.removeItem("escapeMember");
+
+            // 顯示上場成員的按鈕
+            presentMember.forEach((member, index) => {
+                localStorage.setItem(`${presentMember[index].id}-btn-show`, 'true'); // 顯示按鈕
+            });
+
+            // 檢查是否顯示隊伍按鈕
+            if (localStorage.getItem("actableMember").length < 2) {
+                // 如果可行動的隊員不到 2 個，隱藏隊伍按鈕
+                localStorage.removeItem("team-btn-show");
+            } else {
+                // 否則，顯示隊伍按鈕
+                localStorage.setItem("team-btn-show", 'true');
+            }
+
+            return presentMember; // 回傳隊伍陣列
+        }
+
+        // 抽選隨機情況
+        function rollSituation() {
+            // 讀取地點
+            playerLocation = localStorage.getItem("playerLocation");
+
+            // 讀取上次的情況
+            let situation = parseInt(localStorage.getItem("situation"));
+
+            let situationChances;
+            // 1 = 平安無事
+            // 2 = 一般遇敵（我方先攻）
+            // 3 = 被偷襲（敵人先攻）
+            // 4 = 發現無防備的敵人（我方第一回合攻擊、逃跑100%成功）
+            // 5 = 被跟蹤（再繼續探索會被偷襲）
+            // 6 = 巡邏隊
+            // 7 = 被襲擊的路人
+            // 8 = 哥布林商人
+            
+            // 定義不同地點的情況機率
+            const situationProbabilities = {
+                field: { // 原野
+                    1: 10,
+                    2: 20,
+                    3: 10,
+                    4: 30,
+                    5: 10,
+                    6: 5,
+                    7: 10,
+                    8: 5,
+                },  
+                forest: { // 森林
+                    1: 5,
+                    2: 30,
+                    3: 20,
+                    4: 15,
+                    5: 10,
+                    6: 5,
+                    7: 10,
+                    8: 5,
+                },  
+                tracked: { // 被跟蹤後，80% 被偷襲
+                    1: 5,
+                    3: 80,
+                    5: 15,
+                } 
+            };
+
+            // 選擇對應地點的機率表
+            const probabilities = (situation === 5) ? situationProbabilities.tracked : situationProbabilities[playerLocation];
+
+            // 將機率轉換成陣列範圍
+            const weightedSituations = [];
+            Object.entries(probabilities).forEach(([key, weight]) => {
+                weightedSituations.push(...Array(weight).fill(Number(key)));
+            });
+
+            // 隨機選擇一種情況
+            situation = weightedSituations[Math.floor(Math.random() * weightedSituations.length)];
+            //situation = 8; // 測試用
+
+            // 如果有指定遭遇
+            const encounter = JSON.parse(localStorage.getItem("encounter"));
+            if (encounter) {
+                // 使用指定的情況
+                situation = encounter.situation; 
+            }
+
+            // 儲存到 localStorage
+            localStorage.setItem("situation", situation);
+        }
+
+        // 敵人資料庫
+        const enemies = [
+            // 人形
+            { name: "盜賊", type: "人形", con: 10, str: 10, dex: 12, wis: 10, cha: 10, action: "專心數著搶來的錢", actionBattle: "亮出手中的匕首", description: "欺善怕惡，到處打劫旅行者的盜賊。", weaponId: "weapon01", armorId: "armor01", money: 15 },
+            { name: "哥布林", type: "人形", con: 5, str: 6, dex: 12, wis: 12, cha: 5, action: "坐在地上摳著小腳", actionBattle: "胡亂揮舞棍棒", description: "奸詐狡猾的哥布林，身高只有成人的一半。", weaponId: "lootWeapon11", armorId: "lootArmor11", money: 5 },
+            { name: "獸人", type: "人形", con: 16, str: 16, dex: 8, wis: 10, cha: 8, action: "在保養自己的武器", actionBattle: "舉起了沉重的戰斧", description: "壯碩又兇悍的獸人，仗著自身的武力，相當瞧不起人。" , weaponId: "lootWeapon05", armorId: "lootArmor01", money: 10 },
+            { name: "狼人", type: "人形", con: 14, str: 18, dex: 12, wis: 7, cha: 6, action: "懶洋洋地趴在地上", actionBattle: "發出凶狠的咆哮聲", description: "充滿野性的原生狼人，能化身為人，但智力似乎和狼差不多。" },
+            { name: "吸血鬼", type: "人形", con: 10 , str: 12, dex: 18, wis: 14, cha: 16, action: "在樹下躲太陽", actionBattle: "露出尖銳的獠牙", description: "低等吸血鬼，徘迴在夜晚的森林中，狩獵迷途之人。", armorId: "clothes01", money: 50 },
+            { name: "小仙子", type: "人形", con: 1 , str: 1, dex: 14, wis: 10, cha: 14, action: "在花叢中飛舞", actionBattle: "發出施展魔法的光芒", description: "只有手掌大小的仙子，長著透明的翅膀，十分調皮。", loot:"loot03" },
+            { name: "巨魔", type: "人形", con: 25, str: 20, dex: 8, wis: 8, cha: 3, action: "在吃剩的骨頭旁邊打盹", actionBattle: "踏著笨重的步伐走來", weaponId: "lootWeapon12", armorId: "lootArmor12" },
+
+            // 野獸
+            { name: "蠕蟲", type: "野獸", con: 3, str: 3, dex: 8, wis: 0, cha: 0, action: "在地上捲成一球", actionBattle: "扭動著長長的身體", loot:"lootSupply01" },
+            { name: "狐狸", type: "野獸", con: 5, str: 5, dex: 14, wis: 3, cha: 8, action: "正在舔自己的毛", actionBattle: "警戒地圍著你跑來跑去", loot:"loot05" },
+            { name: "骷髏", type: "野獸", con: 6, str: 6, dex: 6, wis: 0, cha: 0, action: "死在地上", actionBattle: "搖搖晃晃地站了起來", weaponId: "lootWeapon02", armorId: "lootArmor02" },
+            { name: "火蜥蜴", type: "野獸", con: 8, str: 12, dex: 12, wis: 3, cha: 2, action: "正悠閒地曬太陽", actionBattle: "用後腿站起來奔跑", loot:"loot02" },
+            { name: "野狼", type: "野獸", con: 10, str: 14, dex: 13, wis: 4, cha: 5, action: "正在用爪子挖土", actionBattle: "虎視眈眈地盯著你", loot:"loot04" },
+            { name: "食人花", type: "野獸", con: 14, str: 18, dex: 6, wis: 0, cha: 3, action: "靜靜地隨風擺動", actionBattle: "張開了血盆大口", loot:"loot08" },
+            { name: "巨型蜘蛛", type: "野獸", con: 25, str: 16, dex: 12, wis: 4, cha: 0, action: "處於靜止狀態", actionBattle: "八條腿高速爬行過來", loot:"loot06" },
+            { name: "獅鷲", type: "野獸", con: 30, str: 25, dex: 16, wis: 6, cha: 6, action: "停在岩石上休息", actionBattle: "在空中盤旋", loot:"loot09" },
+            { name: "樹妖", type: "野獸", con: 50, str: 25, dex: 4, wis: 0, cha: 0, action: "看似普通的樹", actionBattle: "樹枝緩慢地動了起來", loot:"loot07" },
+            { name: "龍", type: "野獸", con: 60, str: 50, dex: 16, wis: 15, cha: 0, action: "凝視著遠方", actionBattle: "目光如炬地盯著你", loot:"loot01" },
+            
+            // 特殊敵人
+            { name: "守衛", type: "人形", con: 12, str: 12, dex: 12, wis: 12, cha: 10, action: "正在巡視四周", actionBattle: "拔出了劍", weaponId: "weapon03", armorId: "armor03", special: true },
+            { name: "食人花幼苗", type: "野獸", con: 7, str: 9, dex: 6, wis: 0, cha: 0, action: "靜靜地隨風擺動", actionBattle: "張開了血盆大口", special: true },
+            { name: "骷髏守衛", type: "野獸", con: 6, str: 6, dex: 6, wis: 0, cha: 0, action: "死在地上", actionBattle: "搖搖晃晃地站了起來", weaponId: "lootWeapon03", armorId: "lootArmor05", special: true },
+
+        ];
+
+        // 形容詞庫
+        const adjs = ["平凡", "醜陋", "猙獰", "英俊", "美豔", "清秀", "蒼白", "黝黑", "刀疤", "年輕", "年長", "滄桑", "纖細", "圓潤", "壯碩", "矮小", "高大"];
+        
+
+        // 抽選敵人種類和數量
+        function rollEnemy() {
+            // 過濾掉特殊敵人
+            const normalEnemies = enemies.filter(enemy => !enemy.special);
+
+            // 隨機選擇一種敵人
+            let randomIndex = Math.floor(Math.random() * normalEnemies.length);
+            let selectedEnemy = normalEnemies[randomIndex];
+            //selectedEnemy = enemies[16]; // 測試用
+
+            // 使用加權隨機決定敵人數量
+            let enemyCount;
+            let randomValue = Math.random();
+            
+            if (randomValue < 0.5) {
+                enemyCount = 1; // 50%
+            } else if (randomValue < 0.85) {
+                enemyCount = 2; // 35%
+            } else if (randomValue < 0.95) {
+                enemyCount = 3; // 10%
+            } else {
+                enemyCount = 4; // 5%
+            }
+
+            // 如果有指定遭遇
+            const encounter = JSON.parse(localStorage.getItem("encounter"));
+            if (encounter) {
+                // 使用指定的敵人（只要指定的名字中包含資料庫中的名字即可）
+                selectedEnemy = enemies.find(e => encounter.enemyName.includes(e.name)); 
+            }
+            if (encounter && encounter.enemyCount) {
+                // 使用指定的數量
+                enemyCount = encounter.enemyCount; 
+            }
+
+
+            // 建立敵人陣列（所有敵人都是相同種類）
+            let enemiesEncountered = [];
+            for (let i = 0; i < enemyCount; i++) {
+                let adjIndex = Math.floor(Math.random() * adjs.length); // 隨機選擇一個形容詞
+                let adj = adjs[adjIndex];
+
+                // 如果有指定形容詞
+                const encounter = JSON.parse(localStorage.getItem("encounter"));
+                if (encounter && encounter.enemyAdj === "none") {
+                    adj = ""; // 不加形容詞
+                } else if (encounter && encounter.enemyAdj === encounter.enemyName) {
+                    adj = encounter.enemyName.replace(selectedEnemy.name, ""); // 從名字取出形容詞
+                } else if (encounter && encounter.enemyAdj) {
+                    adj = encounter.enemyAdj; // 使用指定的形容詞
+                }   
+
+                // 根據裝備ID找到敵人的裝備資料
+                const weapon = itemDatabase.find(item => item.id === selectedEnemy.weaponId) || { str: 0, arm: 0, dex: 0 };
+                const armor = itemDatabase.find(item => item.id === selectedEnemy.armorId) || { str: 0, arm: 0, dex: 0 };
+
+                selectedEnemy.weapon = weapon;
+                selectedEnemy.armor = armor;
+
+                // 計算敵人穿戴裝備後的總屬性
+                selectedEnemy.totalStr = (selectedEnemy.str || 0) + (weapon.str || 0) + (armor.str || 0);
+                selectedEnemy.totalArm = (selectedEnemy.arm || 0) + (weapon.arm || 0) + (armor.arm || 0);
+                selectedEnemy.totalDex = (selectedEnemy.dex || 0) + (weapon.dex || 0) + (armor.dex || 0);
+
+                // 添加敵人資料並設定初始的HP和MaxHP
+                enemiesEncountered.push({
+                    name: selectedEnemy.name,
+                    adj: adj, // 形容詞         
+                    type: selectedEnemy.type,
+                    weaponId: selectedEnemy.weaponId,
+                    armorId: selectedEnemy.armorId,
+                    con: selectedEnemy.con,
+                    str: selectedEnemy.str,
+                    dex: selectedEnemy.dex,
+                    wis: selectedEnemy.wis,
+                    cha: selectedEnemy.cha,
+                    totalStr: selectedEnemy.totalStr,
+                    totalDex: selectedEnemy.totalDex,
+                    totalCha: selectedEnemy.totalCha,
+                    totalArm: selectedEnemy.totalArm,
+                    loot: selectedEnemy.loot,
+                    money: selectedEnemy.money,
+                    action: selectedEnemy.action,
+                    actionBattle: selectedEnemy.actionBattle,
+                    description: selectedEnemy.description,
+                    MaxHP: selectedEnemy.con*3, // MaxHP
+                    HP: selectedEnemy.con*3, // 初始 HP           
+                });
+            }
+
+            // 儲存敵人資訊到 localStorage
+            localStorage.setItem("enemyCount", enemyCount);
+            localStorage.setItem("enemies", JSON.stringify(enemiesEncountered));
+        }
+
+        // 跳轉畫面
+        function scene() {
+            situation = parseInt(localStorage.getItem("situation"));
+            inDungeon = localStorage.getItem("inDungeon");
+
+            if (situation === 2 || situation === 3 || situation === 4 && inDungeon) {
+                window.location.href = 'battle.html'; // 跳轉到戰鬥頁面
+            } else {
+                window.location.href = 'map.html'; // 平安無事，回到地圖
+            }
+        }
+
+    </script>
+
+</body>
+</html>

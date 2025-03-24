@@ -1,0 +1,937 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>角色</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            background-color: #000 !important; /* 背景顏色 */
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- 返回按鈕 -->
+    <div class="button-bar header" id="buttonBar">
+        <button class="exit-button" onclick="goBack()">　〈 返回</button>
+        <h3>角色</h3>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div id="main" class="main-content">
+        <div class="column-container">
+            <p class="column center small">⭐ 名聲： <span id="playerFame"></span></p>
+            <p class="column center small">👤 通緝： <span id="wantedLevel"></span></p>
+        </div>
+
+        <!-- 隊伍選單 -->
+        <div id="member-list"></div>
+    </div>
+
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content"></div>
+
+    <script src="../script.js"></script>
+    <script>
+    
+        // 頁面載入時
+        window.onload = function() {
+            loadPartyData(); // 讀取隊伍資料
+            partyToTeamMember(); // 將主角和同伴加入隊伍
+            showTeamMenu(); // 顯示隊伍選單
+            npcPreferences(); // NPC偏好設定
+        };
+        
+        // 對話資料庫
+        let dialogueData = {
+            "雷納德": {
+                "start": {
+                    npc: "npc",
+                    text: "準備好踏上冒險了嗎？",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "你可以去冒險者公會接任務，這是新手出名最快的途徑。<br><br>如果覺得太難，也可以先從兼職做起。<br><br>但你有我陪著，不用擔心路上的危險。",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "我之前和朋友到處旅行，後來他們一個一個都安頓下來了，我就獨自繼續旅行。<br><br>不過，我想我還是懷念和大家一起圍著營火的時光吧。",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "解散": {
+                    npc: "npc",
+                    text: "你確定？那好吧，之後需要幫忙的話，你還是可以在酒館找到我。",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
+                "戰鬥中": {
+                    npc: "npc",
+                    text: "敵人還在我們面前，有什麼話晚點再說吧。",
+                    choices: [
+                        { text: "好吧", next: "", action: "goBack()" },
+                    ]
+                },
+            },
+            "塔爾穆克": {
+                "start": {
+                    npc: "npc",
+                    text: "幹嘛，人類？你有話要說？",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "你連自己要幹什麼都不知道，那你雇用我是雇好玩的？<br><br>要是閒著沒事，去打擂台賺點獎金啊！",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "你想知道為什麼一名偉大的獸人戰士，會淪落到來當弱雞人類的傭兵？<br><br>因為一個人渣背叛他，奪走了他的一切，害他只能一邊討生活一邊等待機會復仇！",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "解散": {
+                    npc: "npc",
+                    text: "我沒差，反正錢已經拿了，但你找不到比我更好的傭兵了。",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
+                "戰鬥中": {
+                    npc: "npc",
+                    text: "讓我先幹掉這傢伙再說！",
+                    choices: [
+                        { text: "好吧", next: "", action: "goBack()" },
+                    ]
+                },
+            },
+            "賽恩": {
+                "start": {
+                    npc: "npc",
+                    text: "有什麼問題？",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "沒方向的話，去看看公會的任務公告。<br><br>缺資金的話，去競技場試試身手。<br><br>再不然，到野外探索在意的地方也未嘗不可。",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "我是來工作的，不是來和你當朋友的。如果你想聊天，去找別人吧。",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "解散": {
+                    npc: "npc",
+                    text: "嗯，改天再合作。",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
+                "戰鬥中": {
+                    npc: "npc",
+                    text: "現在不是說話的時候。",
+                    choices: [
+                        { text: "好吧", next: "", action: "goBack()" },
+                    ]
+                },
+            },
+            "艾德蒙": {
+                "start": {
+                    npc: "npc",
+                    text: "唉……什麼時候才能大賺一票？",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "啊？我哪知道？不然看是要去喝酒，還是回旅館睡覺。<br><br>說真的，沒必要去接什麼任務啦，要賺錢還是去競技場最快，只要押中贏家就行了。",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "喔？你對我感興趣是吧？哈哈哈！<br><br>說了你別嚇到，我是個放蕩不羈的惡棍，幹過各種各樣的壞事。<br><br>但你放心，我不會傷害你的，嘿嘿！",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "解散": {
+                    npc: "npc",
+                    text: "喔耶！提早休息了！記得下次要再找我啊！",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
+                "戰鬥中": {
+                    npc: "npc",
+                    text: "喂，我們還在戰鬥中欸，你確定要現在聊天？",
+                    choices: [
+                        { text: "好吧", next: "", action: "goBack()" },
+                    ]
+                },
+
+                "監獄中": {
+                    npc: "npc",
+                    text: "你很幸運，能有我這個逃獄大師來帶領你。<br><br>我至少用過三種方法成功逃獄，你想聽哪一種？",
+                    choices: [
+                        { text: "最快的方法", next: "最快" },
+                        { text: "最安全的方法", next: "最安全" },
+                        { text: "最有挑戰性的方法", next: "最有挑戰性" },
+                        { text: "不需要", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "最快": {
+                    npc: "npc",
+                    text: "看見那扇大門了嗎？直直衝出去就是最快的了。<br><br>但如果沒有人手、沒有裝備，被守衛打回娘胎的速度也是最快的。<br><br>所以先去倉庫拿回你的東西吧，如果有點錢，我們可以去下水道口找一個老朋友。",
+                    choices: [
+                        { text: "知道了", next: "監獄中" },
+                    ]
+                },
+                "最安全": {
+                    npc: "npc",
+                    text: "",
+                    choices: [
+                        { text: "知道了", next: "監獄中" },
+                    ]
+                },
+                "最有挑戰性": {
+                    npc: "npc",
+                    text: "為什麼要自找麻煩？",
+                    choices: [
+                        { text: "知道了", next: "監獄中" },
+                    ]
+                },
+            },
+            "諾伊爾": {
+                "start": {
+                    npc: "npc",
+                    text: "嗨，{playerName}，一起旅行真的很有趣。",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "聽說冒險者公會有一些困難的任務，值得挑戰看看。<br><br>比如說送貨的任務，如果在路上跟敵人開戰，就可能會讓包裹受損，我到現在也沒成功過幾次。",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "我一直在家鄉當生物學老師，去年辭職了。<br><br>我喜歡讀書，我讀了很多關於人類的論文、傳記，還有那些精彩的英雄史詩。",
+                    choices: [
+                        { text: "你幾歲", next: "關於年齡" },
+                        { text: "在這裡很少見到精靈", next: "關於精靈" },
+                        { text: "你親眼所見和書上有落差嗎？", next: "關於書的落差" },
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                    "關於年齡": {
+                        npc: "npc",
+                        text: "果然會好奇這個啊，要猜猜看嗎？",
+                        choices: [
+                            { text: "看外表的話，15 歲", next: "15" },
+                            { text: "100 歲", next: "100" },
+                            { text: "超過 5000 歲", next: "5000" },
+                        ]
+                    },
+                    "15": {
+                        npc: "npc",
+                        text: "呵呵，沒有那麼小喔。<br><br>我已經 51 歲了，但以精靈來說還很年輕，所以你把我當成 15 歲的人類看待也沒有關係。",
+                        choices: [
+                            { text: "原來如此", next: "了解" },
+                        ]
+                    },
+                    "100": {
+                        npc: "npc",
+                        text: "不，我才剛滿 51 歲，希望你不會把我當成長輩看待。<br><br>我知道這裡的人類平均壽命是 30 到 40 年，但研究顯示只要生活條件改善，很多都能活到 70 歲喔。",
+                        choices: [
+                            { text: "原來如此", next: "了解" },
+                        ]
+                    },
+                    "5000": {
+                        npc: "npc",
+                        text: "5000……我看起來有那麼老嗎？<br><br>我才剛滿 51 歲而已，超過 5000 歲的是我父親才對。",
+                        choices: [
+                            { text: "原來如此", next: "了解" },
+                        ]
+                    },
+                    "關於精靈": {
+                        npc: "npc",
+                        text: "是啊，大部分的精靈都住在露之聖域，一個寧靜祥和的地方。<br><br>但我對外面的世界很好奇，一直夢想著到外面冒險，和人類交朋友。<br><br>我現在總算開始實現夢想了，很開心。",
+                        choices: [
+                            { text: "原來如此", next: "了解" },
+                        ]
+                    },
+                    "關於書的落差": {
+                        npc: "npc",
+                        text: "落差還不少，書裡歌頌很多品格高尚的英雄，但很少提到一般人的情況。<br><br>我發現這裡的居民很習慣使用暴力，就連愛好和平的哥布林也會襲擊旅行者。<br><br>但我不會因此退縮，我打算記錄我看到的一切，然後編成教材。",
+                        choices: [
+                            { text: "原來如此", next: "了解" },
+                        ]
+                    },
+                "解散": {
+                    npc: "npc",
+                    text: "欸？我做錯了什麼嗎？這樣啊……希望下次還有機會一起冒險。",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
+                "戰鬥中": {
+                    npc: "npc",
+                    text: "抱歉，現在有點忙不過來，戰鬥結束再聽你說。",
+                    choices: [
+                        { text: "好吧", next: "", action: "goBack()" },
+                    ]
+                },
+            },
+            "盜賊": {
+                "start": {
+                    npc: "npc",
+                    text: "要往哪裡走，老大？",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "你連要做什麼都不知道就拉我入夥嗎？<br><br>呃……不然，一起去搶劫路上的肥羊怎麼樣？我看你還滿強的。",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "你知道嗎？我小時候也想過要當冒險者，但後來發現冒險者跟盜賊其實沒差多少，只是我們挑比較弱的目標下手。",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "解散": {
+                    npc: "npc",
+                    text: "我自由了嗎？真的假的？",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
+                "戰鬥中": {
+                    npc: "npc",
+                    text: "喂，現在是說話的時候嗎？快幹掉敵人啊！",
+                    choices: [
+                        { text: "好吧", next: "", action: "goBack()" },
+                    ]
+                },
+                "start_俘虜": {
+                    npc: "npc",
+                    text: "還不打算送我去監獄嗎？難道是想讓我替你幹活？",
+                    choices: [
+                        { text: "和我說說你的事", next: "了解俘虜" },
+                        { text: "你可以走了", next: "解散俘虜" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                    "了解俘虜": {
+                        npc: "npc",
+                        text: "我就是一個倒楣鬼，在盜賊團裡沒地位又賺不到錢，自己出來搶劫又被你抓住，還有哪個盜賊能比我更倒楣？",
+                        choices: [
+                            { text: "原來如此", next: "start_俘虜" },
+                        ]
+                    },
+                    "解散俘虜": {
+                        npc: "npc",
+                        text: "我自由了嗎？真的假的？你不要後悔喔！",
+                        choices: [
+                            { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                        ]
+                    },
+                "盜賊巢穴": {
+                    npc: "npc",
+                    text: "我當然知道在哪，可是……<br><br>那裡起碼有二十個人在看守，裡面還像迷宮一樣，就連我都會迷路了。<br><br>更別說，如果他們看到我帶你過去，我就必死無疑了！想去你自己去，我才不幹！",
+                    choices: [
+                        { text: "告訴我巢穴位置，你就可以離開了", next: "盜賊巢穴_解散", action: "dismiss()" },
+                        { text: "我命令你帶我去（力量）", next: "", action: "intimidate('盜賊巢穴')" },
+                        { text: "相信我，我們會成功的，想想那些戰利品（魅力）", next: "", action: "persuade('盜賊巢穴')" },
+                        { text: "晚點再說", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                    "盜賊巢穴_威嚇成功": {
+                        npc: "npc",
+                        text: "好啦，好啦！真不敢相信我要這麼做……",
+                        choices: [
+                            { text: "走吧", next: "", action: "showThievesPos()" },
+                        ]
+                    },
+                    "盜賊巢穴_威嚇失敗": {
+                        npc: "npc",
+                        text: "我幹嘛聽你的？吃屎吧！",
+                        choices: [
+                            { text: "（繼續）", next: "", action: "(showTeamMenu(), removeDialogue())" },
+                        ]
+                    },
+                    "盜賊巢穴_說服成功": {
+                        npc: "npc",
+                        text: "是啊……那些到處掠奪來的金銀財寶，要是能搶到手，賭上性命也值得！",
+                        choices: [
+                            { text: "走吧", next: "", action: "showThievesPos()" },
+                        ]
+                    },
+                    "盜賊巢穴_說服失敗": {
+                        npc: "npc",
+                        text: "抱歉啦，我只能告訴你位置，找個不怕死的帶你進去吧。",
+                        choices: [
+                            { text: "再見", next: "", action: "(showThievesPos(), showTeamMenu(), removeDialogue())" },
+                        ]
+                    },
+                    "盜賊巢穴_解散": {
+                        npc: "npc",
+                        text: "好吧，我標在地圖上了，那就祝你好運！",
+                        choices: [
+                            { text: "再見", next: "", action: "(showThievesPos(), showTeamMenu(), removeDialogue())" },
+                        ]
+                    },
+            },
+            "哥布林": {
+                "start": {
+                    npc: "npc",
+                    text: "嘿嘿，主人，你滿意我的表現嗎？什麼時候可以付我薪水啊？",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "喔，我有個點子，我們去襲擊那些有錢的吸血鬼。<br><br>我們發揮各自的專長，你負責戰鬥，我負責幫你拿著錢包。",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "我？我只是您卑微的僕人，沒什麼好說的。<br><br>當然，我是有比其他哥布林聰明一點、帥一點，這不就是你把我留在身邊的原因嗎？",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "解散": {
+                    npc: "npc",
+                    text: "那個，關於我的薪水……算了算了，能留著小命就不錯了。",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
+                "戰鬥中": {
+                    npc: "npc",
+                    text: "啊啊，有敵人！主人，保護我！",
+                    choices: [
+                        { text: "好吧", next: "", action: "goBack()" },
+                    ]
+                },
+                "start_俘虜": {
+                    npc: "npc",
+                    text: "聽我說，我是一個善良的哥布林，不要因為我的外表而誤解我，讓我走吧！",
+                    choices: [
+                        { text: "和我說說你的事", next: "了解俘虜" },
+                        { text: "你可以走了", next: "解散俘虜" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                    "了解俘虜": {
+                        npc: "npc",
+                        text: "我是你見過最樂於助人的哥布林了，每當我發現倒在地上的冒險者，我都會幫他們減輕錢包裡的負擔。",
+                        choices: [
+                            { text: "原來如此", next: "start_俘虜" },
+                        ]
+                    },
+                    "解散俘虜": {
+                        npc: "npc",
+                        text: "喔喔！你是個大善人！我會告訴其他哥布林離你的錢包遠一點的。",
+                        choices: [
+                            { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                        ]
+                    },
+            },
+            "獸人": {
+                "start": {
+                    npc: "npc",
+                    text: "雖然是你在帶路，但不要以為你就是老大了。",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "我們去抓幾隻哥布林，哥布林是天生的奴隸，只要你拳頭夠大，他們就忠心耿耿。<br><br>但人類賣給我們的哥布林都是些魯蛇，沒屁用，只會逃跑。",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "我來自一個龐大的獸人部落，跟著大酋長征服了幾座村子，搶到了金山銀山。<br><br>現在我的三個老婆、一打孩子全都不愁吃穿了，大酋長簡直就是神，我會為他做任何事。",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "解散": {
+                    npc: "npc",
+                    text: "你以為你可以趕我走？就算我要走，那也是因為我受夠你了，讓開！",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
+                "戰鬥中": {
+                    npc: "npc",
+                    text: "別說話了，回去戰鬥！",
+                    choices: [
+                        { text: "好吧", next: "", action: "goBack()" },
+                    ]
+                },
+            },
+            "狼人": {
+                "start": {
+                    npc: "npc",
+                    text: "嗯……吃飯了？",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "狩獵，吃肉，睡覺……不要洗澡……",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "我是狼人……我喜歡一個人……我討厭哥布林……很吵，又難吃……",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "解散": {
+                    npc: "npc",
+                    text: "不需要了……喔……",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
+                "戰鬥中": {
+                    npc: "npc",
+                    text: "殺了他！",
+                    choices: [
+                        { text: "好吧", next: "", action: "goBack()" },
+                    ]
+                },
+                "start_俘虜": {
+                    npc: "npc",
+                    text: "嗚……",
+                    choices: [
+                        { text: "和我說說你的事", next: "了解俘虜" },
+                        { text: "你可以走了", next: "解散俘虜" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                    "了解俘虜": {
+                        npc: "npc",
+                        text: "難過……不想……說話……",
+                        choices: [
+                            { text: "原來如此", next: "start_俘虜" },
+                        ]
+                    },
+                    "解散俘虜": {
+                        npc: "npc",
+                        text: "自由！自由！嗷嗷嗷嗚——",
+                        choices: [
+                            { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                        ]
+                    },
+            },
+            "吸血鬼": {
+                "start": {
+                    npc: "npc",
+                    text: "怎麼了，我的小寵物？",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "當然是盡你所能地侍奉我了。<br><br>如果你能討我歡心，我可以考慮把你變成吸血鬼，永遠陪伴在我身邊。",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "或許你聽說過吸血鬼害怕大蒜，這是個誤解。<br><br>正確來說我們是討厭大蒜，討厭到寧可自殺也不願吸入有蒜味的空氣。<br><br>這並不能說是吸血鬼的弱點，你明白嗎？",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "解散": {
+                    npc: "npc",
+                    text: "既然你渴求自由，那我准許你離開。我不喜歡強迫別人……除非是我特別喜歡的。",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
+                "戰鬥中": {
+                    npc: "npc",
+                    text: "去吧，我忠誠的奴僕，除掉敵人！",
+                    choices: [
+                        { text: "好吧", next: "", action: "goBack()" },
+                    ]
+                },
+            },
+            "小仙子": {
+                "start": {
+                    npc: "npc",
+                    text: "你叫{playerName}是嗎？你是個很厲害的冒險者吧？",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "嗯，我想想喔，我們可以在草原上野餐和露營，一定很好玩！<br><br>但要小心那些食人花，它們會一夜之間從你的腳底下長出來。",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "你一定在想為什麼我像花一樣迷人吧？因為我就是從花海之中誕生的仙子。<br><br>我太可愛了，不管做什麼都不會惹人生氣，呵呵！",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "解散": {
+                    npc: "npc",
+                    text: "看來是我們分開的時候了，不要太想我喔，掰啦！",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
+                "戰鬥中": {
+                    npc: "npc",
+                    text: "把我藏起來，不要讓敵人抓到我！",
+                    choices: [
+                        { text: "好吧", next: "", action: "goBack()" },
+                    ]
+                },
+                "start_俘虜": {
+                    npc: "npc",
+                    text: "嘿，我對你來說一點用也沒有，為什麼你不讓我走？",
+                    choices: [
+                        { text: "和我說說你的事", next: "了解俘虜" },
+                        { text: "你可以走了", next: "解散俘虜" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                    "了解俘虜": {
+                        npc: "npc",
+                        text: "我才不跟像你這麼沒禮貌的人聊天，哼！",
+                        choices: [
+                            { text: "原來如此", next: "start_俘虜" },
+                        ]
+                    },
+                    "解散俘虜": {
+                        npc: "npc",
+                        text: "天哪，我還以為我永遠不能再飛翔了。",
+                        choices: [
+                            { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                        ]
+                    },
+            },
+            "囚犯": {
+                "監獄中": {
+                    npc: "npc",
+                    text: "別閒聊了，快逃出去吧！",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "我還以為你有計畫……",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "這不關你的事，再講下去守衛都要過來了！",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "解散": {
+                    npc: "npc",
+                    text: "誰管你！我們已經在同一條船上了，別想臨陣退縮。",
+                    choices: [
+                        { text: "好吧", next: "start" },
+                    ]
+                },
+            },
+        };
+
+        // 顯示隊伍選單
+        function showTeamMenu() {
+            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+
+            const menu = document.getElementById("member-list");
+            menu.innerHTML = "";  // 清空選單內容
+
+            // 創建每個成員的資料
+            teamMember.forEach((member, index) => {
+                const characterDiv = document.createElement("div");
+
+                if (index === 0) {
+                    // 主角
+                    characterDiv.innerHTML = `
+                        <div class="item center background">
+                            <span class="note">${member.type}</span>
+                            <h3>${member.name}</h3>
+                            <h4 class="hp" style="margin:5px 0;">${member.HP} / ${member.MaxHP}</h4>
+                            <div class="row-buttons">
+                                <button onclick="characterSheet('player')">🔎<span class="small">查看</span></button>
+                            </div>
+                        </div>
+                    `;
+                } else {
+                    // 同伴
+                    characterDiv.innerHTML = `
+                        <div class="item center background">
+                            <span class="note">${member.type}</span>
+                            <h3>${member.name}</h3>
+                            <h4 class="hp" style="margin:5px 0;">${member.HP} / ${member.MaxHP}</h4>
+                            <div class="row-buttons">
+                                <button onclick="characterSheet('companion${index}')">🔎<span class="small">查看</span></button>
+                                <button onclick="getDialogueNpc('companion${index}')">💬<span class="small">交談</span></button>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                menu.appendChild(characterDiv);
+            });
+        }
+
+        // 前往角色詳情
+        function characterSheet(memberId) {
+            localStorage.setItem("npcId", memberId);
+            window.location.href = "characterSheet.html"; // 轉跳到詳情頁面
+        }
+
+        // 判斷交談對象
+        function getDialogueNpc(memberId) {
+            localStorage.setItem("npcId", memberId);
+
+            // 讀取所有成員的資料
+            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+
+            // 找到這個成員的資料
+            const member = teamMember.find(m => m.id === memberId);
+            const memberName = member.name;
+
+            localStorage.setItem("npcName", memberName);
+
+            // 檢查是否在戰鬥中
+            const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+            if (enemies.length > 0) {
+                showDialogue("戰鬥中");
+                return;
+            }
+
+            // 檢查是否在監獄中
+            const playerType = localStorage.getItem("playerType");
+            if (playerType === "囚犯") {
+                showDialogue("監獄中");
+                return;
+            }
+
+            // 失竊的紅寶石任務
+            let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
+            const newChoice = { 
+                text: "你知道盜賊團巢穴在哪嗎？",
+                next: "盜賊巢穴"
+            };
+            if (takenMissions.some(mission => mission.id === "quest01")) {
+                ["start", "start_俘虜"].forEach(key => {
+                    let choices = dialogueData["盜賊"][key].choices;
+                    if (!choices.some(choice => choice.text === newChoice.text)) { // 確保不重複插入
+                        choices.splice(0, 0, newChoice); // 插入到第 1 個位置
+                    }
+                });
+            }
+
+            // 檢查成員是不是俘虜
+            if (member.type === "俘虜") {
+                showDialogue("start_俘虜");
+            } else {
+                showDialogue("start");
+            }
+        }
+
+        // 解散同伴
+        function dismiss() {
+            // 讀取對象id
+            const memberId = localStorage.getItem("npcId");
+            removeCompanion(memberId); // 移除成員
+        }
+
+        // 威嚇
+        function intimidate(key) {
+            // 檢查是否已經骰過，以免刷新頁面時重骰
+            const intimidateResult = localStorage.getItem("intimidateResult");
+            if (intimidateResult) {
+                return;
+            } 
+
+            // 讀取成員資料
+            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+
+            // 讀取交談對象
+            const npcId = localStorage.getItem("npcId");
+            let npc = teamMember.find(m => m.id === npcId);
+
+            // 隊伍其他人的總力量
+            let teamStr = 0; 
+            teamMember.forEach(member => {
+                if (member.id !== npcId) {
+                    teamStr += member.totalStr;
+                }
+            });
+            
+            // 計算威嚇成功率
+            let intimidateChance = teamStr / (teamStr + npc.totalStr);
+
+            let randomValue = Math.random(); // 產生 0~1 的隨機小數
+            // 檢查成功率
+            console.log(`隊伍其他人的總力量: ${teamStr}, 對方力量: ${npc.totalStr}`);
+            console.log(`計算的威嚇成功率: ${(intimidateChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+
+            // 顯示威嚇結果
+            if (randomValue <= intimidateChance) {
+                // 威嚇成功
+                showDialogue(key + '_威嚇成功');
+                localStorage.setItem("intimidateResult", "success"); // 記錄結果，清除對話時再清除，以免刷新頁面時重骰
+            } else {
+                // 威嚇失敗
+                dismiss();
+                showDialogue(key + '_威嚇失敗');
+                localStorage.setItem("intimidateResult", "fail"); // 記錄結果，清除對話時再清除，以免刷新頁面時重骰
+            }
+        }
+
+        // 說服
+        function persuade(key) {
+            // 檢查是否已經骰過，以免刷新頁面時重骰
+            const persuadeResult = localStorage.getItem("persuadeResult");
+            if (persuadeResult) {
+                return;
+            } 
+
+            // 讀取主角的魅力
+            const playerTotalCha = parseInt(localStorage.getItem("playerTotalCha"));
+
+            // 讀取成員資料
+            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+
+            // 讀取交談對象
+            const npcId = localStorage.getItem("npcId");
+            let npc = teamMember.find(m => m.id === npcId);
+
+            // 計算說服成功率
+            let persuadeChance = playerTotalCha / (playerTotalCha + npc.wis);
+
+            let randomValue = Math.random(); // 產生 0~1 的隨機小數
+            // 檢查成功率
+            console.log(`主角魅力: ${playerTotalCha}, 對方感知: ${npc.wis}`);
+            console.log(`計算的說服成功率: ${(persuadeChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+
+            // 顯示說服結果
+            if (randomValue <= persuadeChance) {
+                // 說服成功
+                showDialogue(key + '_說服成功');
+                localStorage.setItem("persuadeResult", "success"); // 記錄結果，清除對話時再清除，以免刷新頁面時重骰
+            } else {
+                // 說服失敗
+                dismiss();
+                showDialogue(key + '_說服失敗');
+                localStorage.setItem("persuadeResult", "fail"); // 記錄結果，清除對話時再清除，以免刷新頁面時重骰
+            }
+        }
+
+        // 顯示盜賊巢穴位置
+        function showThievesPos() {
+            localStorage.setItem("showThievesPos", "true");
+            removeDialogue();
+        }
+
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,1375 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>戰鬥</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+        }
+    </style>
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="menu/character.html">🎭<span>角色</span></a>
+        <a href="menu/quest.html">📜<span>任務</span></a>
+        <a href="menu/inventory.html">💰<span>物品</span></a>
+        <a href="menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+    <!-- 主要內容區域 -->
+    <div id="main" class="main-content">
+        <h2 id="situation"></h2>
+        <p id="battle-result"></p>
+        <p id="respawn-result"></p>
+
+        <div id="battle-content">
+            <!-- 顯示敵人資料 -->
+            <div class="enemy-container">
+                <div id="enemy1">
+                    <button id="enemy1-btn" onclick="selectTarget('enemy1', this)">
+                        <div class="column-container">
+                            <div class="column-name">
+                                <h4><span id="enemy1-adj"></span><span id="enemy1-name"></span></h4>
+                                <h4 class="hp"><span id="enemy1-HP"></span> / <span id="enemy1-MaxHP"></span></h4>
+                            </div>
+                            <div class="column">
+                                <span id="enemy1-action" class="battle-text"></span>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+
+                <div id="enemy2">
+                    <button id="enemy2-btn" onclick="selectTarget('enemy2', this)">
+                        <div class="column-container">
+                            <div class="column-name">
+                                <h4><span id="enemy2-adj"></span><span id="enemy2-name"></span></h4>
+                                <h4 class="hp"><span id="enemy2-HP"></span> / <span id="enemy2-MaxHP"></span></h4>
+                            </div>
+                            <div class="column">
+                                <span id="enemy2-action" class="battle-text"></span>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            
+                <div id="enemy3">
+                    <button id="enemy3-btn" onclick="selectTarget('enemy3', this)">
+                        <div class="column-container">
+                            <div class="column-name">
+                                <h4><span id="enemy3-adj"></span><span id="enemy3-name"></span></h4>
+                                <h4 class="hp"><span id="enemy3-HP"></span> / <span id="enemy3-MaxHP"></span></h4>
+                            </div>
+                            <div class="column">
+                                <span id="enemy3-action" class="battle-text"></span>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            
+                <div id="enemy4">
+                    <button id="enemy4-btn" onclick="selectTarget('enemy4', this)">
+                        <div class="column-container">
+                            <div class="column-name">
+                                <h4><span id="enemy4-adj"></span><span id="enemy4-name"></span></h4>
+                                <h4 class="hp"><span id="enemy4-HP"></span> / <span id="enemy4-MaxHP"></span></h4>
+                            </div>
+                            <div class="column">
+                                <span id="enemy4-action" class="battle-text"></span>
+                            </div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+            <hr>
+
+            <!-- 顯示隊伍資料 -->
+            <div>    
+                <!-- 提示 -->
+                <p class="note" id="note"></p>
+                <p id="soul-count"></p>
+
+                <!-- 主角 -->
+                <div id="player" class="hide background">
+                    <div class="column-container item">
+                        <div class="column-name">
+                            <h4 id="playerName"></h4>
+                            <h4 class="hp"><span id="playerHP"></span> / <span id="playerMaxHP"></span></h4>
+                        </div>
+                        <div class="column">
+                            <span id="player-action" class="battle-text"></span>
+                            <div class="row-buttons player-btn">
+                                <button onclick="selectAttacker('player')">⚔️<br><span class="small">攻擊</span></button>
+                                <button onclick="escape('player')">🏃<br><span class="small">逃跑</span></button>
+                                <button onclick="talk()">💬<br><span class="small">交談</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 同伴 -->
+                <div id="companion1" class="hide background">
+                    <div class="column-container item">
+                        <div class="column-name">
+                            <h4 id="companion1-name"></h4>
+                            <h4 class="hp"><span id="companion1-HP"></span> / <span id="companion1-MaxHP"></span></h4>
+                        </div>
+                        <div class="column">
+                            <span id="companion1-action" class="battle-text"></span>
+                            <div class="row-buttons companion1-btn">
+                                <button onclick="selectAttacker('companion1')">⚔️<br><span class="small">攻擊</span></button>
+                                <button onclick="escape('companion1')">🏃<br><span class="small">逃跑</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="companion2" class="hide background">
+                    <div class="column-container item">
+                        <div class="column-name">
+                            <h4 id="companion2-name"></h4>
+                            <h4 class="hp"><span id="companion2-HP"></span> / <span id="companion2-MaxHP"></span></h4>
+                        </div>
+                        <div class="column">
+                            <span id="companion2-action" class="battle-text"></span>
+                            <div class="row-buttons companion2-btn">
+                                <button onclick="selectAttacker('companion2')">⚔️<br><span class="small">攻擊</span></button>
+                                <button onclick="escape('companion2')">🏃<br><span class="small">逃跑</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="companion3" class="hide background">
+                    <div class="column-container item">
+                        <div class="column-name">
+                            <h4 id="companion3-name"></h4>
+                            <h4 class="hp"><span id="companion3-HP"></span> / <span id="companion3-MaxHP"></span></h4>
+                        </div>
+                        <div class="column">
+                            <span id="companion3-action" class="battle-text"></span>
+                            <div class="row-buttons companion3-btn">
+                                <button onclick="selectAttacker('companion3')">⚔️<br><span class="small">攻擊</span></button>
+                                <button onclick="escape('companion3')">🏃<br><span class="small">逃跑</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 隊伍按鈕 -->
+            <!-- 
+            <div>
+                <p id="team-action" class="battle-text"></p>
+                <div class="column-container item">
+                    <div class="row-buttons">
+                        <button onclick="talk()">💬<br><span class="small">交談</span></button>
+                    </div>
+                    <div class="column">
+                         <div class="row-buttons team-btn">
+                            <button onclick="selectAttacker('team')">⚔️⚔️<br><span class="small">聯手攻擊</span></button>
+                            <button onclick="teamEscape()">🏃🏃<br><span class="small">一起逃跑</span></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            -->
+            <p id="team-action" class="battle-text"></p>
+            <div class="menu">
+                <div class="menu team-btn">
+                    <button onclick="selectAttacker('team')">⚔️聯手攻擊</span></button>
+                    <button onclick="teamEscape()">🏃一起逃跑</span></button>
+                </div>
+                <br>
+                <button onclick="endRound()">結束回合</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content"></div>
+
+    <script src="script.js"></script>
+    <script>
+
+        // 顯示文本
+        const texts = {
+            noTarget: "請先選擇一個敵人為目標",
+            noAttacker: "請選擇由誰發動攻擊",
+            fightWin: (name, damage) => `${name}擊中了對方！(${damage})`,
+            fightLose: (name) => `${name}的攻擊被敵人躲開了`,
+            killEnemy: (name, damage) => `${name}擊倒了敵人！(${damage})`,
+            die: (deadMembers) => `${deadMembers}倒下了！`,
+            teamFightWin: (damage) => `你們聯手，對敵人造成了重創！(${damage})`,
+            teamFightLose: "敵人非常頑強，避開了所有的攻擊",
+            teamKillEnemy: (damage) => `你們聯手擊倒敵人！(${damage})`,
+            escapeSuccess: (name) => `${name}逃走了`,
+            escapeFail: (name) => `敵人阻擋了${name}的去路！`,
+            teamEscapeFail: (name) => `${name}跑不過敵人，你們只好停下來！`,
+            enemyWin: (name, damage) => `敵人擊中了${name}！(${damage})`,
+            enemyLose: (name) => `敵人打算攻擊${name}，但失手了`,
+            enemyKill: (name, damage) => `敵人擊倒了${name}！(${damage})`,
+            safe: "順利前進",
+            battle: "敵人出現了！",
+            surprise: "遭到偷襲了！",
+            cannotTalk: "敵人無法理解你說的話。",
+            escapePrisoner: (name) => `${name}趁你在對付敵人時逃走了！`,
+            demonAttacked: "燃燒了起來",
+            //trap: "觸發陷阱！",
+            //enemyComing: "敵人正在趕來的路上，最好快點離開",
+        };
+
+        // 畫面載入時
+        window.onload = function() {
+            getSituation(); // 讀取並執行遇敵方式
+            loadBackground(); // 讀取背景
+            npcPreferences(); // NPC偏好設定
+        };
+
+        // 對話資料庫
+        const dialogueData = {
+            "雷納德": {
+                "雷納德幫忙": {
+                    npc: "npc",
+                    text: "沒事吧？你需要幫忙嗎？",
+                    choices: [
+                        { text: "拜託了", next: "", action: "(helperJoin(), removeDialogue(), getSituation())" },
+                        { text: "不用幫忙", next: "", action: "(removeDialogue(), getSituation())" },
+                    ]
+                },
+            },
+        }
+
+        let enemy = {}; // 當前敵人
+        let escapeMember= []; // 逃跑成員
+
+        // 讀取並執行遇敵方式
+        function getSituation() {
+            let situation = parseInt(localStorage.getItem("situation"));
+
+            if (situation === 2 || situation === 7) {
+                console.log("一般遇敵（我方先攻）");
+
+                let enemiesEncountered = JSON.parse(localStorage.getItem("enemies")) || [];
+                enemiesEncountered.forEach((enemy, index) => {
+                    let enemyId = `enemy${index + 1}`;
+                    document.getElementById(`${enemyId}-action`).textContent = enemy.actionBattle; // 顯示敵人準備戰鬥的描述
+                });
+
+                startBattle() // 開始戰鬥
+                document.getElementById("situation").textContent = texts.battle; // 顯示遇敵的訊息
+
+            } else if (situation === 3) {
+                console.log("被偷襲（敵人先攻）");
+                startBattle() // 開始戰鬥
+                document.getElementById("situation").textContent = texts.surprise; // 顯示被偷襲的訊
+                enemyFight(); // 敵人攻擊
+
+                // 下回合恢復正常回合
+                situation = 2;
+                localStorage.setItem("situation", situation);
+
+            } else if (situation === 4) {
+                console.log("發現無防備的敵人（我方第一回合攻擊、逃跑100%成功）");
+                startBattle() // 開始戰鬥
+
+                let enemiesEncountered = JSON.parse(localStorage.getItem("enemies")) || [];
+                enemiesEncountered.forEach((enemy, index) => {
+                let enemyId = `enemy${index + 1}`;
+                    document.getElementById(`${enemyId}-action`).textContent = enemy.action; // 顯示敵人沒有防備的描述
+                });
+
+            } else {
+                console.error("錯誤：無效的 situation 值", situation);
+            }
+        }
+
+        // 開始戰鬥
+        function startBattle() {
+            loadPartyData(); // 讀取隊伍資料
+            //generateTeam(); // 顯示上場成員欄位及按鈕（已包含在endAction）
+            //generateEnemy(); // 顯示敵人（已包含在endAction）
+            endAction(); // 每次載入時跑一次，以防有東西還原
+        }
+
+        // 顯示上場成員欄位及按鈕
+        function generateTeam() {
+            presentMember = JSON.parse(localStorage.getItem("presentMember")) || [];
+            actableMember = JSON.parse(localStorage.getItem("actableMember")) || [];
+
+            // 先隱藏所有成員欄位
+            document.getElementById("player").style.display = "none";
+            document.getElementById("companion1").style.display = "none";
+            document.getElementById("companion2").style.display = "none";
+            document.getElementById("companion3").style.display = "none";
+
+            // 顯示上場成員的欄位
+            presentMember.forEach(member => {
+                let memberElement = document.getElementById(member.id);
+                if (memberElement) {
+                    memberElement.style.display = "block";
+                } else {
+                    console.warn(`找不到 ID 為 ${member.id} 的元素`);
+                }
+            });
+
+            // 先隱藏所有按鈕
+            document.querySelectorAll('.player-btn button').forEach(button => {
+                button.style.display = "none";
+            });
+            document.querySelectorAll('.companion1-btn button').forEach(button => {
+                button.style.display = "none";
+            });
+            document.querySelectorAll('.companion2-btn button').forEach(button => {
+                button.style.display = "none";
+            });
+            document.querySelectorAll('.companion3-btn button').forEach(button => {
+                button.style.display = "none";
+            });
+
+            // 檢查是否顯示按鈕
+            //if (localStorage.getItem('player-btn-show') === 'true') {
+            if (actableMember.some(m =>m.id === "player")) {
+                document.querySelectorAll('.player-btn button').forEach(button => {
+                    button.style.display = "block";
+                });
+            }
+            //f (localStorage.getItem('companion1-btn-show') === 'true') {
+            if (actableMember.some(m =>m.id === "companion1")) {
+                document.querySelectorAll('.companion1-btn button').forEach(button => {
+                    button.style.display = "block";
+                });
+            }
+            //if (localStorage.getItem('companion2-btn-show') === 'true') {
+            if (actableMember.some(m =>m.id === "companion2")) {
+                document.querySelectorAll('.companion2-btn button').forEach(button => {
+                    button.style.display = "block";
+                });
+            }
+            //if (localStorage.getItem('companion3-btn-show') === 'true') {
+            if (actableMember.some(m =>m.id === "companion3")) {
+                document.querySelectorAll('.companion3-btn button').forEach(button => {
+                    button.style.display = "block";
+                });
+            }
+
+            // 檢查是否顯示隊伍按鈕
+            if (actableMember.length < 2) {
+                // 如果可行動的隊員不到 2 個，隱藏隊伍按鈕
+                document.querySelectorAll('.team-btn button').forEach(button => {
+                    button.style.display = "none";
+                });
+            } else {
+                // 否則顯示
+                document.querySelectorAll('.team-btn button').forEach(button => {
+                    button.style.display = "block";
+                });
+            }
+
+            // 如果物品中有可用的紅寶石，就顯示已獻祭的數量
+            const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            const ruby = playerItems.find(i => i === "specialItem14");
+            if (ruby) {
+                const soulCount = parseInt(localStorage.getItem("soulCount"));
+                document.getElementById('soul-count').textContent = "💀 " + soulCount;
+            }
+            
+            // console.log("可行動的成員", actableMember);
+        }
+
+        // 顯示敵人
+        function generateEnemy() {
+            let enemiesEncountered = JSON.parse(localStorage.getItem("enemies")) || [];
+
+            // 先隱藏所有敵人欄位
+            document.querySelectorAll('[id]').forEach(element => {
+                if (/^enemy\d+$/.test(element.id)) {
+                    element.style.display = "none";
+                }
+            });
+
+            // 顯示敵人
+            enemiesEncountered.forEach((enemy, index) => {
+                let enemyId = `enemy${index + 1}`;
+                let enemyElement = document.getElementById(enemyId);
+
+                if (enemyElement) {
+                    // 顯示欄位
+                    enemyElement.style.display = "block";
+                    document.getElementById(`${enemyId}-adj`).textContent = enemy.adj;
+                    document.getElementById(`${enemyId}-name`).textContent = enemy.name;
+                    document.getElementById(`${enemyId}-HP`).textContent = enemy.HP;
+                    document.getElementById(`${enemyId}-MaxHP`).textContent = enemy.MaxHP;
+                    console.log(`敵人 ${index + 1}:`, enemy);
+                }
+            });
+        }
+
+        let selectedAttacker = null; // 記錄攻擊者
+        let selectedTarget = null; // 記錄目標敵人
+
+        // 選擇攻擊者（角色或同伴）
+        function selectAttacker(attackerId) {
+            // 如果已選擇目標，就進入戰鬥
+            if (selectedTarget) {
+                selectedAttacker = attackerId;
+                checkAndExecuteFight();
+            // 如果還沒選擇目標，就顯示提示
+            } else {
+                document.getElementById("note").textContent = texts.noTarget;
+            }
+        }
+
+        // 選擇目標敵人
+        function selectTarget(targetId, button) {
+            // 移除所有目標按鈕的 selected class
+            document.querySelectorAll("button[id^='enemy']").forEach(btn => {
+                btn.classList.remove("selected");
+            });
+
+            // 為當前選中的按鈕加上 selected class
+            button.classList.add("selected");
+
+            // 顯示「選擇攻擊者」的提示
+            document.getElementById("note").textContent = texts.noAttacker;
+
+            // 將選擇的敵人設為目標
+            selectedTarget = targetId;
+        }
+
+        // 檢查是否已選擇攻擊者和目標，然後執行攻擊
+        function checkAndExecuteFight() {
+            if (selectedAttacker && selectedTarget) {
+                // 執行攻擊邏輯
+                fight(selectedAttacker, selectedTarget);
+
+        
+                // 重置選擇，以便下一次攻擊
+                selectedAttacker = null;
+                // selectedTarget = null;
+            }
+        }
+
+        // 攻擊邏輯
+        function fight(attacker, target) {
+            // 讀取可行動成員的資料
+            let actableMember = JSON.parse(localStorage.getItem("actableMember")) || [];
+            //console.log("可行動的成員", actableMember);
+
+            let attackerName;
+            let attackerDex = 0; // 我方總敏捷
+            let attackerStr = 0; // 我方總力量
+          
+            if (attacker === "team") {
+                // 聯手攻擊，加總可行動成員的資料
+                actableMember.forEach(member => {
+                    attackerName = "聯手";
+                    attackerStr += member.totalStr;
+                    attackerDex += member.totalDex;
+                });
+            } else {
+                // 單獨攻擊，找到攻擊者的資料
+                let member = actableMember.find(comp => comp.id === attacker);
+                attackerName = member.name;
+                attackerStr = member.totalStr;
+                attackerDex = member.totalDex;
+            }
+            
+            // 獲取敵人資料
+            let targetEnemy, targetHP, targetMaxHP;
+            let enemiesEncountered = JSON.parse(localStorage.getItem("enemies")) || [];
+            let targetIndex = parseInt(target.replace("enemy", "")) - 1;  // 根據 target 取得對應的敵人索引
+
+            if (enemiesEncountered[targetIndex]) {
+                targetEnemy = enemiesEncountered[targetIndex];
+                targetHP = targetEnemy.HP;
+                targetMaxHP = targetEnemy.con;
+                
+            } else {
+                console.error(`無效的敵人: ${target}`);
+                return; // 若找不到目標敵人，則終止攻擊
+            }
+
+            // 計算命中率
+            let hitChance;
+            let situation = parseInt(localStorage.getItem("situation"));
+            if (situation === 4) { 
+                // 如果敵人無防備，命中率100%
+                hitChance = 1;
+            } else {
+                // 如果是正常情況，以雙方敏捷計算命中率
+                hitChance = attackerDex / (attackerDex + targetEnemy.totalDex);
+            }
+            let randomValue = Math.random(); // 產生 0~1 的隨機數
+            // 檢查命中率
+            console.log(`攻擊者: ${attackerName}, 敏捷: ${attackerDex}, 力量: ${attackerStr}, 目標: ${target}, 目標敏捷: ${targetEnemy.totalDex}`);
+            console.log(`計算的命中率: ${(hitChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+
+            // 攻擊結果
+            if (randomValue <= hitChance) {
+                // 攻擊成功，對目標造成傷害
+                let damage = attackerStr - targetEnemy.totalArm; // 傷害 = 我方力量總和 - 敵人護甲
+                targetHP = Math.max(targetHP - damage, 0); // HP 減少，不會低於0
+                enemiesEncountered[targetIndex].HP = targetHP;  // 更新敵人資料
+                localStorage.setItem("enemies", JSON.stringify(enemiesEncountered));  // 儲存更新後的敵人資料
+                document.getElementById(target + "-HP").textContent = targetHP;
+
+                // 檢查敵人是否死亡
+                if (targetHP <= 0) {
+                    // 敵人死亡
+                    if (attacker === "team") {
+                        // 顯示聯手擊殺訊息（在隊伍的欄位）
+                        document.getElementById("team-action").textContent = texts.teamKillEnemy(damage);
+                    } else {
+                        // 顯示單獨擊殺訊息（在攻擊者的欄位）
+                        document.getElementById(`${attacker}-action`).textContent = texts.killEnemy(attackerName, damage);
+                    }
+
+                } else {
+                    // 敵人活著
+                    if (attacker === "team") {
+                        // 顯示聯手攻擊成功訊息（在隊伍的欄位）
+                        document.getElementById("team-action").textContent = texts.teamFightWin(damage);
+                    } else {
+                        // 顯示單獨攻擊成功訊息（在攻擊者的欄位）
+                        document.getElementById(`${attacker}-action`).textContent = texts.fightWin(attackerName, damage);
+                    }
+
+                    // HP變為紅字
+                    document.querySelectorAll(".red-hp").forEach(element => {
+                        element.classList.remove("red-hp"); //先移除之前的紅字
+                    });
+                    document.getElementById(target + "-HP").classList.add("red-hp");
+                };
+
+            } else {
+                // 攻擊失敗
+                if (attacker === "team") {
+                    // 顯示聯手攻擊失敗訊息（在隊伍的欄位）
+                    document.getElementById("team-action").textContent = texts.teamFightLose;
+                } else {
+                    // 顯示單獨攻擊失敗訊息（在攻擊者的欄位）
+                    document.getElementById(`${attacker}-action`).textContent = texts.fightLose(attackerName);
+                }
+            }
+
+            // 攻擊結束後
+            if (attacker === "team") {
+                // 聯手攻擊，隱藏可行動成員的攻擊、逃跑按鈕
+                actableMember.forEach(member => {
+                    document.querySelectorAll(`.${member.id}-btn button`).forEach(button => {
+                        button.style.display = "none";
+                    });
+                    //localStorage.removeItem(`${member.id}-btn-show`); // 隱藏按鈕
+
+                    removeActableMember(member.id); // 將攻擊者移出可行動成員
+                });
+
+                // 隱藏聯手攻擊、一起逃跑按鈕
+                document.querySelectorAll('.team-btn button').forEach(button => {
+                    button.style.display = "none";
+                });
+            } else {
+                // 單獨攻擊，隱藏攻擊者的攻擊、逃跑按鈕
+                document.querySelectorAll(`.${attacker}-btn button`).forEach(button => {
+                    button.style.display = "none";
+                });
+                //localStorage.removeItem(`${attacker}-btn-show`); // 隱藏按鈕
+
+                removeActableMember(attacker); // 將攻擊者移出可行動成員
+            }
+
+            endAction();
+        }
+
+        // 逃跑邏輯
+        function escape(escaper) {
+            let presentMember = JSON.parse(localStorage.getItem("presentMember")) || [];
+            let actableMember = JSON.parse(localStorage.getItem("actableMember")) || [];
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+
+            // 找到逃跑者的資料
+            let member = actableMember.find(comp => comp.id === escaper);
+            let escaperName = member.name;
+            let escaperDex = member.totalDex;
+            let escapeId = member.id;
+
+            // 讀取第一個敵人的資料
+            let enemyDex = enemies.length > 0 ? enemies[0].totalDex : 0; // 從陣列中取第一個敵人
+
+            // 計算逃跑成功率
+            let runChance;
+            let situation = parseInt(localStorage.getItem("situation"));
+            if (situation === 4 || presentMember.length > enemies.length) { 
+                // 如果敵人無防備，成功率100%
+                // 或是如果上場成員比敵人多，敵人無法分心追趕，成功率也是100%
+                runChance = 1;
+            } else {
+                // 如果是正常情況，以雙方敏捷計算命中率
+                runChance = escaperDex / (escaperDex + enemyDex);
+            }
+            let randomValue = Math.random(); // 產生 0~1 的隨機小數
+
+            // 檢查成功率
+            console.log(`逃跑者: ${escaperName}, 敏捷: ${escaperDex}, 敵人敏捷: ${enemyDex}`);
+            console.log(`計算的逃跑成功率: ${(runChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+
+            // 顯示逃跑結果
+            if (randomValue <= runChance) {
+                // 逃跑成功時
+                removePresentMember(escaper); // 移出上場成員
+                addEscapeMember(escaper); // 加入逃跑成員
+
+                // 顯示逃跑成功訊息（顯示在隊伍欄位，因為逃跑成功會清除角色欄位）
+                document.getElementById("team-action").textContent = texts.escapeSuccess(escaperName);
+
+            } else {
+                // 顯示逃跑失敗訊息
+                let actionElement = document.getElementById(`${escaper}-action`);
+                if (actionElement) { // 確保該元素存在，避免出錯
+                    actionElement.textContent = texts.escapeFail(escaperName);
+                } else {
+                    console.warn(`找不到ID為 ${escaper}-action 的元素`);
+                }
+            }
+
+            // 隱藏攻擊和逃跑按鈕
+            document.querySelectorAll(`.${escaper}-btn button`).forEach(button => {
+                button.style.display = "none";
+            });
+            //localStorage.removeItem(`${escaper}-btn-show`);  // 隱藏按鈕
+
+            removeActableMember(escaper); // 將逃跑者移出可行動成員
+
+            endAction();
+        }
+
+        // 一起逃跑邏輯
+        function teamEscape() {
+            // 獲取可行動成員的資料
+            let actableMember = JSON.parse(localStorage.getItem("actableMember")) || [];
+   
+            // 找到 dex 最低的成員
+            let minDexMembers = [];
+            let minDex = Infinity; // 設定初始值為無限大
+            actableMember.forEach(member => {
+                if (member.totalDex < minDex) { // 如果找到更低的 dex，重置陣列，將該角色加入陣列
+                    minDex = member.totalDex; //更新最低 dex
+                    minDexMembers = [member];
+                } else if (member.totalDex === minDex) {
+                    minDexMembers.push(member); // 如果dex相同，將該角色加入陣列
+                }
+            });
+
+            // 讀取第一個敵人的資料
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+            let enemyDex = enemies.length > 0 ? enemies[0].totalDex : 0; // 從陣列中取第一個敵人
+
+            // 計算逃跑成功率
+            let runChance;
+            let situation = parseInt(localStorage.getItem("situation"));
+            if (situation === 4) { 
+                // 如果敵人無防備，成功率100%
+                runChance = 1;
+            } else {
+                // 如果是正常情況，以雙方敏捷計算命中率
+                runChance = minDex / (minDex + enemyDex);
+            }
+            let randomValue = Math.random(); // 產生 0~1 的隨機小數
+            // 檢查成功率
+            console.log(`敏捷最低者: ${minDexMembers[0].name}, 敏捷: ${minDex}, 敵人敏捷: ${enemyDex}`);
+            console.log(`計算的逃跑成功率: ${(runChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+
+            // 顯示逃跑結果
+            if (randomValue <= runChance) {
+                // 逃跑成功時
+                actableMember.forEach(member => {
+                    removePresentMember(member.id); // 移出上場成員
+                    addEscapeMember(member.id); // 加入逃跑成員
+                });
+
+                // 取得所有逃跑成員的名字並用頓號「、」分隔
+                let escapers = actableMember.map(member => member.name).join("、");
+
+                // 顯示逃跑成功訊息
+                document.getElementById("team-action").textContent = texts.escapeSuccess(escapers);
+
+            } else {
+                // 逃跑失敗時
+
+                // 取得敏捷最低者的名字並用頓號「、」分隔
+                escapers = minDexMembers.map(member => member.name).join("、");
+
+                // 顯示逃跑失敗訊息
+                document.getElementById("team-action").textContent = texts.teamEscapeFail(escapers);               
+            }
+
+            // 隱藏成員的攻擊和逃跑按鈕
+            actableMember.forEach(member => {
+                document.querySelectorAll(`.${member.id}-btn button`).forEach(button => {
+                    button.style.display = "none";
+                });
+                //localStorage.removeItem(`${member.id}-btn-show`); // 隱藏按鈕
+
+                removeActableMember(member.id); // 將攻擊者移出可行動成員
+            });
+
+            // 隱藏聯手攻擊和一起逃跑按鈕
+            document.querySelectorAll('.team-btn button').forEach(button => {
+                button.style.display = "none";
+            });
+
+            endAction();
+        }
+
+        // 交談
+        function talk() {
+            // 讀取所有敵人的資料
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+
+            let enemyType = enemies.length > 0 ? enemies[0].type : ""; // 取第一個敵人的類型
+            
+            // 檢查敵人類型是不是人形
+            if (enemyType === "人形") {
+                if (selectedTarget) {
+                    // 如果已選擇目標，就進入交談
+                    localStorage.setItem("npcId", selectedTarget); // 儲存交談對象
+
+                    // 隱藏主角的攻擊、逃跑按鈕
+                    document.querySelectorAll("player-btn button").forEach(button => {
+                        button.style.display = "none";
+                    });
+                    //localStorage.removeItem("player-btn-show"); // 隱藏按鈕
+                    removeActableMember("player"); // 將主角移出可行動成員
+                    
+                    window.location.href = 'battleTalk.html'; // 跳轉到交談頁面
+
+                } else {
+                    // 如果還沒選擇目標，就顯示提示
+                    document.getElementById("note").textContent = texts.noTarget;
+                }
+            } else {
+                // 如果不是人形，就顯示無法對話的提示
+                document.getElementById("note").textContent = texts.cannotTalk;
+            }
+        }
+
+        // 敵人攻擊邏輯
+        function enemyFight() {
+            // 讀取同伴資料
+            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions"))
+
+            // 讀取第一個敵人的資料
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+            let enemyDex = enemies.length > 0 ? enemies[0].totalDex : 0; 
+            let enemyStr = enemies.length > 0 ? enemies[0].totalStr : 0; 
+
+            // 每個敵人發動一次攻擊
+            enemies.forEach((enemy, index) => {
+                if (presentMember.length === 0) return; // 若上場成員沒人則不攻擊
+
+                // 隨機選擇一個目標
+                let randomIndex = Math.floor(Math.random() * presentMember.length);
+                let hurtMember = presentMember[randomIndex];
+
+                // 計算敵人命中率
+                let hitChance = enemyDex / (enemyDex + hurtMember.totalDex);
+                let randomValue = Math.random(); // 產生 0~1 的隨機小數
+                // 檢查命中率
+                console.log(`攻擊者: ${enemy.name}, 敏捷: ${enemyDex}, 目標: ${hurtMember.name}, 目標敏捷: ${hurtMember.totalDex}`);
+                console.log(`計算的敵人命中率: ${(hitChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+
+                // 攻擊結果
+                if (randomValue < hitChance) {
+                    // 敵人攻擊成功，對角色造成傷害
+                    let damage = enemyStr - hurtMember.totalArm; // 傷害 = 攻擊者的力量 - 目標的護甲
+                    hurtMember.HP = Math.max(hurtMember.HP - damage, 0); // HP減少，不會低於0
+                    document.getElementById(hurtMember.HPid).textContent = hurtMember.HP;
+
+                    // HP變為紅字（不移除之前的紅字，可以同時有多個紅字）
+                    document.getElementById(hurtMember.HPid).classList.add("red-hp");
+
+                    // 更新 localStorage
+                    if (hurtMember.HPid === "playerHP") {
+                        localStorage.setItem("playerHP", hurtMember.HP);
+                    } else {
+                        let companionIndex = parseInt(hurtMember.HPid.match(/\d+/)[0]) - 1;
+                        if (hiredCompanions[companionIndex]) {
+                            hiredCompanions[companionIndex].HP = hurtMember.HP;
+                            localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
+                        }
+                    }
+
+                    // 判斷角色是否死亡
+                    if (hurtMember.HP <= 0) {
+                        // 如果角色死亡，顯示被擊殺訊息（在敵人的欄位）
+                        let enemyActionElement = document.getElementById(`enemy${index + 1}-action`);
+                        if (enemyActionElement) {
+                            enemyActionElement.textContent = texts.enemyKill(hurtMember.name, damage);
+                        } else {
+                            console.warn(`找不到ID為 enemy${index + 1}-action 的元素`);
+                        }
+                    } else {
+                        // 如果角色活著，顯示被攻擊訊息（在敵人的欄位）
+                        let enemyActionElement = document.getElementById(`enemy${index + 1}-action`);
+                        if (enemyActionElement) {
+                            enemyActionElement.textContent = texts.enemyWin(hurtMember.name, damage);
+                        } else {
+                            console.warn(`找不到ID為 enemy${index + 1}-action 的元素`);
+                        }
+                    }
+
+                } else {
+                    // 敵人攻擊失敗，顯示訊息（在敵人的欄位）
+                    let enemyActionElement = document.getElementById(`enemy${index + 1}-action`);
+                    if (enemyActionElement) {
+                        enemyActionElement.textContent = texts.enemyLose(hurtMember.name);
+                    } else {
+                        console.warn(`找不到ID為 enemy${index + 1}-action 的元素`);
+                    }
+                }
+                endAction();
+            })
+        }
+
+        // 角色離開上場成員
+        function removePresentMember(removeMember) {
+            let index = presentMember.findIndex(member => member.id === removeMember);
+
+            if (index !== -1) {
+                let removedMember = presentMember.splice(index, 1)[0]; // 移除並返回該成員
+                console.log(`${removedMember.name} 離開了隊伍`);
+            } else {
+                console.warn(`無效的同伴: ${removeMember}`);
+            }
+            localStorage.setItem("presentMember", JSON.stringify(presentMember));
+            console.log("剩餘成員：", presentMember.map(m => m.name));
+        }
+
+        // 角色離開可行動隊伍
+        function removeActableMember(removeMember) {
+            let index = actableMember.findIndex(member => member.id === removeMember);
+
+            if (index !== -1) {
+                let removedMember = actableMember.splice(index, 1)[0]; // 移除並返回該成員
+                //console.log(`${removedMember.name} 離開了隊伍`);
+            } else {
+                //console.warn(`無效的同伴: ${removeMember}`);
+            }
+            localStorage.setItem("actableMember", JSON.stringify(actableMember));
+            //console.log("還沒行動過的成員：", actableMember.map(m => m.name));
+        }
+
+        // 角色加入逃跑成員
+        function addEscapeMember(escaper) {
+            // 讀取目前已逃跑的成員
+            let escapeMember = JSON.parse(localStorage.getItem("escapeMember")) || [];
+            
+            // 讀取可行動成員的資料
+            let actableMember = JSON.parse(localStorage.getItem("actableMember")) || [];
+            
+            // 找到逃跑者的名字
+            let member = actableMember.find(comp => comp.id === escaper);
+
+            //加入逃跑成員
+            escapeMember.push(member);
+
+            localStorage.setItem("escapeMember", JSON.stringify(escapeMember));
+            console.log("已逃跑成員：", escapeMember.map(m => m.name));
+        }
+
+        // 行動結束（敵我通用）
+        function endAction() {  
+            // 移除提示
+            document.getElementById("note").textContent = "";
+            document.getElementById("battle-result").textContent = "";
+
+            let battleResult = 0;
+            let respawn = 0;
+
+            // 讀取所有敵人資料
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+
+            // 如果殺死守衛，通緝等級上升，名聲下降
+            enemies.forEach(enemy => {
+                if (enemy.name === "守衛" && enemy.HP === 0) {
+                    addWantedLevel(5);
+                    addPlayerFame(-5);
+                }
+            });
+
+            // 計算獻祭的靈魂數量
+            enemies.forEach(enemy => {
+                if (enemy.HP === 0) {
+                    let soulCount = parseInt(localStorage.getItem("soulCount"));
+                    soulCount ++; // 靈魂增加
+                    localStorage.setItem("soulCount", soulCount);
+                }
+            });
+
+            // 檢查是否執行惡魔攻擊
+            const demonAttack = localStorage.getItem("demonAttack");
+            if (demonAttack) {
+                enemies.forEach(enemy => {
+                    let damage = 10; // 傷害 = 10
+                    enemy.HP = Math.max(enemy.HP - damage, 0); // HP 減少，不會低於0
+                });
+                localStorage.setItem("enemies", JSON.stringify(enemies)); // 儲存更新後的敵人資料
+                localStorage.removeItem("demonAttack"); // 清除惡魔攻擊
+
+                for (let i = 1; i <= 4; i++) {
+                    let enemyHP = document.getElementById(`enemy${i}-HP`);
+                    let enemyAction = document.getElementById(`enemy${i}-action`);
+
+                    if (enemyHP && enemyAction) {
+                        enemyHP.classList.add("red-hp"); // HP變為紅字
+                        enemyAction.textContent = texts.demonAttacked; // 顯示敵人燃燒的描述
+                    }
+                }
+            }
+
+            // 讀取成員資料
+            let presentMember = JSON.parse(localStorage.getItem("presentMember")) || [];
+            let actableMember = JSON.parse(localStorage.getItem("actableMember")) || [];
+            let escapeMember = JSON.parse(localStorage.getItem("escapeMember")) || [];
+
+            // 更新角色 HP 資料
+            partyToTeamMember();
+            presentMember.forEach(member => {
+                if (member.id === "player") {
+                    member.HP = parseInt(localStorage.getItem("playerHP"));
+                } else {
+                    let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+                    let companionIndex = parseInt(member.id.replace("companion", "")) - 1;
+                    if (hiredCompanions[companionIndex]) {
+                        member.HP = hiredCompanions[companionIndex].HP;
+                    }
+                }
+            });
+            actableMember.forEach(member => {
+                if (member.id === "player") {
+                    member.HP = parseInt(localStorage.getItem("playerHP"));
+                } else {
+                    let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+                    let companionIndex = parseInt(member.id.replace("companion", "")) - 1;
+                    if (hiredCompanions[companionIndex]) {
+                        member.HP = hiredCompanions[companionIndex].HP;
+                    }
+                }
+            });
+
+            // 檢查是否有角色死亡
+            let deadMembers = presentMember.filter(member => member.HP <= 0).map(member => member.name).join("、");
+            if (deadMembers) {
+                document.getElementById("team-action").textContent = texts.die(deadMembers); // 顯示死亡訊息（可顯示多人）
+            }
+
+            // 檢查角色是否非死即逃
+            if (presentMember.length > 0) { // 檢查上場成員是否有人（如果沒人，有可能是全員逃走）
+                let allMembersDead = presentMember.every(member => member.HP <= 0); // 檢查上場成員是否都死亡
+                if (allMembersDead) {
+                    if (escapeMember.length > 0) { // 檢查逃跑成員是否有人
+                        // 有人死亡，剩下的人都已逃走
+                        battleResult = 3;
+                        localStorage.setItem("battleResult", battleResult);
+                        return; // 防止繼續執行後面的邏輯
+                    }
+                }
+            }
+
+            // 移除死亡角色，只保留HP大於0的角色
+            presentMember = presentMember.filter(member => member.HP > 0); 
+            actableMember = actableMember.filter(member => member.HP > 0); 
+            localStorage.setItem("presentMember", JSON.stringify(presentMember));
+            localStorage.setItem("actableMember", JSON.stringify(actableMember));
+            
+            //console.log("剩餘成員:", presentMember);
+            //console.log("可行動的成員", actableMember);
+            generateTeam(); // 重新顯示隊伍
+
+            // 檢查隊伍是否全滅
+            if (presentMember.length === 0) { // 檢查上場成員是否 0 人
+                if (escapeMember.length === 0) { // 檢查逃跑成員是否 0 人
+                    // 全員死亡
+                    defeated();
+                } else {
+                    // 全員逃走
+                    battleResult = 2;
+                    localStorage.setItem("battleResult", battleResult);
+                    localStorage.removeItem("inDungeon"); // 清除副本
+                    endBattle();
+                }
+                return; // 防止繼續執行後面的邏輯
+            }
+
+            // 檢查敵人是否全滅
+            if (enemies.every(enemy => enemy.HP <= 0)) {
+                // 戰鬥勝利
+                loot();
+                battleResult = 1;
+                localStorage.setItem("battleResult", battleResult);
+                endEvent(); // 如果在事件中，標記事件完成
+
+                // 如果有指定戰勝後的對話
+                const encounter = JSON.parse(localStorage.getItem("encounter")) || [];
+                if (encounter && encounter.successKey) {
+                    localStorage.setItem("currentKey", encounter.successKey);
+                }
+
+                endBattle();
+            }
+
+            // 檢查是否搶劫敵人
+            let robEnemy = localStorage.getItem("robEnemy") === "true"; 
+            if (robEnemy) {
+                // 搶劫敵人
+                loot();
+                battleResult = 4;
+                localStorage.setItem("battleResult", battleResult);
+                endBattle();
+            }
+
+            // 移除死亡的敵人
+            enemies = enemies.filter(enemy => enemy.HP > 0); // 只保留HP大於0的敵人
+            localStorage.setItem("enemies", JSON.stringify(enemies)); // 更新localStorage中的敵人資料
+            generateEnemy(); // 重新顯示敵人
+        }
+
+        // 回合結束
+        function endRound() {
+            // 移除標題和提示
+            document.getElementById("situation").textContent = "";
+            document.getElementById("battle-result").textContent = "";
+
+            // 移除戰鬥訊息
+            document.querySelectorAll(".battle-text").forEach(el => el.textContent = "");
+
+            // 移除HP的紅字
+            document.querySelectorAll(".red-hp").forEach(element => {
+                element.classList.remove("red-hp");
+            });
+
+            // 判斷是否已經戰敗（因為戰勝的話，會直接在行動結束時跳轉，戰敗的話，要先讓玩家看一下發生什麼事，然後按下「回合結束」後才跳轉）
+            battleResult = localStorage.getItem("battleResult");
+            if (battleResult && (battleResult !== 1 || battleResult !== 2 || battleResult !== 4)) {
+                localStorage.removeItem("inDungeon"); // 清除副本
+                endBattle();
+                return;
+            }
+            
+            // 檢查俘虜是否逃跑
+                // 獲取俘虜、非俘虜成員的資料
+                const prisoners = presentMember.filter(member => member.type === "俘虜");
+                const nonPrisoners = presentMember.filter(member => member.type !== "俘虜");
+   
+                // 找到 dex 最高的非俘虜成員
+                let maxDexMembers = [];
+                let maxDex = -Infinity; // 設定初始值為負無限
+                nonPrisoners.forEach(member => {
+                    if (member.totalDex > maxDex) { // 如果找到更高的 dex，重置陣列，將該角色加入陣列
+                        maxDex = member.totalDex; //更新最高 dex
+                        maxDexMembers = [member];
+                    }
+                });
+
+                // 檢查俘虜是否逃跑
+                prisoners.forEach(member => {
+                    // 計算逃跑成功率
+                    let runChance = member.totalDex / (member.totalDex + maxDex);
+                    
+                    let randomValue = Math.random(); // 產生 0~1 的隨機小數
+                    // 檢查成功率
+                    console.log(`俘虜敏捷: ${member.totalDex}, 隊伍最高敏捷: ${maxDex}`);
+                    console.log(`計算的逃跑機率: ${(runChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+
+                    // 結果
+                    if (randomValue <= runChance) {
+                        // 俘虜逃跑
+                        removePresentMember(member.id); // 移出上場成員
+                        removeCompanion(member.id); // 移出隊伍
+
+                        // 顯示俘虜逃跑訊息（顯示在隊伍欄位，因為逃跑成功會清除角色欄位）
+                        document.getElementById("team-action").textContent = texts.escapePrisoner(member.name);
+                    }
+                });
+
+            // 將上場成員設為可行動成員
+            localStorage.setItem("actableMember", JSON.stringify(presentMember));
+
+            // 檢查敵人是否投降
+                // 找到 str 最高的成員
+                let maxStrMembers = [];
+                let maxStr = -Infinity; // 設定初始值為負無限
+                presentMember.forEach(member => {
+                    if (member.totalStr > maxStr) { // 如果找到更高的 str，重置陣列，將該角色加入陣列
+                        maxStr = member.totalStr; //更新最高 str
+                        maxStrMembers = [member];
+                    }
+                });
+
+                // 讀取所有敵人資料
+                let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+            
+                // 敵人總 HP
+                let totalEnemyHP = 0;
+                enemies.forEach(enemy => {
+                    if (enemy.HP) {
+                        for (let i = 0; i < enemies.length; i++) {
+                            totalEnemyHP += enemy.HP;
+                        }
+                    }
+                });
+
+                // 敵人是否投降
+                let enemyType = enemies.length > 0 ? enemies[0].type : ""; // 取第一個敵人的類型
+                if (enemies.length === 1 && enemyType === "人形") {
+                    if (maxStr > totalEnemyHP) {
+                        // 如果只剩一個人形敵人，且隊伍中最高力量 > 敵人 HP 時，敵人有機會投降
+
+                        // 計算投降機率
+                        let surrenderChance = maxStr / (maxStr + totalEnemyHP);
+                    
+                        let randomValue = Math.random(); // 產生 0~1 的隨機小數
+                        // 檢查成功率
+                        console.log(`隊伍最高力量: ${maxStr}, 敵人總HP: ${totalEnemyHP}`);
+                        console.log(`計算的投降機率: ${(surrenderChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+
+                        // 結果
+                        if (randomValue <= surrenderChance) {
+                            localStorage.setItem("enemySurrender", "true");
+                            localStorage.setItem("npcId", "enemy1"); // 將 enemy1 儲存為交談對象
+                            window.location.href = 'battleTalk.html'; // 敵人投降，跳轉到交談頁面
+                            return;
+                        }
+                    }
+                }
+
+            // 如果敵人毫無防備，下回合恢復正常回合
+            let situation = parseInt(localStorage.getItem("situation"));
+            if (situation === 4) {
+                situation = 2; 
+                localStorage.setItem("situation", situation); 
+            }
+
+            // 敵人攻擊
+            enemyFight(); 
+
+            // 檢查雷納德是否路過幫忙
+                const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+                isMember = teamMember.some(m => m.name === "雷納德");
+                const inDungeon = localStorage.getItem("inDungeon");
+
+                if (!isMember && teamMember.length < 4 && !inDungeon) {
+                    // 如果雷納德不在隊伍中，隊伍有空位，且不是在副本中，雷納德有機率加入
+                    let randomValue = Math.random();
+                    if (randomValue <= 0.1) { // 10% 加入
+                        localStorage.setItem("npcName", "雷納德");
+                        showDialogue("雷納德幫忙");
+                    }
+                }
+
+            // 重新顯示隊伍欄位及按鈕
+            generateTeam(); 
+
+            window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
+        }
+
+        // 獲得金錢和戰利品
+        function loot() {
+            // 讀取所有敵人的資料
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+
+            // 讀取初始敵人數量
+            let enemyCount = parseInt(localStorage.getItem("enemyCount"));
+                
+            // 讀取玩家的金錢與物品
+            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+            let totalMoney = 0;
+            let totalLoot = [];
+
+            // 計算金錢和戰利品
+            enemies.forEach(enemy => {
+                // 金錢
+                if (enemy.money) {
+                    totalMoney += enemy.money * enemyCount;
+                    playerMoney += enemy.money * enemyCount;
+                }
+                // 戰利品（一般戰利品 + 武器 + 護甲）
+                for (let i = 0; i < enemyCount; i++) {
+                    if (enemy.loot) totalLoot.push(enemy.loot);
+                    if (enemy.weaponId) totalLoot.push(enemy.weaponId);
+                    if (enemy.armorId) totalLoot.push(enemy.armorId);
+                }
+            });
+
+            // 更新玩家金錢與物品
+            playerItems = playerItems.concat(totalLoot);
+            localStorage.setItem("playerItems", JSON.stringify(playerItems));
+            localStorage.setItem("playerMoney", playerMoney);
+
+            // 統計戰利品的數量
+            let lootCount = totalLoot.reduce((count, loot) => {
+                count[loot] = (count[loot] || 0) + 1;
+                return count;
+            }, {});
+
+            // 顯示獲得的金錢和戰利品
+            let lootResult;
+
+            // 獲得的金錢
+            let moneyText = totalMoney > 0 ? `獲得 🪙 $${totalMoney}<br>` : "";
+
+            // 獲得的戰利品
+            let lootText = Object.keys(lootCount).map(loot => {
+                let item = itemDatabase.find(i => i.id === loot);
+                return item ? `獲得 ${item.name} × ${lootCount[loot]}` : "";
+            }).filter(text => text !== "").join("<br>");
+
+            lootResult = moneyText + lootText;
+            localStorage.setItem("lootResult", lootResult);
+        }
+
+        // 戰敗後的處理
+        function defeated() {
+            // 讀取第一個敵人的類型
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+            let enemyType = enemies.length > 0 ? enemies[0].type : 0;
+
+            // 讀取目前已逃跑的成員
+            let escapeMember = JSON.parse(localStorage.getItem("escapeMember")) || [];
+            let playerEscaped = escapeMember.some(member => member.id === "player");
+
+            const encounter = JSON.parse(localStorage.getItem("encounter"));
+
+            // 決定戰敗的情況
+            if (enemyType === "人形" && !playerEscaped && !encounter) {
+                // 如果是人形敵人、主角沒有逃走，也不是指定戰鬥，就隨機決定情況
+                let randomValue = Math.random();
+
+                if (randomValue < 1) { // 100% 被搶劫
+                    battleResult = 6;
+                } else { // 0% 被抓去當奴隸（尚未實裝）
+                    battleResult = 7; 
+                }                
+                localStorage.setItem("battleResult", battleResult);
+
+            } else { 
+                // 否則單純被擊倒
+                battleResult = 5;
+                localStorage.setItem("battleResult", battleResult);
+            }
+            
+            // 處理戰敗的情況
+            if (battleResult === 6) { // 被搶劫的情況
+                // 讀取主角金錢
+                let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+
+                // 如果有錢，執行搶劫
+                if (playerMoney > 0) {
+                    // 隨機決定被搶走的金額（至少 1，最多一半）
+                    let robbedMoney = Math.max(1, Math.floor(Math.random() * playerMoney * 0.5));
+                    robbedMoney = Math.min(robbedMoney, playerMoney); // 確保不會超過擁有的金額
+
+                    // 扣除金錢並儲存
+                    playerMoney -= robbedMoney;
+                    localStorage.setItem("playerMoney", playerMoney);
+                    localStorage.setItem("robbedMoney", robbedMoney);
+
+                } else {
+                    // 沒有錢，改為普通擊倒
+                    battleResult = 5;
+                    localStorage.setItem("battleResult", battleResult);
+                }
+
+            } else if (battleResult === 7) { // 成為奴隸的情況（尚未實裝）
+
+            }
+
+            // 檢查有沒有包裹，隨機損壞一件
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            let packages = playerItems.filter(item => item === "specialItem01" || item === "specialItem03");
+
+            if (packages.length > 0) {
+                // 隨機選擇一件包裹
+                let randomPackage = packages[Math.floor(Math.random() * packages.length)];
+
+                // 根據這個包裹的id替換為損壞包裹
+                playerItems = playerItems.map(item => {
+                    if (item === randomPackage) {
+                        return randomPackage === "specialItem01" ? "specialItem02" : "specialItem04"; // 替換為損壞版本
+                    }
+                    return item; // 保留其他包裹不變
+                });
+
+                // 更新 localStorage
+                localStorage.setItem("playerItems", JSON.stringify(playerItems));
+            }
+
+            // 如果有指定戰敗後的對話
+            if (encounter && encounter.failKey) {
+                localStorage.setItem("currentKey", encounter.failKey);
+            } else {
+                localStorage.removeItem("inDungeon"); // 清除副本
+            }
+                
+            localStorage.removeItem("helpVictim"); // 清除「幫助平民」事件
+
+            // 隨機決定重生的情況
+            let respawn;
+            let randomValue = Math.random();
+            if (randomValue < 0.5) { // 50% 原地重生
+                respawn = 1; 
+            } else { // 50% 被送回城鎮
+                respawn = 2; 
+            }
+
+            // 如果在副本中，只會原地重生
+            const inDungeon = localStorage.getItem("inDungeon");
+            if (inDungeon) {
+                respawn = 1; 
+            }
+            
+            // 如果指定敵人是守衛，就會被逮捕
+            if (encounter && encounter.enemyName === "守衛") {
+                respawn = 3; // 在監獄重生
+            }
+
+            // 儲存重生的情況
+            localStorage.setItem("respawn", respawn);
+        }
+
+        // 戰鬥結束
+        function endBattle() {  
+            window.location.href = 'battleResult.html'; // 跳轉到戰鬥結果頁面
+        }
+
+        // 幫手加入
+        function helperJoin() {
+            // 加入隊伍
+            const npcName = localStorage.getItem("npcName");
+            let companion = mercenaries.find(comp => comp.name === npcName);
+            addCompanion(companion);
+
+            // 找到隊中的id
+            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            let member = teamMember.find(m => m.name === npcName);
+
+            // 加入上場成員、可行動成員
+            let presentMember = JSON.parse(localStorage.getItem("presentMember")) || [];
+            let actableMember = JSON.parse(localStorage.getItem("actableMember")) || [];
+            presentMember.push(member);
+            actableMember.push(member);
+            localStorage.setItem("presentMember", JSON.stringify(presentMember));
+            localStorage.setItem("actableMember", JSON.stringify(actableMember));
+
+            generateTeam();
+        }
+    </script>
+
+</body>
+</html>

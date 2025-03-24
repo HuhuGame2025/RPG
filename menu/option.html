@@ -1,0 +1,148 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>選項</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            background-color: #000 !important; /* 背景顏色 */
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- 返回按鈕 -->
+    <div class="button-bar header" id="buttonBar">
+        <button class="exit-button" onclick="goBack()">　〈 返回</button>
+        <h3>選項</h3>
+    </div>
+
+    <div class="main-content">
+        <br>
+
+         <!-- 選單 -->
+        <div class="menu">
+            <button onclick="aboutBattle()">戰鬥說明</button>
+            <button onclick="preference()">偏好設定</button>
+            <a href="../index.html"><button>回首頁</button></a>
+        </div>
+
+        <div id="text"></div>
+        <br>
+
+        <!-- Top按紐 -->
+        <button class="top-button" onclick="goTop()"></button>
+    </div>
+
+    <script src="../script.js"></script>
+    <script>
+    
+        // 頁面載入時
+        window.onload = function() {
+
+        };
+        
+        // 戰鬥說明
+        function aboutBattle() {
+            document.getElementById("text").innerHTML = `
+                <h1>戰鬥說明</h1>
+                <hr>
+                <p>影響戰鬥的屬性有體質、力量、敏捷。</p>
+                <p>【體質】<br>角色的最大生命值等於體質的 3 倍。</p>
+                <p>【力量】<br>角色的攻擊造成的傷害等於力量。</p>
+                <p>【敏捷】<br>角色的敏捷越高，攻擊的命中率和逃跑的成功率越高。</p>
+                <hr>
+                <p>在戰鬥中，角色每回合都能選擇攻擊或逃跑。</p>
+                <p>【攻擊】<br>攻擊的命中率等於角色「敏捷」除以「角色敏捷 + 敵人敏捷」。<br>命中時造成等同於角色「力量」的傷害。</p>
+                <p>【逃跑】<br>逃跑的成功率等於角色「敏捷」除以「角色敏捷 + 敵人敏捷」。</p>
+                <hr>
+                <p>當隊伍中有 2 人以上還沒行動時，就可以使用聯手攻擊、一起逃跑。</p>
+                <p>【聯手攻擊】<br>採計所有攻擊者的敏捷，因此能大幅提高命中率，並造成等同所有攻擊者力量的傷害。</p>
+                <p>【一起逃跑】<br>採計敏捷最低成員的敏捷，因此只要該成員逃跑失敗，所有人都會一起失敗。</p>
+                <br>
+             `;
+        }
+
+        // 偏好設定
+        function preference() {
+            document.getElementById("text").innerHTML = `
+                <h1>偏好設定</h1>
+                <hr>
+                <h3>NPC性別代名詞</h3>
+                <p class="note">會替換遊戲中全部的代名詞。</p>
+                <div class="column-container">
+                    <button id="he-button" class="column center">他</button>
+                    <button id="she-button" class="column center">她</button>
+                </div>
+                <hr>
+                <h3>自訂NPC名字</h3>
+                <div id="npc-name-settings" class="note"></div>
+                <div class="column-container">
+                    <button id="save-names" class="column center">儲存</button>
+                    <button id="reset-default" class="column center">恢復預設</button>
+                </div>
+                <br>
+            `;
+
+            // 設定性別按鈕
+            document.getElementById("he-button").onclick = () => {
+                localStorage.setItem("npcGender", "he");
+                alert("已設定為「他」");
+            };
+            document.getElementById("she-button").onclick = () => {
+                localStorage.setItem("npcGender", "she");
+                alert("已設定為「她」");
+            };
+
+            // 可自訂的NPC名稱
+            const npcList = [
+                { key: "newReynald", label: "老練的冒險者", defaultName: "雷納德" },
+                { key: "newTarmuk", label: "獸人狂戰士", defaultName: "塔爾穆克" },
+                { key: "newSain", label: "蒙面刺客", defaultName: "賽恩" },
+                { key: "newEdmund", label: "像小混混的傭兵", defaultName: "艾德蒙" },
+                { key: "newNoirel", label: "精靈少年", defaultName: "諾伊爾" },
+                { key: "newRowan", label: "公會接待員", defaultName: "羅文" },
+                { key: "newWood", label: "公會接待員", defaultName: "伍德" },
+                { key: "newLazrik", label: "哥布林商人", defaultName: "拉茲" },
+                { key: "newZibber", label: "哥布林商人", defaultName: "齊布" },
+                { key: "newMarcus", label: "小孩", defaultName: "馬卡斯" },
+                { key: "newSelreth", label: "吸血鬼領主", defaultName: "賽爾瑞斯" },
+            ];
+
+            const npcContainer = document.getElementById("npc-name-settings");
+            npcList.forEach(npc => {
+                const storedName = localStorage.getItem(npc.key) || "";
+                npcContainer.innerHTML += `
+                    <p>
+                        <label>${npc.label}：</label><br>
+                        <input type="text" id="${npc.key}" value="${storedName}" placeholder="${npc.defaultName}">
+                    </p>
+                `;
+            });
+
+            // 儲存 NPC 名稱
+            document.getElementById("save-names").onclick = () => {
+                npcList.forEach(npc => {
+                    const newName = document.getElementById(npc.key).value.trim();
+                    if (newName) {
+                        localStorage.setItem(npc.key, newName);
+                    } else {
+                        localStorage.removeItem(npc.key); // 清除設定，回復為預設
+                    }
+                });
+                alert("儲存成功");
+            };
+
+            // 恢復預設 NPC 名稱
+            document.getElementById("reset-default").onclick = () => {
+                npcList.forEach(npc => localStorage.removeItem(npc.key));
+                preference(); // 重新載入 UI
+            };
+        }
+
+    </script>
+
+</body>
+</html>

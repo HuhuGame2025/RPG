@@ -1,0 +1,536 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>物品</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        body {
+            background-color: #000 !important; /* 背景顏色 */
+        }
+        
+
+
+    </style>
+</head>
+<body>
+    <!-- 返回按鈕 -->
+    <div class="button-bar header" id="buttonBar">
+        <button class="exit-button" onclick="goBack()">　〈 返回</button>
+        <h3>物品</h3>
+    </div>
+
+    <div id="main" class="main-content">
+        <p>🪙 $<span id="playerMoney"></span></p>
+
+        <div class="row-buttons">
+            <button onclick="showItem()"><span class="small">全部</span></button>
+            <button onclick="showItem('equipment')"><span class="small">🗡️</span></button>
+            <button onclick="showItem('supply')"><span class="small">🫙</span></button>
+            <button onclick="showItem('loot')"><span class="small">💰</span></button>
+            <button onclick="showItem('specialItem')"><span class="small">📜</span></button>
+        </div>
+        <hr>
+
+        <!-- 物品列表 -->
+        <div id="item-list"></div>
+        <br>
+        
+        <!-- Top按紐 -->
+        <button class="top-button" onclick="goTop()"></button>
+    </div>
+
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content"></div>
+
+    <script src="../script.js"></script>
+    <script>
+    
+        // 頁面載入時
+        window.onload = function() {
+            loadPartyData();
+            partyToTeamMember();
+            showItem(); // 顯示所有物品
+            npcPreferences(); // NPC偏好設定
+            
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            console.log("物品", playerItems);
+            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            console.log("teamMember", teamMember);
+        };
+
+        // 對話資料庫
+        let dialogueData = {
+            "紅寶石中的惡魔": {
+                "start": {
+                    npc: "npc",
+                    text: "我一直在觀察你，{playerName}，我知道你渴望力量。<br><br>我能借給你強大的力量，你只需要將新鮮的靈魂獻祭給我。",
+                    choices: [
+                        { text: "你是什麼？", next: "關於惡魔" },
+                        { text: "你能給我什麼力量？", next: "關於力量" },
+                        { text: "要怎麼獻祭？", next: "關於獻祭" },
+                        { text: "放回去", next: "", action: "(showItem(), removeDialogue())" },
+                    ]
+                },
+                "關於惡魔": {
+                    npc: "npc",
+                    text: "我是一個惡魔，數百年前，某人將我封印在這個精美的血紅色監獄中。<br><br>我變成了貪婪之人爭奪的寶物，擁有我的人便能實現願望，成為英雄、貴族或暴君。<br><br>而現在，我是你的了。",
+                    choices: [
+                        { text: "你要靈魂做什麼？", next: "關於靈魂" },
+                        { text: "封印能被解開嗎？", next: "關於封印" },
+                        { text: "發布委託的人是誰？", next: "關於委託人" },
+                        { text: "我有其他問題", next: "start" },
+                    ]
+                },
+                    "關於靈魂": {
+                        npc: "npc",
+                        text: "靈魂是我的糧食，我吸收靈魂後會變得更強大，也就能為你提供更多力量。<br><br>這本就是一個充滿殺戮的世界，人類、獸人、野獸隨時都在死去，為什麼要白白浪費那些鮮美的靈魂？",
+                        choices: [
+                            { text: "原來如此", next: "關於惡魔" },
+                        ]
+                    },
+                    "關於封印": {
+                        npc: "npc",
+                        text: "知道如何解開封印的人，已經在數百年前死了。<br><br>雖然我失去了自由，但我卻因此有機會認識更多像你一樣的人，也未嘗是壞事。",
+                        choices: [
+                            { text: "原來如此", next: "關於惡魔" },
+                        ]
+                    },
+                    "關於委託人": {
+                        npc: "npc",
+                        text: "那是其中一個費盡心機得到我，卻沒能力把我保管好的人。<br><br>既然你奪取到了我，就證明你更適合擁有我，為什麼要再讓給別人？",
+                        choices: [
+                            { text: "原來如此", next: "關於惡魔" },
+                        ]
+                    },
+                "關於力量": {
+                    npc: "npc",
+                    text: "你可以召喚烈焰吞噬你的敵人，或是讓受傷的肉體瞬間再生。<br><br>你獻祭的靈魂越多，我的魔力就越強大。<br><br>但我最好還是提醒你……如果有人看見你使用魔法，他們會叫你「巫師」，那會引來一些不必要的麻煩。",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "關於獻祭": {
+                    npc: "npc",
+                    text: "每當你奪走一條生命，不管是用刀劍或是利用他人，我都能吸收受害者的靈魂。<br><br>在那瞬間你也能感覺到我的力量增強，很快你就會愛上這種感覺。",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "use": {
+                    npc: "npc",
+                    text: "你想要我怎麼做？",
+                    choices: [
+                        { text: "召喚烈焰", next:"", action: "demonAttack()" },
+                        { text: "治療傷口", next: "", action: "demonHeal()" },
+                        { text: "算了", next: "", action: "(showItem(), removeDialogue())" },
+                    ]
+                },
+                "use_非戰鬥中": {
+                    npc: "npc",
+                    text: "你想要我怎麼做？",
+                    choices: [
+                        { text: "治療傷口", next: "", action: "demonHeal()" },
+                        { text: "算了", next: "", action: "(showItem(), removeDialogue())" },
+                    ]
+                },
+                    "靈魂不足": {
+                        npc: "npc",
+                        text: "想使用我的力量？先獻祭靈魂。",
+                        choices: [
+                            { text: "好吧", next: "", action: "(showItem(), removeDialogue())" },
+                        ]
+                    },
+            },
+        }
+
+        // 顯示文本
+        const texts = {
+            chooseUser: (item, count) =>  `要讓誰使用 ${item}（× ${count}）？`,
+            chooseRubyUser: (count) =>  `能使用 ${count} 次魔法，要治療誰？`,
+        }
+
+        // 顯示所有物品
+        function showItem(itemType) {
+            // 讀取玩家的物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+            // 統計物品數量
+            let count = {};
+            playerItems.forEach(item => {
+                count[item] = (count[item] || 0) + 1;
+            });
+
+            let itemData = [];
+
+            // 依分類篩選物品
+            if (!itemType) { // 無指定，顯示全部
+                itemData = itemDatabase;
+            } else if (itemType === "equipment") { // 裝備
+                itemData = itemDatabase.filter(i => i.type === "weapon" || i.type === "armor"); 
+            } else { // 其他分類
+                itemData = itemDatabase.filter(i => i.type === itemType);
+            }
+
+            // 顯示物品列表
+            const itemList = document.getElementById("item-list");
+            itemList.innerHTML = "";
+
+            Object.keys(count).forEach(itemId => {
+                let item = itemData.find(i => i.id === itemId); // 從資料庫查找物品
+
+                if (item) {
+                    let itemDiv = document.createElement("div");
+                    itemDiv.classList.add("item", "background");
+
+                    itemDiv.innerHTML = `
+                        <div class="column-container" style="cursor: pointer;">
+                            <span class="column">${item.name} × ${count[itemId]}</span>
+                            <span class="column-small">
+                                ${item.price ? `$${item.price}` : "-"}
+                            </span>
+                        </div>
+                        <div class="hided" style="display: none;">
+                            <div class="column-container">
+                                <p class="column small note">
+                                    ${item.description}<br>
+                                    ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}` : item.str)}<br>` : ""}
+                                    ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}` : item.cha)}<br>` : ""}
+                                    ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}` : item.arm)}<br>` : ""}
+                                    ${item.dex ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}` : ""}
+                                </p>
+                                ${item.type !== "specialItem" && !item.owner ? 
+                                    `<button onclick="discardItem('${item.id}')" style="margin: auto;">
+                                        <span class="small">🗑️</span>
+                                    </button>` : ""}
+                            </div>
+                            <div class="column-container">
+                                <div class="column column-container">
+                                    ${item.usable ? 
+                                        `<button class="column center" onclick="useItem('${item.id}')">
+                                            <span class="small">使用</span>
+                                        </button>` : ""}
+                                    ${item.investigable ? 
+                                        `<button class="column center" onclick="investigateItem('${item.id}')">
+                                            <span class="small">查看</span>
+                                        </button>` : ""}
+                                </div>
+
+                            </div>
+                        </div>
+                    `;
+
+                    // 點擊物品時，顯示或隱藏詳細資訊
+                    let itemElement = itemDiv.querySelector(".column-container");
+                    let hidedElement = itemDiv.querySelector(".hided");
+
+                    itemElement.addEventListener("click", () => {
+                        hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
+                    });
+
+                    itemList.appendChild(itemDiv);
+                }
+            });
+        }
+
+        // 使用物品
+        function useItem(itemId) {
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
+            let count = playerItems.filter(item => item === itemId).length; // 計算剩餘數量
+
+            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+
+            // 如果是紅寶石
+            if (itemId === "specialItem14") { 
+                const soulCount = parseInt(localStorage.getItem("soulCount"));
+                const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+                
+                localStorage.setItem("npcName", "紅寶石中的惡魔");
+
+                if (soulCount > 0) {
+                    if (enemies) {
+                        showDialogue("use");
+                    } else {
+                        showDialogue("use_非戰鬥中");
+                    }
+                } else {
+                    showDialogue("靈魂不足");
+                }
+                
+                return;
+            }
+    
+            // 隱藏主要內容
+            document.getElementById("main").style.display = "none";
+
+            // 建立選擇使用者的 UI
+            let menu = document.createElement("div");
+            menu.id = "userMenu";
+            menu.classList.add("menu");
+
+            // 顯示「要讓誰使用」的提示
+            let message = document.createElement("p");
+            message.textContent = texts.chooseUser(item.name, count);
+            menu.appendChild(message);
+
+            // 為每個成員建立一個按鈕
+            teamMember.forEach((member, index) => {
+                let button = document.createElement("button");
+                button.innerHTML = `
+                    <h4>${member.name}</h4>
+                    <h4 class="hp">${member.HP} / ${member.MaxHP}</h4>
+                `;
+
+                button.onclick = function () {
+                    if (item.consumable) {
+                        // 如果是消耗品，移除一個物品
+                        let itemIndex = playerItems.indexOf(itemId);
+                        if (itemIndex !== -1) {
+                            playerItems.splice(itemIndex, 1);
+                        }
+                    }
+
+                    // 執行物品效果
+                    if (item.heal) { // 有治療效果
+                        // 檢查角色是否已死亡
+                        if (member.HP === 0) {
+                            member.HP = Math.min(member.HP + item.heal, member.MaxHP);
+
+                            // 死亡角色補血後，回歸上場成員、可行動成員
+                            let presentMember = JSON.parse(localStorage.getItem("presentMember")) || [];
+                            let actableMember = JSON.parse(localStorage.getItem("actableMember")) || [];
+                            presentMember.push(member);
+                            actableMember.push(member);
+                            localStorage.setItem("presentMember", JSON.stringify(presentMember));
+                            localStorage.setItem("actableMember", JSON.stringify(actableMember));
+                        } else {
+                            // 非死亡角色只補血
+                            member.HP = Math.min(member.HP + item.heal, member.MaxHP);
+                        }
+                    }
+
+                    // 儲存
+                    localStorage.setItem("playerItems", JSON.stringify(playerItems));
+                    localStorage.setItem("teamMember", JSON.stringify(teamMember));
+
+                    // 同步儲存到角色和同伴資料
+                    if (member.id === "player") {
+                        localStorage.setItem("playerHP", member.HP);
+                    } else {
+                        let companionIndex = parseInt(member.id.match(/\d+/)[0]) - 1;
+                        if (hiredCompanions[companionIndex]) {
+                            hiredCompanions[companionIndex] = member
+                            localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
+                        }
+                    }
+
+                    document.body.removeChild(menu);  // 清除選單
+
+                    // 檢查還有沒有這個物品
+                    if (playerItems.includes(itemId)) {
+                        useItem(itemId); // 重新顯示選單，方便連續使用
+                    } else {
+                        showItem(); // 顯示物品列表
+                        document.getElementById("main").style.display = "block"; // 顯示主要內容
+                    }
+                };
+
+                menu.appendChild(button);
+            });
+
+            // 取消按鈕
+            let cancelButton = document.createElement("button");
+            cancelButton.textContent = "取消";
+    
+            cancelButton.onclick = function () {
+                document.body.removeChild(menu); // 清除選單
+                showItem(); // 顯示物品列表
+                document.getElementById("main").style.display = "block"; // 顯示主要內容
+                return;
+            };
+
+            menu.appendChild(cancelButton);
+            document.body.appendChild(menu);
+        }
+
+        // 調查物品
+        function investigateItem(itemId) {
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
+            let count = playerItems.filter(item => item === itemId).length; // 計算剩餘數量
+
+            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+    
+            // 隱藏主要內容
+            document.getElementById("main").style.display = "none";
+
+            // 執行查看的動作
+            if (itemId === "specialItem13") { // 最初的紅寶石
+                loseItem("specialItem13"); // 移除最初的紅寶石
+                getItem("specialItem14"); // 獲得可用的紅寶石
+                localStorage.setItem("soulCount", 0); // 開始計算獻祭的靈魂
+                localStorage.setItem("npcName", "紅寶石中的惡魔");
+            } else if (itemId === "specialItem14") { // 可用的紅寶石
+                localStorage.setItem("npcName", "紅寶石中的惡魔");
+            }
+            showDialogue("start");
+        }
+
+        // 丟棄物品
+        function discardItem(itemId) {
+            // 讀取主角所有的物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+            // 找出該物品的數量
+            let itemCount = playerItems.filter(item => item === itemId).length;
+    
+            let discardAmount; // 丟棄的數量
+
+            if (itemCount === 1) {
+                // 如果只有 1 個，就直接丟
+                discardAmount = 1;
+            } else {
+                // 如果超過 1 個，讓玩家輸入數量
+                let input = prompt("要丟棄幾件？", "1");
+
+                // 如果玩家按「取消」，則直接結束函式
+                if (input === null) {
+                    return;
+                }
+
+                discardAmount = parseInt(input);
+
+                // 驗證輸入是否有效
+                if (isNaN(discardAmount) || discardAmount <= 0) {
+                    alert("請輸入有效的數量");
+                    return;
+                } else if (discardAmount > itemCount) {
+                    discardAmount = itemCount;
+                }
+            }         
+    
+            // 移除物品
+            for (let i = 0; i < discardAmount; i++) {
+                let index = playerItems.indexOf(itemId);
+                if (index !== -1) {
+                    playerItems.splice(index, 1); // 移除一個該物品
+                }
+            }
+
+            // 更新 `localStorage`
+            localStorage.setItem("playerItems", JSON.stringify(playerItems));
+
+            // 重新顯示物品列表
+            showItem();
+        }
+
+        // 惡魔治療
+        function demonHeal() {
+            // 讀取靈魂數量
+            let soulCount = parseInt(localStorage.getItem("soulCount"));
+
+            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+    
+            // 隱藏對話
+            document.getElementById("dialogue").style.display = "none";
+
+            // 建立選擇使用者的 UI
+            let menu = document.createElement("div");
+            menu.id = "userMenu";
+            menu.classList.add("menu");
+
+            // 顯示「要對誰使用」的提示
+            let message = document.createElement("p");
+            message.textContent = texts.chooseRubyUser(soulCount);
+            menu.appendChild(message);
+
+            // 為每個成員建立一個按鈕
+            teamMember.forEach((member, index) => {
+                let button = document.createElement("button");
+                button.innerHTML = `
+                    <h4>${member.name}</h4>
+                    <h4 class="hp">${member.HP} / ${member.MaxHP}</h4>
+                `;
+
+                button.onclick = function () {
+                    soulCount --; // 靈魂減少
+
+                    // 檢查角色是否已死亡
+                    if (member.HP === 0) {
+                        member.HP = member.MaxHP; // 完全治療
+
+                        // 死亡角色補血後，回歸上場成員、可行動成員
+                        let presentMember = JSON.parse(localStorage.getItem("presentMember")) || [];
+                        let actableMember = JSON.parse(localStorage.getItem("actableMember")) || [];
+                        presentMember.push(member);
+                        actableMember.push(member);
+                        localStorage.setItem("presentMember", JSON.stringify(presentMember));
+                        localStorage.setItem("actableMember", JSON.stringify(actableMember));
+                    } else {
+                        // 非死亡角色只補血
+                        member.HP = member.MaxHP; // 完全治療
+                    }
+
+                    // 儲存
+                    localStorage.setItem("soulCount", soulCount);
+                    localStorage.setItem("teamMember", JSON.stringify(teamMember));
+
+                    // 同步儲存到角色和同伴資料
+                    if (member.id === "player") {
+                        localStorage.setItem("playerHP", member.HP);
+                    } else {
+                        let companionIndex = parseInt(member.id.match(/\d+/)[0]) - 1;
+                        if (hiredCompanions[companionIndex]) {
+                            hiredCompanions[companionIndex] = member
+                            localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
+                        }
+                    }
+
+                    document.body.removeChild(menu);  // 清除選單
+
+                    // 檢查還有沒有靈魂
+                    if (soulCount > 0) {
+                        demonHeal(); // 重新顯示選單，方便連續使用
+                    } else {
+                        showItem(); // 顯示物品列表
+                        document.getElementById("main").style.display = "block"; // 顯示主要內容
+                    }
+                };
+
+                menu.appendChild(button);
+            });
+
+            // 取消按鈕
+            let cancelButton = document.createElement("button");
+            cancelButton.textContent = "取消";
+    
+            cancelButton.onclick = function () {
+                document.body.removeChild(menu); // 清除選單
+                showItem(); // 顯示物品列表
+                document.getElementById("main").style.display = "block"; // 顯示主要內容
+                return;
+            };
+
+            menu.appendChild(cancelButton);
+            document.body.appendChild(menu);
+        }
+
+        // 惡魔攻擊
+        function demonAttack() {
+            let soulCount = parseInt(localStorage.getItem("soulCount"));
+            soulCount --; // 靈魂減少
+            localStorage.setItem("soulCount", soulCount);
+
+            localStorage.setItem("demonAttack", "true"); // 標記為惡魔攻擊
+            goBack();
+        }
+
+    </script>
+
+</body>
+</html>

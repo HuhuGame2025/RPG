@@ -1,0 +1,1156 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-6">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地圖</title>
+    <link rel="stylesheet" href="style.css">
+    <style>
+        body {
+        }
+
+        /* 地圖 */
+        #map {
+            margin-left: auto;
+            margin-right: auto;
+            background-color: rgba(61, 97, 64, 0.7); /* 綠色 */
+        }
+
+        /* 地圖單元格 */
+        td {
+            font-size: 36px;
+            position: relative;
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            border: none;
+            padding: 0;
+        }
+
+        /* 湖泊 */
+        td:has(.lake) {
+            font-size: 40px;
+            color: #33BEFF;
+            background-color: #00A7F5; 
+            border-radius: 20px;
+        }
+
+        /* 小屋 */
+        td:has(.cabin) {
+            font-size: 24px;
+        }
+        
+        /* 玩家位置 */
+        .player {
+            font-size: 24px;
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            transform: translate(-50%, -40%); /* 比城鎮圖示稍低 */
+        }
+        .companion {
+            font-size: 24px;
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            transform: translate(-50%, -20%); /* 比玩家圖示稍低 */
+        }
+
+        /* 任務標誌 */
+        .quest {
+            font-size: 32px;
+            position: absolute;
+            top: 25px;
+            left: 25px;
+            transform: translate(-50%, -50%);
+            background-color: rgba(150, 0, 0, 0.2);
+            border-radius: 50%;
+        }
+                       
+        /* 方向按鈕 */
+        .controls {
+            text-align: center;
+            margin: 20px;
+        }
+        .controls button {
+            width: 80px;
+        }
+        
+    </style>
+</head>
+<body>
+    <!-- 按鈕列 -->
+    <div class="button-bar" id="buttonBar">
+        <a href="menu/character.html">🎭<span>角色</span></a>
+        <a href="menu/quest.html">📜<span>任務</span></a>
+        <a href="menu/inventory.html">💰<span>物品</span></a>
+        <a href="menu/option.html">⚙️<span>選項</span></a>
+    </div>
+
+
+    <!-- 主要內容區域 -->
+    <div id="main" class="main-content">
+        <p id="situation"></p>
+
+        <!-- 選單 -->
+        <div class="menu">
+            <div id="button-container"></div>
+        </div>
+
+        <!-- 方向按鈕 -->
+        <div class="controls">
+            <button onclick="move(0, -1)">▲</button><br>
+            <button onclick="move(-1, 0)">◀</button>
+            <button onclick="move(0, 1)">▼</button>
+            <button onclick="move(1, 0)">▶</button>
+        </div>
+
+        <!-- 地圖 -->
+        <table id="map"></table>
+    </div>
+
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content"></div>
+
+    <script src="script.js" defer></script>
+
+    <script>
+        // 載入頁面後執行
+        window.onload = function() {
+            renderMap(); // 顯示地圖
+            showSituation(); // 顯示遭遇的情況
+            loadBackground(); // 讀取背景
+            npcPreferences(); // NPC偏好設定
+        };
+
+        // 5x5 地圖 (x=0~4,y=0~4)
+        const mapData = [
+            ["🌳", "🏘️", "", "🌳", "🌳"],
+            ["", "", "🌳", "", "🌳"],
+            ["≋", "", "", "", ""],
+            ["🏰", "≋", "", "🌳", "🏘️"],
+            ["", "", "🛖", "🌳", ""]
+        ];
+
+        // 定義圖標
+        const icons = {
+            p1: "🧍", 
+            p2: "🧑‍🤝‍🧑", 
+            town: "🏘️",
+            orcVillage: " 🏘️ ",
+            cabin: "🛖",
+            castle: "🏰",
+            lake: "≋",
+            forest: "🌳",
+            quest: "❗",
+        };
+
+        // 地點
+        const locations = {
+            town01: { id:"town01", name: "晨曦鎮", x: 1, y: 0 },  
+            town02: { id:"town02", name: "鐵石鎮", x: 4, y: 3 }, 
+            thieves: { id:"thieves", name: "盜賊巢穴", x: 4, y: 0 }, 
+        };
+
+        // 讀取角色位置，預設在正中央 (2,2)
+        let playerPos = JSON.parse(localStorage.getItem("playerPos")) || { x: 2, y: 2 };
+
+        // 顯示文本
+        const texts = {
+            town: (townName) => `你抵達了${townName}的大門，門前有守衛站崗，令人感到安全。`,
+            followed: "後方傳來腳步聲，某人或某種生物正在慢慢靠近……",
+            chance: (count, name) => `在遠處發現了 ${count} 個${name}，對方似乎還沒注意到你。`,
+            guards: "一支巡邏隊正好經過這裡，跟著他們走就能安全地回到最近的城鎮。",
+            victim: (count, name) => `你聽見呼救的聲音，有 ${count} 個${name}正在攻擊平民。`,
+            helpVictim: "獲救的平民感激你出手相助，你的名聲上升了 1 。",
+            merchant: "一個哥布林背著大得誇張的背包，面帶微笑地向你招手，看起來沒有攻擊的意圖。",
+            thieves: "前方有一個很深的洞穴。",
+            thievesCompleted: "前方是盜賊巢穴，你已經探索過了。",
+            castle: "眼前的是一座陰森的古堡，看起來荒廢已久，成群的蝙蝠盤據在此。",
+            castleCompleted: "眼前的是一座陰森的古堡，你已經探索過了。",
+        };
+
+        // 對話資料庫
+        const dialogueData = {
+            "守衛": {
+                "被守衛攔下": {
+                    npc: "守衛",
+                    text: "等一下，你是通緝犯，乖乖跟我們走吧。",
+                    choices: [
+                        { text: "投降", next: "", action: "arrested()" },
+                        { text: "抵抗", next: "", action: "battle(2, '守衛', 4, 'town.html')" },
+                    ]
+                },
+            },
+
+            "拉茲": {
+                "start": {
+                    npc: "npc",
+                    text: "嘿，不要攻擊！我雖然是個哥布林，但別把我當成我那些野蠻的親戚，我只是想跟你做生意。",
+                    choices: [
+                        { text: "讓我看看你的貨", next: "交易", action: "showShop(null, ['specialItem11', 'specialItem12']);" },
+                        { text: "你是從哪裡找到這些的？", next: "來源" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "再見", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "交易": {
+                    npc: "npc",
+                    text: "這些好東西是我千辛萬苦才弄到的，看在你給我的印象不錯，才算你這個價錢喔！<br><br>但你必須先付錢，等我走遠以後才能打開來看。",
+                    choices: [
+                        { text: "不買了", next: "離開" },
+                    ]
+                },
+                "來源": {
+                    npc: "npc",
+                    text: "這是商業機密，但我可以透露一點點。<br><br>我會跟在那些不自量力的冒險者後面，他們以為穿上很貴的裝備就天下無敵了。<br><br>只要耐心等待他們碰上強敵……嘿嘿！就是大豐收的時候了。",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "你想知道我為什麼不揮舞著棍棒，衝過來讓你一刀砍死是嗎？<br><br>答案很明顯，我不是腦殘。<br><br>我試過叫那些腦殘來做生意，但他們說我被人類影響太深了，是哥布林的恥辱。",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "購買": {
+                    npc: "npc",
+                    text: "嘿嘿，和你交易非常愉快！",
+                    choices: [
+                        { text: "繼續買", next: "交易" },
+                        { text: "再見", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "離開": {
+                    npc: "npc",
+                    text: "不買？那就別浪費我的時間！",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "removeDialogue()" },
+                    ]
+                },
+            },
+
+            "盜賊巢穴": {
+                "start": {
+                    text: "一群盜賊走了出來，警告你如果再往前一步，他們就要不客氣了。",
+                    choices: [
+                        { text: "戰鬥", next: "入口", action: "battle(2, '盜賊', 4)" },
+                        { text: "撤退", next: "", action: "retreat()" },
+                    ]
+                },
+                "入口": {
+                    text: "進入洞穴後有一扇關著的木門，門後傳出了談話聲。<br><br>你還注意到，旁邊有一條狹窄的岩石縫。",
+                    choices: [
+                        { text: "走進木門", next: "木門" },
+                        { text: "鑽進岩石縫", next: "岩石縫" },
+                        { text: "撤出洞穴", next: "", action: "retreat()" },
+                    ]
+                },
+                    "木門": {
+                        text: "當你推開木門，門後的盜賊看見你，立刻大喊「有入侵者！」",
+                        choices: [
+                            { text: "準備戰鬥", next: "岔路口", action: "battle(2, '盜賊', 2)" },
+                        ]
+                    },
+                    "岩石縫": {
+                        text: "穿過岩石縫後，你來到了那扇木門的另一側，看見 2 個盜賊正在門邊聊天，他們還沒有發現你。",
+                        choices: [
+                            { text: "偷襲", next: "岔路口", action: "battle(4, '盜賊', 2)" },
+                            { text: "悄悄繞過去", next: "岔路口" },
+                            { text: "撤出洞穴", next: "", action: "retreat()" },
+                        ]
+                },
+                "岔路口": {
+                    text: "你來到了岔路口，一邊有火把照明，另一邊黑暗無光。",
+                    choices: [
+                        { text: "走有火把的路", next: "大坑" },
+                        { text: "走黑暗的路", next: "黑暗處" },
+                        { text: "撤出洞穴", next: "", action: "retreat()" },
+                    ]
+                },
+                    "大坑": {
+                        text: "前方是一個大坑，有一道通往下方的梯子。<br><br>你能看見一群盜賊在下面休息，那裡沒有任何遮蔽，你一定會被發現。",
+                        choices: [
+                            { text: "下去", next: "寶庫", action: "battle(2, '盜賊', 4)" },
+                            { text: "返回岔路口", next: "岔路口" },
+                        ]
+                    },
+                    "黑暗處": {
+                        text: "你黑暗中摸到了一堆蜘蛛絲，看來繼續走就會闖入另一種生物的巢穴了。",
+                        choices: [
+                            { text: "繼續深入", next: "蜘蛛巢穴", action: "battle(3, '巨型蜘蛛', 2)" },
+                            { text: "返回岔路口", next: "岔路口" },
+                        ]
+                    },
+                    "蜘蛛巢穴": {
+                        text: "你聽到更多蜘蛛正在接近的聲音。",
+                        choices: [
+                            { text: "返回岔路口", next: "岔路口" },
+                            { text: "引誘蜘蛛", next: "引誘" },
+                        ]
+                    },
+                    "引誘": {
+                        text: "一群蜘蛛衝了過來。",
+                        choices: [
+                            { text: "跑回岔路口", next: "引蜘蛛到岔路口" },
+                        ]
+                    },
+                    "引蜘蛛到岔路口": {
+                        text: "你來到了岔路口，一邊有火把照明，另一邊黑暗無光。<br><br>蜘蛛們追過來了，但火把的光芒讓牠們卻步。",
+                        choices: [
+                            { text: "走有火把的路", next: "大坑" },
+                            { text: "熄滅火把", next: "熄滅火把" },
+                        ]
+                    },
+                    "熄滅火把": {
+                        text: "你熄滅了火把，蜘蛛們立刻追上來，你已經沒有退路了。",
+                        choices: [
+                            { text: "繼續前進", next: "引蜘蛛到大坑" },
+                        ]
+                    },
+                    "引蜘蛛到大坑": {
+                        text: "前方是一個大坑，有一道通往下方的梯子。<br><br>你能看見一群盜賊在下面休息，那裡沒有任何遮蔽，你一定會被發現。<br><br>但那群蜘蛛緊追在後，你不能停下來。",
+                        choices: [
+                            { text: "下去", next: "蜘蛛大戰盜賊" },
+                        ]
+                    },
+                    "蜘蛛大戰盜賊": {
+                        text: "盜賊們正想攻擊你，就被你身後那群蜘蛛嚇呆了。<br><br>他們急忙抓起火把，和蜘蛛對抗，沒有時間理會你。",
+                        choices: [
+                            { text: "繼續前進", next: "寶庫" },
+                        ]
+                    },
+                "寶庫": {
+                    text: "你來到洞穴深處的寶庫，盜賊們四處掠奪來的戰利品全都堆放在這裡。<br><br>有寶石、武器、補給品，以及 $320 的金幣。",
+                    choices: [
+                        { text: "搜刮戰利品", next: "搜刮", action: "(getItem('specialItem13'), getItem('weapon01', 4), getItem('supply01', 2), getItem('supply02', 2), getItem('supply03', 2), getItem('$320'))" },
+                    ]
+                },
+                "搜刮": {
+                    npc: "盜賊",
+                    text: "喂，小偷！看來你跟我們是同行的啊，那就來商量一下吧。<br><br>把那些錢分我一半，我就當作沒看到你，不然等我叫其他人過來，你就自己看著辦吧！",
+                    choices: [
+                        { text: "同意分贓", next: "同意分贓", action: "loseItem('$160')" },
+                        { text: "拒絕分贓", next: "拒絕分贓" },
+                    ]
+                },
+                    "同意分贓": {
+                        npc: "盜賊",
+                        text: "呵呵呵！我發財了，再也不用聽那幫渾蛋的命令了！",
+                        choices: [
+                            { text: "撤出洞穴", next: "", action: "(completedDungeons('盜賊巢穴'), retreat())" },
+                        ]
+                    },
+                    "拒絕分贓": {
+                        npc: "盜賊",
+                        text: "大家快來啊！有人要偷寶物！",
+                        choices: [
+                            { text: "準備戰鬥", next: "戰勝", action: "battle(2, '盜賊', 4)" },
+                        ]
+                    },
+                    "戰勝": {
+                        text: "你擊敗了盜賊們，也獲得了他們的寶物，是時候離開了。",
+                        choices: [
+                            { text: "撤出洞穴", next: "", action: "(completedDungeons('盜賊巢穴'), retreat())" },
+                        ]
+                    },
+            },
+
+            "古堡": {
+                "start": {
+                    text: "這裡是空無一人的中庭，前方是雄偉的主樓，左右兩側各有一座高塔。",
+                    choices: [
+                        { text: "前往左側高塔", next: "左側門外", condition: "!isEnd('古堡獅鷲戰鬥')" },
+                        { text: "前往左側高塔", next: "左側門外_無聲", condition: "isEnd('古堡獅鷲戰鬥')" },
+                        { text: "前往右側高塔", next: "右側門外" },
+                        { text: "前往主樓", next: "主樓門外" },
+                        { text: "撤出古堡", next: "", action: "retreat()" },
+                    ]
+                },
+
+                // 左側
+                    "左側門外": {
+                        text: "左側高塔的上半部已經半毀，破舊的大門沒有上鎖。<br><br>從塔頂傳來一陣陣低沉的呼吸聲。",
+                        choices: [
+                            { text: "進入高塔", next: "左側一樓" },
+                            { text: "返回中庭", next: "start" },
+                        ]
+                    },
+                        "左側門外_無聲": {
+                            text: "左側高塔的上半部已經半毀，破舊的大門沒有上鎖。",
+                            choices: [
+                                { text: "進入高塔", next: "左側一樓_無聲" },
+                                { text: "返回中庭", next: "start" },
+                            ]
+                        },
+                    "左側一樓": {
+                        text: "塔裡是一個圓形監牢，生鏽的鐵籠中躺著幾具枯骨，有一道通往塔頂的樓梯。<br><br>上方持續傳來呼吸聲。",
+                        choices: [
+                            { text: "搜索枯骨", next: "搜索枯骨", condition: "!isEnd('古堡枯骨搜刮')", action: "(getItem('$25'), endEvent('古堡枯骨搜刮'))" },
+                            { text: "上樓", next: "走上左側樓梯" },
+                            { text: "離開高塔", next: "start" },
+                        ]
+                    },
+                        "左側一樓_無聲": {
+                            text: "塔裡是一個圓形監牢，生鏽的鐵籠中躺著幾具枯骨，有一道通往塔頂的樓梯。",
+                            choices: [
+                                { text: "搜索枯骨", next: "搜索枯骨", condition: "!isEnd('古堡枯骨搜刮')", action: "(getItem('$25'), endEvent('古堡枯骨搜刮'))" },
+                                { text: "上樓", next: "左側塔頂" },
+                                { text: "離開高塔", next: "遇到獅鷲", condition: "!isEnd('古堡獅鷲戰鬥')" },
+                                { text: "離開高塔", next: "start", condition: "isEnd('古堡獅鷲戰鬥')" },
+                            ]
+                        },
+                    "搜索枯骨": {
+                        text: "這些枯骨的口袋裡還有一點錢，你總共找到 $25。",
+                        choices: [
+                            { text: "離開枯骨", next: "back" },
+                        ]
+                    },
+                    "走上左側樓梯": {
+                        text: "你上樓時，老舊的木造樓梯在你腳下嘎吱作響。<br><br>這時，上方傳來了震耳欲聾的吼叫，接著是一陣拍翅膀的聲音。",
+                        choices: [
+                            { text: "繼續上樓", next: "左側塔頂" },
+                            { text: "下樓", next: "左側一樓_無聲" },
+                        ]
+                    },
+                    "左側塔頂": {
+                        text: "你來到了塔頂，眼前是一個巨大的鳥巢，周圍散落著吃剩的骨頭。<br><br>鳥巢的主人已經不在了。",
+                        choices: [
+                            { text: "搜索鳥巢", next: "搜索鳥巢", condition: "!isEnd('古堡鳥巢搜刮')", action: "(getItem('loot09', 3), getItem('key02', 1), endEvent('古堡鳥巢搜刮'))" },
+                            { text: "下樓", next: "左側一樓_無聲" },
+                        ]
+                    },
+                    "搜索鳥巢": {
+                        text: "你收集了幾根尖硬的羽毛，還發現了一把鐵鑰匙。",
+                        choices: [
+                            { text: "下樓", next: "左側一樓_無聲" },
+                        ]
+                    },
+                    "遇到獅鷲": {
+                        text: "當你走出高塔時，一隻獅鷲從天而降，對著你憤怒地咆嘯。",
+                        choices: [
+                            { text: "準備戰鬥", next: "start", action: "(battle(2, '獅鷲', 1), triggerEvent('古堡獅鷲戰鬥'))" },
+                        ]
+                    },
+
+                // 右側
+                    "右側門外": {
+                        text: "右側高塔沒有上鎖。",
+                        choices: [
+                            { text: "進入高塔", next: "右側一樓", condition: "!isEnd('古堡骷髏守衛戰鬥')" },
+                            { text: "進入高塔", next: "右側一樓_無盔甲", condition: "isEnd('古堡骷髏守衛戰鬥')" },
+                            { text: "返回中庭", next: "start" },
+                        ]
+                    },
+                    "右側一樓": {
+                        text: "塔裡擺放著幾副站立的盔甲，旁邊堆放著一些生鏽的武器，有一道通往塔頂的樓梯。",
+                        choices: [
+                            { text: "調查盔甲", next: "調查盔甲" },
+                            { text: "搜刮武器", next: "搜刮武器", condition: "!isEnd('古堡搜索武器')", action: "(getItem('lootWeapon03', 2), endEvent('古堡搜索武器'))" },
+                            { text: "上樓", next: "骷髏襲擊" },
+                            { text: "離開高塔", next: "start" },
+                        ]
+                    },
+                        "右側一樓_無盔甲": {
+                            text: "塔裡散落著枯骨，旁邊堆放著一些生鏽的武器，有一道通往塔頂的樓梯。",
+                            choices: [
+                                { text: "搜刮武器", next: "搜刮武器", condition: "!isEnd('古堡搜索武器')", action: "(getItem('lootWeapon03', 2), endEvent('古堡搜索武器'))" },
+                                { text: "上樓", next: "右側二樓", condition: "!isEnd('古堡掀布')" },
+                                { text: "上樓", next: "右側二樓_掀布", condition: "isEnd('古堡掀布') && !isEnd('古堡釋放小孩')" },
+                                { text: "上樓", next: "右側二樓_釋放", condition: "isEnd('古堡釋放小孩')" },
+                                { text: "離開高塔", next: "start" },
+                            ]
+                        },
+                        "右側一樓_吸血鬼埋伏": {
+                            text: "當你帶著馬卡斯下樓時，聽見了一個令人背脊發涼的笑聲。<br><br>忽然間煙霧瀰漫，完全遮蔽了視線，你的意識漸漸變得模糊……",
+                            choices: [
+                                { text: "接受命運", next: "昏過去" },
+                                { text: "堅持住（體質）", action: "roll('con', '堅持住', '昏過去')" },
+                            ]
+                        },
+
+                        "調查盔甲": {
+                            text: "你掀開盔甲的頭盔，看見了裡面的骷髏頭。",
+                            choices: [
+                                { text: "攻擊骷髏", next: "右側一樓_無盔甲", action: "(battle(2, '骷髏守衛', 4), triggerEvent('古堡骷髏守衛戰鬥'))" },
+                                { text: "後退", next: "back" },
+                            ]
+                        },
+                        "搜刮武器": {
+                            text: "你檢查那堆武器，找到了 2 把還能用的老舊單手劍。",
+                            choices: [
+                                { text: "收起來", next: "back" },
+                            ]
+                        },
+                        "骷髏襲擊": {
+                            text: "當你走向樓梯時，那些盔甲突然拔出武器，對你發動攻擊。",
+                            choices: [
+                                { text: "準備戰鬥", next: "右側一樓_無盔甲", action: "(battle(3, '骷髏守衛', 4), triggerEvent('古堡骷髏守衛戰鬥'))" },
+                            ]
+                        },
+
+                        "堅持住": {
+                            text: "你咬緊牙關，勉強保持清醒。<br><br>就在這時，幾道黑影從煙霧中現形。",
+                            choices: [
+                                { text: "準備戰鬥", action: "battle('2', '吸血鬼', '3', '', '戰勝吸血鬼', '昏過去')" },
+                            ]
+                        },
+                        "戰勝吸血鬼": {
+                            text: "此時，你聽到馬卡斯的尖叫聲。<br><br>你回頭，看見一個吸血鬼抓著馬卡斯，將利刃架在他脖子上。",
+                            choices: [
+                                { text: "（繼續）", next: "戰勝吸血鬼2" },
+                            ]
+                        },
+                        "戰勝吸血鬼2": {
+                            npc: "吸血鬼守衛",
+                            text: "不想看到無辜小孩喪命的話，就放下武器！<br><br>我的主人不打算殺你，相反地，他很想見你一面。<br><br>只要你乖乖聽話就沒有人會死。",
+                            choices: [
+                                { text: "放下武器", next: "放下武器" },
+                                { text: "攻擊", next: "攻擊吸血鬼", action:"endEvent('馬卡斯已死')" },
+                            ]
+                        },
+                        "放下武器": {
+                            text: "你放下武器之後，吸血鬼滿意地點頭。<br><br>此時，周遭再度出現了那種煙霧，這次你馬上就感到昏昏欲睡。",
+                            choices: [
+                                { text: "（繼續）", next: "昏過去" },
+                            ]
+                        },
+                        "攻擊吸血鬼": {
+                            text: "在你衝向吸血鬼的那一刻，利刃劃開了馬卡斯的喉嚨，他還來不及喊叫就倒在了地上。<br><br>吸血鬼立刻化成蝙蝠飛走，不見蹤影。",
+                            choices: [
+                                { text: "查看馬卡斯", next: "查看馬卡斯" },
+                                { text: "離開古堡", next: "離開古堡", action: "(completedDungeons('古堡'), retreat())" },
+                            ]
+                        },
+                        "查看馬卡斯": {
+                            text: "馬卡斯的喉嚨流出鮮血，他的身體冰冷，心臟已經停止跳動。",
+                            choices: [
+                                { text: "檢查他的隨身物品", next: "搜刮馬卡斯" },
+                                { text: "離開古堡", next: "離開古堡", action: "(completedDungeons('古堡'), retreat())" },
+                            ]
+                        },
+                        "搜刮馬卡斯": {
+                            text: "你發現馬卡斯戴著一枚金戒指，看起來很有價值。",
+                            choices: [
+                                { text: "拿走戒指", next: "拿走戒指", action: "(getItem('loot11'))" },
+                                { text: "不拿走", next: "查看馬卡斯" },
+                            ]
+                        },
+                        "拿走戒指": {
+                            text: "你從馬卡斯手上取下了戒指。",
+                            choices: [
+                                { text: "離開古堡", next: "離開古堡", action: "(completedDungeons('古堡'), retreat())" },
+                            ]
+                        },
+
+                    "右側二樓": {
+                        text: "這裡是陰暗的二樓，窗戶全都被木板封住了。<br><br>中央有一個被黑布罩著的巨大方形物體。",
+                        choices: [
+                            { text: "掀開黑布", next: "掀布", action: "endEvent('古堡掀布')" },
+                            { text: "上樓", next: "右側塔頂" },
+                            { text: "下樓", next: "右側一樓_無盔甲" },
+                        ]
+                    },
+                        "右側二樓_掀布": {
+                            text: "這裡是陰暗的二樓，窗戶全都被木板封住了。<br><br>中央有一個鐵籠，馬卡斯被關在裡面。",
+                            choices: [
+                                { text: "和馬卡斯交談", next: "和小孩交談3" },
+                                { text: "上樓", next: "右側塔頂" },
+                                { text: "下樓", next: "右側一樓_無盔甲" },
+                            ]
+                        },
+                        "右側二樓_釋放": {
+                            text: "這裡是陰暗的二樓，窗戶全都被木板封住了。<br><br>中央有一個空的鐵籠。",
+                            choices: [
+                                { text: "上樓", next: "右側塔頂" },
+                                { text: "下樓", next: "右側一樓_吸血鬼埋伏" },
+                            ]
+                        },
+                        "掀布": {
+                            text: "黑布下方是一個堅固的鐵製牢籠。<br><br>有一個小孩躺在牢籠中，因為你的靠近而醒了過來。",
+                            choices: [
+                                { text: "和小孩交談", next: "和小孩交談" },
+                            ]
+                        },
+                        "和小孩交談": {
+                            npc: "馬卡斯",
+                            text: "你……你看起來不像吸血鬼，你是來救我的嗎？<br><br>小心一點，吸血鬼的手下在看守這裡。",
+                            choices: [
+                                { text: "我已經解決了", next: "和小孩交談2" },
+                            ]
+                        },
+                        "和小孩交談2": {
+                            npc: "馬卡斯",
+                            text: "真的嗎？太厲害了！<br><br>那你可以打開這個籠子嗎？我看過鑰匙，但是被吸血鬼拿走了，我不知道鑰匙在哪裡……",
+                            choices: [
+                                { text: "是這把鐵鑰匙嗎？", next: "給鑰匙", condition: "isEnd('古堡鳥巢搜刮')" },
+                                { text: "我去找", next: "我去找" },
+                            ]
+                        },
+                        "和小孩交談3": {
+                            npc: "馬卡斯",
+                            text: "請問……你找到鑰匙了嗎？",
+                            choices: [
+                                { text: "是這把鐵鑰匙嗎？", next: "給鑰匙", condition: "isEnd('古堡鳥巢搜刮')" },
+                                { text: "我去找", next: "我去找" },
+                            ]
+                        },
+                        "給鑰匙": {
+                            npc: "馬卡斯",
+                            text: "沒錯，就是這一把。<br><br>趁吸血鬼還沒來，快幫我打開這個籠子，拜託了。",
+                            choices: [
+                                { text: "（打開牢籠）", next: "釋放小孩", action: "endEvent('古堡釋放小孩')" },
+                            ]
+                        },
+                        "我去找": {
+                            npc: "馬卡斯",
+                            text: "謝謝，我會在這裡等你。",
+                            choices: [
+                                { text: "（離開）", next: "右側二樓_掀布" },
+                            ]
+                        },
+                        "釋放小孩": {
+                            text: "你用鐵鑰匙打開了牢籠，順利救馬卡斯出來。",
+                            choices: [
+                                { text: "放馬卡斯出來", next: "釋放小孩2" },
+                            ]
+                        },
+                        "釋放小孩2": {
+                            npc: "馬卡斯",
+                            text: "哇，終於出來了，謝謝你！<br><br>我們快回鎮上去吧。",
+                            choices: [
+                                { text: "走吧", next: "右側二樓_釋放" },
+                            ]
+                        },
+                    "右側塔頂": {
+                        text: "你來到了塔頂，從這裡可以清楚看見另一座高塔。",
+                        choices: [
+                            { text: "觀察另一座塔", next: "看見左側獅鷲", condition: "!isEnd('古堡獅鷲戰鬥')" },
+                            { text: "觀察另一座塔", next: "看見左側", condition: "isEnd('古堡獅鷲戰鬥')" },
+                            { text: "觀察主樓", next: "看見主樓" },
+                            { text: "下樓", next: "右側二樓", condition: "!isEnd('古堡掀布')" },
+                            { text: "下樓", next: "右側二樓_掀布", condition: "isEnd('古堡掀布') && !isEnd('古堡釋放小孩')" },
+                            { text: "下樓", next: "右側二樓_釋放", condition: "isEnd('古堡釋放小孩')" },
+                        ]
+                    },
+                        "看見左側獅鷲": {
+                            text: "你看見另一座塔上棲息著一頭獅鷲。",
+                            choices: [
+                                { text: "移開視線", next: "back" },
+                            ]
+                        },
+                        "看見左側": {
+                            text: "你看見另一座塔上有個巨大的鳥巢。",
+                            choices: [
+                                { text: "移開視線", next: "back" },
+                            ]
+                        },
+                        "看見主樓": {
+                            text: "你看見主樓的窗戶全都被封得密不透風。",
+                            choices: [
+                                { text: "移開視線", next: "back" },
+                            ]
+                        },
+
+                // 主樓
+                    "主樓": {
+                        text: "主樓的大門鎖住了。",
+                        choices: [
+                            { text: "返回中庭", next: "start" },
+                        ]
+                    },
+                    "昏過去": {
+                        text: "你支撐不住，昏了過去……",
+                        choices: [
+                            { text: "醒來", next: "醒來" },
+                        ]
+                    },
+                    "醒來": {
+                        text: "你睜開眼睛，發現你在一張柔軟的扶手椅上，脖子隱隱作痛。<br><br>眼前坐著一個氣質高貴的人，壁爐的火光照亮他蒼白的側臉。<br><br>他用審視的眼光看著你。",
+                        choices: [
+                            { text: "交談", next: "和吸血鬼交談" },
+                        ]
+                    },
+                    "和吸血鬼交談": {
+                        npc: "賽爾瑞斯",
+                        text: "歡迎你，把這裡當成自己家吧。",
+                        choices: [
+                            { text: "你是誰？", next: "你是誰" },
+                            { text: "我的同伴在哪？", next: "同伴在哪", condition: "isCompanion() && !isCompanion('賽恩')" },
+                            { text: "我的同伴在哪？", next: "同伴在哪", condition: "isCompanion('賽恩') && !isEnd('允許賽恩吸血')" },
+                            { text: "我的同伴在哪？", next: "同伴在哪_提到賽恩", condition: "isCompanion('賽恩') && isEnd('允許賽恩吸血')" },
+                            { text: "馬卡斯在哪？", next: "馬卡斯在哪" },
+                            { text: "我被咬了嗎？", next: "被咬了嗎" },
+                            { text: "我有話要說", next: "有話要說" },
+                        ]
+                    },
+                        "問問題": {
+                            npc: "賽爾瑞斯",
+                            text: "還想問什麼嗎？",
+                            choices: [
+                                { text: "你是誰？", next: "你是誰" },
+                                { text: "我的同伴在哪？", next: "同伴在哪", condition: "isCompanion() && !isCompanion('賽恩')" },
+                                { text: "我的同伴在哪？", next: "同伴在哪", condition: "isCompanion('賽恩') && !isEnd('允許賽恩吸血')" },
+                                { text: "我的同伴在哪？", next: "同伴在哪_提到賽恩", condition: "isCompanion('賽恩') && isEnd('允許賽恩吸血')" },
+                                { text: "馬卡斯在哪？", next: "馬卡斯在哪" },
+                                { text: "我被咬了嗎？", next: "被咬了嗎" },
+                                { text: "我有話要說", next: "有話要說" },
+                            ]
+                        },
+                        "你是誰": {
+                            npc: "賽爾瑞斯",
+                            text: "我是這裡的吸血鬼領主，你在高塔上的表現引起了我的興趣。<br><br>從現在開始，我就是你的主人。<br><br>我會評估你適合成為僕人，還是牲畜。評估的依據是我的心情。",
+                            choices: [
+                                { text: "（繼續）", next: "問問題" },
+                            ]
+                        },
+                        "同伴在哪": {
+                            npc: "賽爾瑞斯",
+                            text: "同伴？我放生了。<br><br>我不需要你的跟班，我看上的是你。",
+                            choices: [
+                                { text: "（繼續）", next: "問問題" },
+                            ]
+                        },
+                        "同伴在哪_提到賽恩": {
+                            npc: "賽爾瑞斯",
+                            text: "你是說賽恩那小鬼嗎？<br><br>我準備了一個房間讓他靜靜，因為他正在不開心自己的寵物被搶走。<br><br>不過你現在是我的了，就忘了他吧。",
+                            choices: [
+                                { text: "（繼續）", next: "問問題" },
+                            ]
+                        },
+                        "馬卡斯在哪": {
+                            npc: "賽爾瑞斯",
+                            text: "小馬卡斯？喔，你也是為了他的委託而來的吧？<br><br>呵呵，刊登那則消息之後，我都不需要派人出去狩獵了。<br><br>別埋怨那孩子，他只是在想盡辦法討我歡心。",
+                            choices: [
+                                { text: "（繼續）", next: "問問題" },
+                            ]
+                        },
+                        "被咬了嗎": {
+                            npc: "賽爾瑞斯",
+                            text: "還會痛嗎？別擔心，吸血鬼的唾液會讓傷口快速癒合。<br><br>那一口只是為了檢查你的血是否純淨，畢竟我不希望你帶了什麼毒素進來。<br><br>順帶一提，你不會變成吸血鬼的，沒這麼容易。",
+                            choices: [
+                                { text: "（繼續）", next: "問問題" },
+                            ]
+                        },
+                    "有話要說": {
+                        npc: "賽爾瑞斯",
+                        text: "我在聽。",
+                        choices: [
+                            { text: "可以放我走嗎？", next: "放我走" },
+                            { text: "我要打倒你", next: "打倒你" },
+                            { text: "謝謝您，我一直都很想和吸血鬼生活", next: "謝謝您" },
+                            { text: "我還有問題要問", next: "問問題" },
+                        ]
+                    },
+                        "放我走": {
+                            npc: "賽爾瑞斯",
+                            text: "當然，你的新家就在我的地底莊園裡，我馬上就會放你回去。<br><br>我已經決定了，你將成為提供鮮血的牲畜，一個血奴。",
+                            choices: [
+                                { text: "（繼續）", next: "送到牧場" },
+                            ]
+                        },
+                        "打倒你": {
+                            npc: "賽爾瑞斯",
+                            text: "為什麼？你在我這裡會受到良好的照顧，吃飽睡足，確保你擁有健康的血液。<br><br>我已經決定了，你將成為提供鮮血的牲畜，一個血奴。",
+                            choices: [
+                                { text: "（繼續）", next: "送到牧場" },
+                            ]
+                        },
+                        "謝謝您": {
+                            npc: "賽爾瑞斯",
+                            text: "你的態度很好，我喜歡，有你服侍應該能讓我心情愉快。<br><br>我已經決定了，你將會成為我的直屬僕人。",
+                            choices: [
+                                { text: "（繼續）", next: "送到房間" },
+                            ]
+                        },
+                    "送到牧場": {
+                        npc: "賽爾瑞斯",
+                        text: "來人，把這個血奴帶下去。",
+                        choices: [
+                            { text: "（繼續）", next: "送到牧場2" },
+                        ]
+                    },
+                    "送到牧場2": {
+                        text: "吸血鬼守衛帶著你深入城堡下層，這裡有一片廣大的地底莊園，種植了血葡萄。<br><br>你被帶到一間木屋，所有的血奴都像牛羊一樣被豢養在這裡。",
+                        choices: [
+                            { text: "（繼續）", next: "送到牧場3" },
+                        ]
+                    },
+                    "送到牧場3": {
+                        npc: "吸血鬼守衛",
+                        text: "到了，這裡就是血奴住的地方。<br><br>你可以自由活動，但要作息正常，維持健康。<br><br>每晚會有一位吸血鬼來飲用你的血，不要想耍什麼把戲，否則我們就把你餵給獅鷲。",
+                        choices: [
+                            { text: "（繼續）", next: "", action: "goTo('town/underground')" },
+                        ]
+                    },
+
+                    "送到房間": {
+                        npc: "賽爾瑞斯",
+                        text: "馬卡斯，為我的新僕人準備房間。",
+                        choices: [
+                            { text: "（繼續）", next: "送到房間2" },
+                        ]
+                    },
+                    "送到房間2": {
+                        npc: "馬卡斯",
+                        text: "是的，主人。",
+                        choices: [
+                            { text: "（繼續）", next: "送到房間3" },
+                        ]
+                    },
+                    "送到房間3": {
+                        npc: "馬卡斯",
+                        text: "跟我來吧，{playerName}。<br><br>你需要先好好洗個澡，換上合適的衣服。",
+                        choices: [
+                            { text: "你還欠我一個解釋", next: "和馬卡斯交談" },
+                            { text: "帶路吧", next: "送到房間4" },
+                        ]
+                    },
+                    "和馬卡斯交談": {
+                        npc: "馬卡斯",
+                        text: "我知道……很抱歉騙了你。<br><br>但我必須親自面試僕人的人選，確保來的是品行高貴、聰明勇敢、有著美味血液的人。<br><br>不是隨隨便便的野種都能來服侍領主大人。",
+                        choices: [
+                            { text: "我不會原諒你的", next: "不會原諒" },
+                            { text: "你也是吸血鬼嗎？", next: "是吸血鬼嗎" },
+                            { text: "帶路吧", next: "送到房間4" },
+                        ]
+                    },
+                        "和馬卡斯交談2": {
+                            npc: "馬卡斯",
+                            text: "說完了嗎？",
+                            choices: [
+                                { text: "我不會原諒你的", next: "不會原諒" },
+                                { text: "你也是吸血鬼嗎？", next: "是吸血鬼嗎" },
+                                { text: "帶路吧", next: "送到房間4" },
+                            ]
+                        },
+                        "不會原諒": {
+                            npc: "馬卡斯",
+                            text: "呵呵，你覺得我會在意嗎？<br><br>反正你想要的只是委託的報酬吧？那筆錢又能幹嘛？讓你多生活幾個月？<br><br>在這裡，你能擁有富裕的生活和主人的關愛，我不懂你有什麼好抱怨。",
+                            choices: [
+                                { text: "（繼續）", next: "和馬卡斯交談2" },
+                            ]
+                        },
+                        "是吸血鬼嗎": {
+                            npc: "馬卡斯",
+                            text: "我當然是吸血鬼了，你不會以為我的身分跟你一樣吧？<br><br>領主大人是所有吸血鬼的主人，而所有吸血鬼都是你的主人。<br><br>不要忘記這一點。",
+                            choices: [
+                                { text: "（繼續）", next: "和馬卡斯交談2" },
+                            ]
+                        },
+                    "送到房間4": {
+                        text: "馬卡斯帶著你穿越城堡的迴廊與大廳，來到一個佈置典雅的房間，告訴你浴室的位置。<br><br>你盥洗過後換上了僕人的服裝。",
+                        choices: [
+                            { text: "（繼續）", next: "送到房間5" },
+                        ]
+                    },
+                    "送到房間5": {
+                        npc: "馬卡斯",
+                        text: "聽著，你是專門服侍領主大人的僕人。<br><br>只要鈴鐺一響，你就必須馬上到他面前，服從他的命令。<br><br>沒被召喚的時候，千萬不要去打擾他。",
+                        choices: [
+                            { text: "知道了", next: "" },
+                        ]
+                    },
+            },
+        }
+
+        // 顯示地圖
+        function renderMap() {
+            const table = document.getElementById("map");
+            table.innerHTML = "";
+    
+            for (let y = 0; y < 5; y++) {
+                let row = document.createElement("tr");
+                for (let x = 0; x < 5; x++) {
+                    let cell = document.createElement("td");
+            
+                    // 根據 mapData 的內容填入圖示
+                    let cellContent = mapData[y][x];
+                    if (cellContent) {
+                        let icon = document.createElement("span");
+                        icon.textContent = cellContent;
+                        cell.appendChild(icon);
+                    }
+
+                    // 調整樣式
+                    if (mapData[y][x] === icons.lake) {
+                        // 如果是湖泊
+                        let Icon = document.createElement("span");
+                        Icon.classList.add("lake");
+                        cell.appendChild(Icon);
+
+                    } else if (mapData[y][x] === icons.cabin) {
+                        // 如果是小屋
+                        let Icon = document.createElement("span");
+                        Icon.classList.add("cabin");
+                        cell.appendChild(Icon);
+                    }
+
+                    // 檢查是否顯示盜賊巢穴
+                    if (x === locations.thieves.x && y === locations.thieves.y && localStorage.getItem("showThievesPos")) {
+                        let Icon = document.createElement("span");
+                        Icon.textContent = icons.quest;
+                        Icon.classList.add("quest");
+                        cell.appendChild(Icon);
+                    }
+
+                    // 如果角色在這個格子，加入 <span> 來顯示角色
+                    if (playerPos.x === x && playerPos.y === y) {
+                        let playerIcon = document.createElement("span");
+                        let companionIcon = document.createElement("span");
+                        
+                        let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+                        if (hiredCompanions.length === 0) { // 1人
+                            playerIcon.textContent = icons.p1; 
+                        } else if (hiredCompanions.length === 1) { // 2人
+                            playerIcon.textContent = icons.p2; 
+                        } else if (hiredCompanions.length === 2) { // 3人
+                            playerIcon.textContent = icons.p1; 
+                            companionIcon.textContent = icons.p2;
+                        } else if (hiredCompanions.length === 3) { // 4人
+                            playerIcon.textContent = icons.p2; 
+                            companionIcon.textContent = icons.p2; 
+                        }
+                        playerIcon.classList.add("player");
+                        companionIcon.classList.add("companion");
+                        
+                        cell.appendChild(playerIcon);
+                        cell.appendChild(companionIcon);
+                    }
+
+                    row.appendChild(cell);
+                }
+                table.appendChild(row);
+            }
+
+            // 計算距離最近的城鎮，儲存城鎮座標
+            let distance01 = Math.pow(playerPos.x - locations.town01.x, 2) + Math.pow(playerPos.y - locations.town01.y, 2);
+            let distance02 = Math.pow(playerPos.x - locations.town02.x, 2) + Math.pow(playerPos.y - locations.town02.y, 2);
+
+            // 比較並選擇較近的城鎮
+            let townPos = (distance01 <= distance02) ? locations.town01 : locations.town02;
+
+            localStorage.setItem("townPos", JSON.stringify(townPos));
+        }
+
+        // 角色移動
+        function move(dx, dy) {
+            let newX = playerPos.x + dx;
+            let newY = playerPos.y + dy;
+
+            // 確保不超出範圍，並且不能走進湖泊
+            if (newX >= 0 && newX < 5 && newY >= 0 && newY < 5 && mapData[newY][newX] !== icons.lake) {
+                playerPos.x = newX;
+                playerPos.y = newY;
+                localStorage.setItem("playerPos", JSON.stringify(playerPos));
+                renderMap();
+
+                let background;
+                
+                // 當角色抵達某個格子時，變更背景圖，觸發遭遇
+                if (mapData[newY][newX] === "") {
+                    // 原野
+                    localStorage.setItem("playerLocation", "field");
+                    localStorage.setItem("backgroundStyle", "url('images/field.jpg')");
+                    window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
+                    return;
+
+                } else if (mapData[newY][newX] === icons.forest) {
+                    // 森林
+                    localStorage.setItem("playerLocation", "forest");
+                    localStorage.setItem("backgroundStyle", "url('images/forest.jpg')");
+                    window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
+                    return;
+
+                }
+
+                localStorage.removeItem("situation"); // 如果在安全區，清除之前的情況
+                loadBackground(); // 讀取背景
+                showSituation(); // 顯示情況
+            }
+        }
+
+        // 顯示遭遇的情況
+        function showSituation() {
+            // 讀取情況，預設第 1 種
+            let situation = parseInt(localStorage.getItem("situation")) || 1;
+            console.log("情況：", situation);
+            const locationIcon = mapData[playerPos.y][playerPos.x];
+            const helpVictim = localStorage.getItem("helpVictim");
+            //situation = 8; // 測試用
+
+            // 清空按鈕
+            document.getElementById("button-container").innerHTML = "";
+            
+            // 如果「幫助平民」後回到地圖
+            if (helpVictim === "true") { 
+                document.getElementById("situation").textContent = texts.helpVictim;
+                let playerFame = parseInt(localStorage.getItem("playerFame"));
+                playerFame ++ ; // 名聲上升
+                localStorage.setItem("playerFame", playerFame);
+                localStorage.removeItem("helpVictim"); // 清除「幫助平民」事件
+
+            // 位於城鎮
+            } else if (locationIcon === icons.town) {
+                localStorage.setItem("backgroundStyle", "url('images/town.jpg')"); // 變更背景圖
+                const townPos = JSON.parse(localStorage.getItem("townPos")); // 讀取最近的城鎮位置
+                localStorage.setItem("playerPos", JSON.stringify(townPos)); // 更新主角的位置
+
+                document.getElementById("situation").textContent = texts.town(townPos.name);
+
+                // 顯示按鈕
+                document.getElementById("button-container").innerHTML = `
+                    <button id="situation-btn">🏘️ 進入城鎮</button>
+                `;
+                document.getElementById("situation-btn").addEventListener("click", function () {
+                    // 檢查是否被通緝中
+                    const wantedLevel = parseInt(localStorage.getItem("wantedLevel")) || 0;
+                    if (wantedLevel > 0) {
+                        localStorage.setItem("npcName", "守衛");
+                        showDialogue("被守衛攔下");
+                    } else {
+                        window.location.href = 'town.html'; // 跳轉到城鎮
+                    }
+                });
+
+            // 位於小屋
+            } else if (locationIcon === icons.cabin) {
+                localStorage.setItem("backgroundStyle", "url('images/cabin.jpg')"); // 變更背景圖
+            
+            // 位於盜賊巢穴
+            } else if (playerPos.x === locations.thieves.x && playerPos.y === locations.thieves.y) {
+                let dungeon = "盜賊巢穴";
+                localStorage.setItem("backgroundStyle", "url('images/cave.jpg')"); // 變更背景圖
+
+                // 檢查是否已完成副本
+                const completedDungeons = JSON.parse(localStorage.getItem("completedDungeons")) || [];
+                let isCompleted = completedDungeons.find(d => d === dungeon);
+                if (isCompleted) {
+                    // 顯示探索過的訊息
+                    document.getElementById("situation").textContent = texts.thievesCompleted;
+                    return;
+                }
+
+                // 檢查是否已在副本中
+                const inDungeon = localStorage.getItem("inDungeon");
+                if (inDungeon === dungeon) {
+                    localStorage.setItem("npcName", dungeon);
+                    showDialogue(); // 從上次的進度繼續
+                    return;
+                }
+                
+                // 顯示抵達的訊息
+                document.getElementById("situation").textContent = texts.thieves;
+
+                // 顯示按鈕
+                document.getElementById("button-container").innerHTML = `
+                    <button id="situation-btn">進入洞穴</button>
+                `;
+                document.getElementById("situation-btn").addEventListener("click", function () {
+                    localStorage.setItem("inDungeon", dungeon); // 儲存副本
+                    localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+                    showDialogue("start"); // 從頭開始
+                });
+            
+            // 位於古堡
+            } else if (locationIcon === icons.castle) {
+                let dungeon = "古堡";
+                localStorage.setItem("backgroundStyle", "url('images/castle.jpg')"); // 變更背景圖
+
+                // 檢查是否已完成副本
+                const completedDungeons = JSON.parse(localStorage.getItem("completedDungeons")) || [];
+                let isCompleted = completedDungeons.find(d => d === dungeon);
+                if (isCompleted) {
+                    // 顯示探索過的訊息
+                    document.getElementById("situation").textContent = texts.castleCompleted;
+                    return;
+                }
+
+                // 檢查是否已在副本中
+                const inDungeon = localStorage.getItem("inDungeon");
+                if (inDungeon === dungeon) {
+                    localStorage.setItem("npcName", dungeon);
+                    showDialogue(); // 從上次的進度繼續
+                    return;
+                }
+
+                // 顯示抵達的訊息
+                document.getElementById("situation").textContent = texts.castle;
+
+                // 顯示按鈕
+                document.getElementById("button-container").innerHTML = `
+                    <button id="situation-btn">進入古堡</button>
+                `;
+                document.getElementById("situation-btn").addEventListener("click", function () {
+                    localStorage.setItem("inDungeon", dungeon); // 儲存副本
+                    localStorage.setItem("npcName", dungeon); // 用對話系統執行副本
+                    showDialogue("start"); // 從頭開始
+                });
+            
+            // 平安無事
+            } else if (situation === 1) {
+                document.getElementById("situation").textContent = "";
+
+            // 發現無防備的敵人
+            } else if (situation === 4) {
+                const enemyCount = parseInt(localStorage.getItem("enemyCount"));
+                const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+                document.getElementById("situation").textContent = texts.chance(enemyCount, enemies[0].name);
+
+                // 按鈕
+                document.getElementById("button-container").innerHTML = `
+                    <button id="situation-btn">⚔️ 偷襲</button>
+                `;
+                document.getElementById("situation-btn").addEventListener("click", function () {
+                    window.location.href = 'battle.html';
+                });
+
+            // 被跟蹤
+            } else if (situation === 5) {
+                document.getElementById("situation").textContent = texts.followed;
+            
+            // 巡邏隊
+            } else if (situation === 6) {
+                document.getElementById("situation").textContent = texts.guards;
+
+                // 按鈕
+                document.getElementById("button-container").innerHTML = `
+                  <button onclick="fastTravel()">跟著巡邏隊回城</button>`;
+
+            // 被襲擊的路人
+            } else if (situation === 7) {
+                const enemyCount = parseInt(localStorage.getItem("enemyCount"));
+                const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+                document.getElementById("situation").textContent = texts.victim(enemyCount, enemies[0].name);
+
+                // 按鈕
+                document.getElementById("button-container").innerHTML = `
+                    <button id="situation-btn">⚔️ 幫助平民</button>
+                `;
+                document.getElementById("situation-btn").addEventListener("click", function () {
+                    localStorage.setItem("helpVictim", "true");
+                    window.location.href = 'battle.html';
+                });
+                
+            // 哥布林商人
+            } else if (situation === 8) {
+                document.getElementById("situation").textContent = texts.merchant;
+
+                // 按鈕
+                document.getElementById("button-container").innerHTML = `
+                    <button id="situation-btn">交談</button>
+                `;
+                document.getElementById("situation-btn").addEventListener("click", function () {
+                    localStorage.setItem("npcName", "拉茲");
+                    showDialogue("start");
+                });
+            }
+            loadBackground(); // 讀取背景
+        }
+
+
+    </script>
+</body>
+</html>
