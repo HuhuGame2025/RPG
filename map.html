@@ -90,6 +90,13 @@
 
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
+        <!-- 天氣 -->
+        <p class="" id="weather">
+            <span id="weather-name"></span>
+            <span id="weather-description" class="note small"></span>
+        </p>
+
+        <!-- 情況敘述 -->
         <p id="situation"></p>
 
         <!-- 選單 -->
@@ -105,8 +112,18 @@
             <button onclick="move(1, 0)">▶</button>
         </div>
 
+        <!-- 潛行開關 -->
+        <p class="center">
+            <label>
+                <input type="checkbox" id="stealthToggle" onchange="stealth(this.checked)">
+                潛行
+                <span id="stealth-chance" class="note small"></span>
+            </label>
+        </p>
+
         <!-- 地圖 -->
         <table id="map"></table>
+
     </div>
 
     <!-- 對話區域 -->
@@ -119,17 +136,19 @@
         window.onload = function() {
             renderMap(); // 顯示地圖
             showSituation(); // 顯示遭遇的情況
-            loadBackground(); // 讀取背景
+            showWeather(); // 顯示天氣
+            loadStealth(); // 更新潛行開關
             npcPreferences(); // NPC偏好設定
+            loadBackground(); // 讀取背景
         };
 
         // 5x5 地圖 (x=0~4,y=0~4)
         const mapData = [
             ["🌳", "🏘️", "", "🌳", "🌳"],
-            ["", "", "🌳", "", "🌳"],
-            ["≋", "", "", "", ""],
-            ["🏰", "≋", "", "🌳", "🏘️"],
-            ["", "", "🛖", "🌳", ""]
+            ["🌳", "", "", "", "🌳"],
+            ["≋", "🌳", "🌳", "", ""],
+            ["🏰", "≋", "🌳", "", "🏘️"],
+            ["", "🌳", "🛖", "🌳", ""]
         ];
 
         // 定義圖標
@@ -769,7 +788,7 @@
                         npc: "賽爾瑞斯",
                         text: "來人，把這個血奴帶下去。",
                         choices: [
-                            { text: "（繼續）", next: "送到牧場2", action: "loadBackground('underground')" },
+                            { text: "（繼續）", next: "送到牧場2", action: "(loadBackground('underground'), captured('血奴'))" },
                         ]
                     },
                     "送到牧場2": {
@@ -790,7 +809,7 @@
                         npc: "賽爾瑞斯",
                         text: "馬卡斯，為我的新僕人準備房間。",
                         choices: [
-                            { text: "（繼續）", next: "送到房間2" },
+                            { text: "（繼續）", next: "送到房間2", action: "captured('僕人')" },
                         ]
                     },
                     "送到房間2": {
@@ -901,15 +920,15 @@
                         let playerIcon = document.createElement("span");
                         let companionIcon = document.createElement("span");
                         
-                        let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
-                        if (hiredCompanions.length === 0) { // 1人
+                        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+                        if (teamMembers.length === 1) { // 1人
                             playerIcon.textContent = icons.p1; 
-                        } else if (hiredCompanions.length === 1) { // 2人
+                        } else if (teamMembers.length === 2) { // 2人
                             playerIcon.textContent = icons.p2; 
-                        } else if (hiredCompanions.length === 2) { // 3人
+                        } else if (teamMembers.length === 3) { // 3人
                             playerIcon.textContent = icons.p1; 
                             companionIcon.textContent = icons.p2;
-                        } else if (hiredCompanions.length === 3) { // 4人
+                        } else if (teamMembers.length === 4) { // 4人
                             playerIcon.textContent = icons.p2; 
                             companionIcon.textContent = icons.p2; 
                         }
@@ -951,15 +970,15 @@
                 
                 // 當角色抵達某個格子時，變更背景圖，觸發遭遇
                 if (mapData[newY][newX] === "") {
-                    // 原野
-                    localStorage.setItem("playerLocation", "field");
+                    // 草原
+                    localStorage.setItem("playerTerrain", "草原");
                     localStorage.setItem("backgroundStyle", "url('images/field.jpg')");
                     window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
                     return;
 
                 } else if (mapData[newY][newX] === icons.forest) {
                     // 森林
-                    localStorage.setItem("playerLocation", "forest");
+                    localStorage.setItem("playerTerrain", "森林");
                     localStorage.setItem("backgroundStyle", "url('images/forest.jpg')");
                     window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
                     return;
@@ -1150,6 +1169,52 @@
             loadBackground(); // 讀取背景
         }
 
+        // 顯示天氣
+        function showWeather() {
+            const weather = JSON.parse(localStorage.getItem("weather")) || [];
+            document.getElementById("weather-name").textContent = weather.icon + " " + weather.name;
+
+            // 如果有天氣敘述
+            if (weather.description) {
+                const note = "[說明]";
+                document.getElementById("weather-description").textContent = note;
+
+                // 點擊問號時，顯示或收起敘述
+                let itemElement = document.getElementById("weather");
+                let hidedElement = document.getElementById("weather-description");
+
+                itemElement.addEventListener("click", () => {
+                    hidedElement.textContent = (hidedElement.textContent === note) ? weather.description : note;
+                });
+            }
+        }
+
+        // 潛行
+        function stealth() { 
+            let isChecked = document.getElementById("stealthToggle").checked; // 取得勾選框狀態
+            turnSwitch("stealth", isChecked); // 設定潛行狀態
+        }
+
+        // 更新潛行開關
+        function loadStealth() {
+            // 更新勾選狀態
+            let stealthToggle = document.getElementById("stealthToggle");
+            if (isTrue("stealth")) {
+                stealthToggle.checked = true; // 如果潛行模式啟用，勾選
+            } else {
+                stealthToggle.checked = false; // 否則取消勾選
+            }
+
+            // 顯示潛行成功率
+            const playerTotalDex = parseInt(localStorage.getItem("playerTotalDex"));
+            document.getElementById("stealth-chance").textContent = playerTotalDex * 5 + "%";
+
+            // 如果有濃霧，潛行 100% 成功
+            const weather = JSON.parse(localStorage.getItem("weather")) || [];
+            if (weather.name === "濃霧") {
+                document.getElementById("stealth-chance").textContent = "100%";
+            }
+        }
 
     </script>
 </body>

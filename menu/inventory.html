@@ -50,14 +50,13 @@
         // 頁面載入時
         window.onload = function() {
             loadPartyData();
-            partyToTeamMember();
             showItem(); // 顯示所有物品
             npcPreferences(); // NPC偏好設定
             
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
             console.log("物品", playerItems);
-            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
-            console.log("teamMember", teamMember);
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            console.log("teamMembers", teamMembers);
         };
 
         // 對話資料庫
@@ -240,8 +239,7 @@
             let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
             let count = playerItems.filter(item => item === itemId).length; // 計算剩餘數量
 
-            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
-            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
             // 如果是紅寶石
             if (itemId === "specialItem14") { 
@@ -277,7 +275,7 @@
             menu.appendChild(message);
 
             // 為每個成員建立一個按鈕
-            teamMember.forEach((member, index) => {
+            teamMembers.forEach((member, index) => {
                 let button = document.createElement("button");
                 button.innerHTML = `
                     <h4>${member.name}</h4>
@@ -300,12 +298,12 @@
                             member.HP = Math.min(member.HP + item.heal, member.MaxHP);
 
                             // 死亡角色補血後，回歸上場成員、可行動成員
-                            let presentMember = JSON.parse(localStorage.getItem("presentMember")) || [];
-                            let actableMember = JSON.parse(localStorage.getItem("actableMember")) || [];
-                            presentMember.push(member);
-                            actableMember.push(member);
-                            localStorage.setItem("presentMember", JSON.stringify(presentMember));
-                            localStorage.setItem("actableMember", JSON.stringify(actableMember));
+                            let presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
+                            let actableMembers = JSON.parse(localStorage.getItem("actableMembers")) || [];
+                            presentMembers.push(member);
+                            actableMembers.push(member);
+                            localStorage.setItem("presentMembers", JSON.stringify(presentMembers));
+                            localStorage.setItem("actableMembers", JSON.stringify(actableMembers));
                         } else {
                             // 非死亡角色只補血
                             member.HP = Math.min(member.HP + item.heal, member.MaxHP);
@@ -314,18 +312,7 @@
 
                     // 儲存
                     localStorage.setItem("playerItems", JSON.stringify(playerItems));
-                    localStorage.setItem("teamMember", JSON.stringify(teamMember));
-
-                    // 同步儲存到角色和同伴資料
-                    if (member.id === "player") {
-                        localStorage.setItem("playerHP", member.HP);
-                    } else {
-                        let companionIndex = parseInt(member.id.match(/\d+/)[0]) - 1;
-                        if (hiredCompanions[companionIndex]) {
-                            hiredCompanions[companionIndex] = member
-                            localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
-                        }
-                    }
+                    localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
 
                     document.body.removeChild(menu);  // 清除選單
 
@@ -362,8 +349,7 @@
             let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
             let count = playerItems.filter(item => item === itemId).length; // 計算剩餘數量
 
-            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
-            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
     
             // 隱藏主要內容
             document.getElementById("main").style.display = "none";
@@ -433,8 +419,7 @@
             // 讀取靈魂數量
             let soulCount = parseInt(localStorage.getItem("soulCount"));
 
-            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
-            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
     
             // 隱藏對話
             document.getElementById("dialogue").style.display = "none";
@@ -450,7 +435,7 @@
             menu.appendChild(message);
 
             // 為每個成員建立一個按鈕
-            teamMember.forEach((member, index) => {
+            teamMembers.forEach((member, index) => {
                 let button = document.createElement("button");
                 button.innerHTML = `
                     <h4>${member.name}</h4>
@@ -465,12 +450,12 @@
                         member.HP = member.MaxHP; // 完全治療
 
                         // 死亡角色補血後，回歸上場成員、可行動成員
-                        let presentMember = JSON.parse(localStorage.getItem("presentMember")) || [];
-                        let actableMember = JSON.parse(localStorage.getItem("actableMember")) || [];
-                        presentMember.push(member);
-                        actableMember.push(member);
-                        localStorage.setItem("presentMember", JSON.stringify(presentMember));
-                        localStorage.setItem("actableMember", JSON.stringify(actableMember));
+                        let presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
+                        let actableMembers = JSON.parse(localStorage.getItem("actableMembers")) || [];
+                        presentMembers.push(member);
+                        actableMembers.push(member);
+                        localStorage.setItem("presentMembers", JSON.stringify(presentMembers));
+                        localStorage.setItem("actableMembers", JSON.stringify(actableMembers));
                     } else {
                         // 非死亡角色只補血
                         member.HP = member.MaxHP; // 完全治療
@@ -478,18 +463,7 @@
 
                     // 儲存
                     localStorage.setItem("soulCount", soulCount);
-                    localStorage.setItem("teamMember", JSON.stringify(teamMember));
-
-                    // 同步儲存到角色和同伴資料
-                    if (member.id === "player") {
-                        localStorage.setItem("playerHP", member.HP);
-                    } else {
-                        let companionIndex = parseInt(member.id.match(/\d+/)[0]) - 1;
-                        if (hiredCompanions[companionIndex]) {
-                            hiredCompanions[companionIndex] = member
-                            localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
-                        }
-                    }
+                    localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
 
                     document.body.removeChild(menu);  // 清除選單
 

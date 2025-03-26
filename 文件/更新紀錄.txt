@@ -407,17 +407,58 @@ encounter.html 有5種遇敵方式：
 01
 「被吸血鬼俘虜的小孩」委託
 完成古堡副本，在副本中有機會被吸血鬼抓到地下莊園當血奴，或是被選為領主的僕人
-地下莊園逃脫法：在沃特的杯子裡加入哥布林血讓他嘔吐，主角就會被趕出莊園
+
+【地底莊園】
+宿舍：餵食隨機吸血鬼、睡覺
+農場：目前沒有功能
+釀造坊：可以工作換取血葡萄酒，方式有：打掃倉庫、把幽靈菇磨粉、提供鮮血
+
+逃脫方法：在沃特的杯子裡加入哥布林的血讓他嘔吐，主角就會被趕出莊園
 
 02
 更改函式名稱：
 事件→開關
 isEnd→isTrue
-endEvent→switch
+endEvent→turnSwitch
 event→switch
 Event→Switch
 副本→事件
 dungeon→event
 Dungeon→Event
 retreat→exitEvent
-之後再將addEventListener改回來
+
+例外：
+addEventListener
+let button = event.target;
+
+如果有物品被沒收，可以在公會的「失物招領」處繳交 $100 取回物品
+
+
+
+20250325
+
+01
+變數teamMember更名為teamMembers（加s）
+變數presentMember更名為presentMembers（加s）
+變數actableMember更名為actableMembers（加s）
+刪除變數hiredCompanions，用teamMember取代
+
+修復包裹無法領取的bug（將顯示包裹的段落放到 missionDiv.innerHTML 之後）
+吃酒館料理時，如果有成員已補滿，會將剩餘治療量繼續分配給未補滿的成員
+將「一起逃跑邏輯」合併到「逃跑邏輯」中
+區分敵人種類
+每日天氣變化（在nextDay函式裡）
+
+
+
+20250326
+
+01
+在不同地形會出現不同敵人
+在地圖上可以潛行，每次移動須過敏捷檢定
+有濃霧時潛行自動成功
+
+武器能附加狀態：
+穿刺，有機率附加流血狀態 3 回合（骰武器的str）
+鈍擊，有機率附加倒下狀態 1 回合（骰武器的str）
+揮砍，無特殊效果

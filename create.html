@@ -195,7 +195,7 @@
 
             // 儲存角色資料至 localStorage
             localStorage.setItem("playerName", name);
-            localStorage.setItem("playerType", "冒險者");
+            localStorage.setItem("PlayerType", "冒險者");
             localStorage.setItem("playerCon", stats.con);
             localStorage.setItem("playerStr", stats.str);
             localStorage.setItem("playerDex", stats.dex);
@@ -205,16 +205,19 @@
             localStorage.setItem("playerTotalDex", stats.dex);
             localStorage.setItem("playerTotalCha", stats.cha);
             localStorage.setItem("playerTotalArm", 0);
-            localStorage.setItem("playerHP", stats.con * 3);
             localStorage.setItem("playerMaxHP", stats.con * 3);
             localStorage.setItem("playerMoney", 1000); // 起始資金
             localStorage.setItem("playerFame", 0); // 名聲
             localStorage.setItem("wantedLevel", 0); // 通緝等級
             
             // 將主角加入隊伍
-            partyToTeamMember();
+            playerToTeamMembers();
 
-            equip("player", "lootclothes01"); // 穿布衣
+            // 穿布衣
+            equip("player", "lootclothes01"); 
+
+            // 新的一天（為了抽天氣）
+            nextDay();
 
             // 導向主遊戲頁面
             window.location.href = "map.html"; // 假設這是遊戲主頁面的名稱

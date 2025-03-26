@@ -32,8 +32,8 @@
         <div id="player" class="background">
             <div class="column-container item">
                 <div class="column-name">
-                    <h4 id="playerName"></h4>
-                    <h4 class="hp"><span id="playerHP"></span> / <span id="playerMaxHP"></span></h4>
+                    <h4 id="player-name"></h4>
+                    <h4 class="hp"><span id="player-HP"></span> / <span id="player-MaxHP"></span></h4>
                 </div>
                 <div class="column">
                     <span id="player-action" class="battle-text"></span>
@@ -43,7 +43,7 @@
 
          <!-- 選單 -->
         <div id="button-container" class="menu">
-            <button onclick="newDay()">醒來</button>
+            <button onclick="workStart()">醒來</button>
         </div>
     </div>
 
@@ -57,7 +57,7 @@
             loadPartyData(); // 讀取隊伍資料
             showText('player'); // 顯示健康程度
             showCountDown(); // 顯示倒數天數
-            loadEvent() || endDay(); // 讀取進度，如果沒在事件中就結束一天
+            loadEvent() || workEnd(); // 讀取進度，如果沒在事件中就跳到結束工作
             npcPreferences(); // NPC偏好設定
 
             localStorage.setItem("backgroundStyle", "url('../images/prison.jpg')"); // 儲存背景圖
@@ -172,7 +172,7 @@
                 "睡覺": {
                     text: "一天的工作結束了，囚犯們被趕回牢房。",
                     choices: [
-                        { text: "回到牢房", next: "", action: "endDay()" },
+                        { text: "回到牢房", next: "", action: "workEnd()" },
                     ]
                 },
             },
@@ -183,13 +183,13 @@
                     text: "你解開了牢房的門鎖。",
                     choices: [
                         { text: "離開牢房", next: "", action: "escape('離開牢房')" },
-                        { text: "留在牢房", next: "", action: "endDay()" },
+                        { text: "留在牢房", next: "", action: "workEnd()" },
                     ]
                 },
                 "開鎖失敗": {
                     text: "你撬不開這道鎖，弄壞了鐵絲。",
                     choices: [
-                        { text: "（繼續）", next: "", action: "endDay()" },
+                        { text: "（繼續）", next: "", action: "workEnd()" },
                     ]
                 },
 
@@ -210,7 +210,7 @@
                         { text: "前往監獄大門", next: "", action: "escape('前往大門')" },
                         { text: "前往倉庫", next: "", action: "escape('前往倉庫')" },
                         { text: "前往下水道", next: "", action: "escape('前往下水道')" },
-                        { text: "回到牢房", next: "", action: "endDay()" },
+                        { text: "回到牢房", next: "", action: "workEnd()" },
                     ]
                 },
 
@@ -406,8 +406,8 @@
         // 顯示健康程度
         function showText(memberId) {
             // 讀取隊伍資訊
-            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
-            const member = teamMember.find(m => m.id === memberId);
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            const member = teamMembers.find(m => m.id === memberId);
 
             // 顯示文本
             let actionElement = document.getElementById(`${memberId}-action`);
@@ -438,8 +438,8 @@
             }
         }
 
-        // 新的一天
-        function newDay() {
+        // 工作開始
+        function workStart() {
             let event = "坐牢";
             localStorage.setItem("inEvent", event); // 儲存事件
             localStorage.setItem("npcName", event); // 用對話系統執行事件
@@ -587,8 +587,8 @@
             }
         }
 
-        // 一天結束
-        function endDay() {
+        // 工作結束
+        function workEnd() {
             localStorage.removeItem("inEvent"); // 清除事件
             removeDialogue(); // 清除對話
 
@@ -621,25 +621,17 @@
                 localStorage.removeItem("unlockCell3");
                 localStorage.removeItem("unlockCell4");
 
-                // 重置事件進度
-                localStorage.removeItem("currentKey"); // 清除對話 key
-
                 // 所有同伴退出隊伍
                 removeCompanion("companion3");
                 removeCompanion("companion2");
                 removeCompanion("companion1");
 
-                // 重置酒館
-                localStorage.removeItem("tavernClose"); // 重置打烊
-                localStorage.removeItem("drinkingStart");
-                localStorage.removeItem("drinkingResults");
-                localStorage.removeItem("drinkingEnd");
-
+                nextDay(); // 新的一天
                 resetHP(); // 完全恢復
                 loadPartyData(); // 讀取隊伍資料
                 showText('player'); // 顯示健康程度
                 showCountDown(); // 顯示倒數天數
-                newDay();
+                workStart();
             });
 
             showKey(); // 顯示開鎖工具
@@ -807,8 +799,7 @@
         // 逃獄成功
         function escapeSuccess() {
             // 主角的身分改為冒險者
-            localStorage.setItem("playerType", "冒險者");
-            partyToTeamMember();
+            changePlayerType("冒險者");
 
             // 通緝等級設為當前犯罪值
             const playerCrime = parseInt(localStorage.getItem("playerCrime")) || 0;

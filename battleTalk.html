@@ -732,11 +732,11 @@
             // 隱藏對話
             document.getElementById("dialogue").style.display = "none";
 
-            // 讀取已雇用的同伴資料
-            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+            // 讀取隊伍資料
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
-            // 限制最多 3 個同伴
-            if (hiredCompanions.length >= 3) {
+            // 隊伍最多 4 人
+            if (teamMembers.length >= 4) {
                 // 如果隊伍已滿，建立選擇 UI
                 let menu = document.createElement("div");
                 menu.id = "replaceMenu";
@@ -747,15 +747,15 @@
                 message.textContent = texts.partyFull; 
                 menu.appendChild(message);
 
-                // 為每個已雇用的同伴建立一個按鈕
-                hiredCompanions.forEach((companion, index) => {
+                // 為每個成員建立一個按鈕
+                teamMembers.forEach(companion => {
+                    if (companion.id === "player") return; // 排除主角
+
                     let button = document.createElement("button");
                     button.textContent = companion.name;
 
                     button.onclick = function () {
-                        hiredCompanions.splice(index, 1); // 移除選擇的同伴
-                        localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
-
+                        removeCompanion(companion.id);// 移除選擇的同伴
                         document.body.removeChild(menu);  // 清除選單
                         showDialogue("capture"); // 顯示敵人加入的對話
                     };
@@ -785,12 +785,12 @@
         // 威嚇
         function intimidate() {
             // 讀取成員資料
-            let presentMember = JSON.parse(localStorage.getItem("presentMember")) || [];
+            let presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
 
             // 找到 str 最高的成員
             let maxStrMembers = [];
             let maxStr = -Infinity; // 設定初始值為負無限
-            presentMember.forEach(member => {
+            presentMembers.forEach(member => {
                 if (member.totalStr > maxStr) { // 如果找到更高的 str，重置陣列，將該角色加入陣列
                     maxStr = member.totalStr; //更新最高 str
                     maxStrMembers = [member];
@@ -812,8 +812,8 @@
 
             // 敵人是否投降
             let enemyType = enemies.length > 0 ? enemies[0].type : ""; // 取第一個敵人的類型
-            if (enemies.length === 1 && enemyType === "人形" && maxStr > totalEnemyHP) {
-                // 如果只剩一個人形敵人，且隊伍中最高力量 > 敵人 HP 時，威嚇成功
+            if (enemies.length === 1 && enemyType.includes("智慧") && maxStr > totalEnemyHP) {
+                // 如果只剩一個智慧敵人，且隊伍中最高力量 > 敵人 HP 時，威嚇成功
                 showDialogue('威嚇成功'); // 敵人投降
             } else {
                 showDialogue('威嚇失敗'); // 敵人拒絕投降
@@ -911,11 +911,11 @@
                 // 隱藏對話
                 document.getElementById("dialogue").style.display = "none";
 
-                // 讀取已雇用的同伴資料
-                let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+                // 讀取隊伍資料
+                let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
-                // 限制最多 3 個同伴
-                if (hiredCompanions.length >= 3) {
+                // 隊伍最多 4 人
+                if (teamMembers.length >= 4) {
                     // 如果隊伍已滿，建立選擇 UI
                     let menu = document.createElement("div");
                     menu.id = "replaceMenu";
@@ -923,20 +923,20 @@
 
                     // 顯示隊伍已滿的訊息
                     let message = document.createElement("p");
-                    message.textContent = texts.partyFull;
+                    message.textContent = texts.partyFull; 
                     menu.appendChild(message);
 
-                    // 為每個已雇用的同伴建立一個按鈕
-                    hiredCompanions.forEach((companion, index) => {
+                    // 為每個成員建立一個按鈕
+                    teamMembers.forEach(companion => {
+                        if (companion.id === "player") return; // 排除主角
+
                         let button = document.createElement("button");
                         button.textContent = companion.name;
 
                         button.onclick = function () {
-                            hiredCompanions.splice(index, 1); // 移除選擇的同伴
-                            localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
-
+                            removeCompanion(companion.id);// 移除選擇的同伴
                             document.body.removeChild(menu);  // 清除選單
-                            showDialogue('邀請成功'); // 顯示邀請成功的對話
+                            showDialogue("capture"); // 顯示敵人加入的對話
                         };
 
                         menu.appendChild(button);
@@ -1013,17 +1013,16 @@
             //添加為同伴
             addCompanion(enemy);
                            
-            // 重新讀取最新的 hiredCompanions，確保數據是最新的
-            hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+            // 重新讀取，確保數據是最新的
+            teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
             // 將類型和目前 HP 儲存到同伴資料中
-            let latestCompanionIndex = hiredCompanions.length - 1; // 取得最新加入的同伴（最後一個）
+            let latestCompanionIndex = teamMembers.length - 1; // 取得最新加入的同伴（最後一個）
             if (latestCompanionIndex >= 0) {
-                hiredCompanions[latestCompanionIndex].type = type;
-                hiredCompanions[latestCompanionIndex].HP = enemy.HP;
+                teamMembers[latestCompanionIndex].type = type;
+                teamMembers[latestCompanionIndex].HP = enemy.HP;
             }
-            localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
-            partyToTeamMember();
+            localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
 
             returnMap(); // 回到地圖
         }

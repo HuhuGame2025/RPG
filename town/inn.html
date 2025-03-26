@@ -42,7 +42,7 @@
     <!-- 對話區域 -->
     <div id="dialogue" class="main-content"></div>
 
-    <!-- 突發開關 -->
+    <!-- 突發事件 -->
     <p id="text"></p>
     <div class="menu">
         <div id="button-container"></div>
@@ -302,30 +302,19 @@
                 return;
             }
 
-            // 通緝等級每天下降 1 級
-            addWantedLevel(-1);
-
-            // 重置酒館
-            localStorage.removeItem("tavernClose"); // 重置打烊
-            localStorage.removeItem("drinkingStart");
-            localStorage.removeItem("drinkingResults");
-            localStorage.removeItem("drinkingEnd");
-            
-            // 重置事件進度
-            localStorage.removeItem("currentKey"); // 清除對話 key
-
+            nextDay(); // 新的一天
             resetHP(); // 完全恢復
-            checkAccident(); // 檢查是否有突發開關
+            checkAccident(); // 檢查是否有突發事件
             showTeamHealth(); // 顯示隊伍健康程度
         }
 
-        // 檢查是否有突發開關（只會發生一件，按照優先順序寫）
+        // 檢查是否有突發事件（只會發生一件，按照優先順序寫）
         function checkAccident() {
-            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
             
             // 檢查賽恩是否襲擊
-                const member = teamMember.find(m => m.name.includes("賽恩"));
+                const member = teamMembers.find(m => m.name.includes("賽恩"));
                 let nightWithSain = parseInt(localStorage.getItem("nightWithSain")) || 0;
             
                 // 賽恩首次襲擊
@@ -357,7 +346,7 @@
                 }
 
             // 檢查每個吸血鬼是否襲擊
-            const vampires = teamMember.filter(m => m.name.includes("吸血鬼"));
+            const vampires = teamMembers.filter(m => m.name.includes("吸血鬼"));
             vampires.forEach(vampire => {
                 if (Math.random() <= 0.2) {  // 20% 機率襲擊
                     localStorage.setItem("npcName", vampire.name);
@@ -415,14 +404,13 @@
 
         // 被吸血
         function bloodSucked() {
-            let playerHP = parseInt(localStorage.getItem("playerHP"));
             const npcName = localStorage.getItem("npcName");
-            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
-            const member = teamMember.find(m => m.name.includes("賽恩"));
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            const member = teamMembers.find(m => m.name.includes("賽恩"));
 
             if (npcName === "賽恩") {
                 // 如果是賽恩，吸 2 HP
-                playerHP -= 2;
+                addPlayerHP(-2);
 
             } else if (npcName !== "賽恩" && member && isTrue('用血支付賽恩')) {
                 // 如果是其他吸血鬼，但賽恩在隊伍中，且已與賽恩談好用血支付，他會阻止吸血
@@ -430,15 +418,10 @@
 
             } else {
                 // 如果是其他吸血鬼，吸 5 HP
-                playerHP -= 5;
+                addPlayerHP(-2);
                 showDialogue("允許");
             }
-           
-            localStorage.setItem("playerHP", playerHP);
-            partyToTeamMember();
         }
-
-
 
     </script>
 

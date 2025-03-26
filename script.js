@@ -300,8 +300,10 @@
 // 事件相關
 
     // 屬性擲骰
+        // 骰主角屬性：roll("dex");
+        // 骰指定數值：roll("5");
     function roll(attribute, successKey, failKey) {
-        // 讀取玩家屬性
+        // 讀取主角屬性
         const playerAttributes = {
             con: parseInt(localStorage.getItem("playerCon")) || 0,
             str: parseInt(localStorage.getItem("playerStr")) || 0,
@@ -313,48 +315,59 @@
             totalcha: parseInt(localStorage.getItem("playerTotalCha")) || 0,
             totalarm: parseInt(localStorage.getItem("playerTotalArm")) || 0
         };
+        
+        let difficultyLevel;
 
-        // 確保輸入的屬性有效
-        if (!(attribute in playerAttributes)) {
-            console.warn(`無效的屬性: ${attribute}`);
-            return false;
+        if (attribute in playerAttributes) {
+            // 用主角屬性值來骰
+            difficultyLevel = playerAttributes[attribute];
+        } else {
+            // 用輸入的數值來骰
+            difficultyLevel = attribute;
         }
 
         // 擲 1d20 骰子
         const roll = Math.floor(Math.random() * 20) + 1;
-        console.log(`擲骰結果: ${roll}, 屬性值: ${playerAttributes[attribute]}`);
+        console.log(`${attribute}: ${difficultyLevel}, 擲骰結果: ${roll}`);
 
-        // 根據結果顯示對話
-        if (roll <= playerAttributes[attribute]) {
-            showDialogue(successKey);
+        // 回傳結果，顯示對話
+        if (roll <= difficultyLevel) {
+            if (successKey) showDialogue(successKey);
+            return true;
         } else {
-            showDialogue(failKey);
+            if (failKey) showDialogue(failKey);
+            return false;
         }
     }
 
     // 檢查同伴在不在
     function isCompanion(memberName) {
-        const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+        const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
         if (memberName) {
             // 如果有指定同伴，回傳該同伴是否在隊伍中
-            let member = teamMember.some(m => m.name === memberName);
+            let member = teamMembers.some(m => m.name === memberName);
             if (member) {
                 return true;
             }
         } else {
             // 如果沒有指定，回傳是否有同伴
-            if (teamMember.length > 1) {
+            if (teamMembers.length > 1) {
                 return true;
             }
         }
     }
 
-    // 檢查有沒有某個物品
+    // 檢查有沒有某個物品，或指定的金錢
     function isItem(itemId) {
-        const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-        let item = playerItems.some(i => i === itemId);
-        if (item) {
-            return true;
+        if (itemId.startsWith("$")) {
+            // 如果是 $ 開頭，代表金幣
+            let money = parseInt(itemId.slice(1), 10); // 取得 $ 後的金額
+            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+            return playerMoney >= money; // 回傳比較結果
+        } else {
+            // 如果是物品
+            const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            return playerItems.some(i => i === itemId); // 回傳檢查結果
         }
     }
 
@@ -441,59 +454,27 @@
     ];
 
     // 讀取隊伍資料
-    function loadPartyData(){
-        // 讀取主角資料
-        const playerName = localStorage.getItem("playerName");
-        const playerType = localStorage.getItem("playerType");
-        const playerWeapon = JSON.parse(localStorage.getItem("playerWeapon")) || [];
-        const playerArmor = JSON.parse(localStorage.getItem("playerArmor")) || [];
-        const playerCon = parseInt(localStorage.getItem("playerCon"));
-        const playerStr = parseInt(localStorage.getItem("playerStr"));
-        const playerDex = parseInt(localStorage.getItem("playerDex"));
-        const playerWis = parseInt(localStorage.getItem("playerWis"));
-        const playerCha = parseInt(localStorage.getItem("playerCha"));
-        const playerTotalStr = parseInt(localStorage.getItem("playerTotalStr"));
-        const playerTotalDex = parseInt(localStorage.getItem("playerTotalDex"));
-        const playerTotalCha = parseInt(localStorage.getItem("playerTotalCha"));
-        const playerTotalArm = parseInt(localStorage.getItem("playerTotalArm"));
-        const playerMaxHP = parseInt(localStorage.getItem("playerMaxHP"));
-        const playerHP = parseInt(localStorage.getItem("playerHP"));
+    function loadPartyData() {
+        // 讀取隊伍資料
+        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
-        // 顯示主角資料
-        if (document.getElementById("playerName")) {
-            document.getElementById("playerName").textContent = playerName;
-        }
-        if (document.getElementById("playerType")) {
-            document.getElementById("playerType").textContent = playerType;
-        }
-        if (document.getElementById("playerHP")) {
-            document.getElementById("playerHP").textContent = playerHP;
-        }
-        if (document.getElementById("playerMaxHP")) {
-            document.getElementById("playerMaxHP").textContent = playerMaxHP;
-        }
-
-        // 讀取已雇用的同伴資料
-        let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
-
-        hiredCompanions.forEach((comp, index) => {
-            let compPrefix = `companion${index + 1}`;
-            let compItem = document.getElementById(compPrefix);
+        teamMembers.forEach((member, index) => {
+            let memberItem = document.getElementById(member.id);
 
             // 顯示同伴資料
-            if (compItem) {
-                compItem.style.display = "block"; // 顯示已雇用的同伴區域
-                if (document.getElementById(`${compPrefix}-name`)) {
-                    document.getElementById(`${compPrefix}-name`).textContent = comp.name;
+            if (memberItem) {
+                memberItem.style.display = "block"; // 顯示已雇用的同伴區域
+                if (document.getElementById(`${member.id}-name`)) {
+                    document.getElementById(`${member.id}-name`).textContent = member.name;
                 }
-                if (document.getElementById(`${compPrefix}-type`)) {
-                    document.getElementById(`${compPrefix}-type`).textContent = comp.type;
+                if (document.getElementById(`${member.id}-type`)) {
+                    document.getElementById(`${member.id}-type`).textContent = member.type;
                 }
-                if (document.getElementById(`${compPrefix}-MaxHP`)) {
-                    document.getElementById(`${compPrefix}-MaxHP`).textContent = comp.MaxHP;
+                if (document.getElementById(`${member.id}-MaxHP`)) {
+                    document.getElementById(`${member.id}-MaxHP`).textContent = member.MaxHP;
                 }
-                if (document.getElementById(`${compPrefix}-HP`)) {
-                    document.getElementById(`${compPrefix}-HP`).textContent = comp.HP;
+                if (document.getElementById(`${member.id}-HP`)) {
+                    document.getElementById(`${member.id}-HP`).textContent = member.HP;
                 }
             }
         });
@@ -517,90 +498,10 @@
         }
     }
 
-    // 將角色資料更新到隊伍
-    function partyToTeamMember(){
-        let teamMember = []; // 隊伍
-    
-        // 讀取主角資料
-        const playerName = localStorage.getItem("playerName");
-        const playerType = localStorage.getItem("playerType");
-        const playerWeapon = JSON.parse(localStorage.getItem("playerWeapon")) || [];
-        const playerArmor = JSON.parse(localStorage.getItem("playerArmor")) || [];
-        const playerCon = parseInt(localStorage.getItem("playerCon"));
-        const playerStr = parseInt(localStorage.getItem("playerStr"));
-        const playerDex = parseInt(localStorage.getItem("playerDex"));
-        const playerWis = parseInt(localStorage.getItem("playerWis"));
-        const playerCha = parseInt(localStorage.getItem("playerCha"));
-        const playerTotalStr = parseInt(localStorage.getItem("playerTotalStr"));
-        const playerTotalDex = parseInt(localStorage.getItem("playerTotalDex"));
-        const playerTotalCha = parseInt(localStorage.getItem("playerTotalCha"));
-        const playerTotalArm = parseInt(localStorage.getItem("playerTotalArm"));
-        const playerMaxHP = parseInt(localStorage.getItem("playerMaxHP"));
-        let playerHP = parseInt(localStorage.getItem("playerHP"));
-
-        // 讀取同伴資料
-        let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
-    
-        // 將主角加入隊伍
-        teamMember = [{
-            name: playerName,
-            id: "player",
-            type: playerType,
-            weapon: playerWeapon,
-            armor: playerArmor,
-            HPid: "playerHP",
-            HP: playerHP,
-            MaxHP: playerMaxHP,
-            str: playerStr,
-            dex: playerDex,
-            con: playerCon,
-            wis: playerWis,
-            cha: playerCha,
-            totalStr: playerTotalStr,
-            totalDex: playerTotalDex,
-            totalCha: playerTotalCha,
-            totalArm: playerTotalArm,
-            description: "",
-        }];
-
-        // 將所有同伴加入隊伍
-        hiredCompanions.forEach((companion, index) => {
-            teamMember.push({
-                name: companion.name,
-                id: `companion${index + 1}`,
-                type: companion.type,
-                weapon: companion.weapon,
-                armor: companion.armor,
-                HPid: `companion${index + 1}-HP`,
-                HP: companion.HP,
-                MaxHP: companion.MaxHP,
-                str: companion.str,
-                dex: companion.dex,
-                con: companion.con,
-                wis: companion.wis,
-                cha: companion.cha,
-                totalStr: companion.totalStr,
-                totalDex: companion.totalDex,
-                totalCha: companion.totalCha,
-                totalArm: companion.totalArm,
-                description: companion.description,
-            });
-        });
-
-        // 儲存隊伍成員
-        localStorage.setItem("teamMember", JSON.stringify(teamMember));
-        console.log(teamMember);
-
-        teamMember.forEach((member, index) => {
-            let memberId = `member${index + 1}`;
-            let memberItem = document.getElementById(memberId);
-        });
-    }
-
     // 同伴加入隊伍
     function addCompanion(companion) {
-        // 讀取所有同伴的資料
-        let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+        // 讀取隊伍資料
+        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
         // 如果有形容詞，則加到名字前面
         let companionName = companion.adj ? `${companion.adj}${companion.name}` : companion.name;
@@ -618,9 +519,13 @@
         companion.totalDex = (companion.dex || 0) + (weapon.dex || 0) + (armor.dex || 0);
         companion.totalCha = (companion.cha || 0) + (weapon.cha || 0) + (armor.cha || 0);
 
+        // 生成同伴的id
+        const companionId = `companion${teamMembers.length}`;
+
         // 添加同伴資料並設定初始的HP和MaxHP
-        hiredCompanions.push({
+        teamMembers.push({
             name: companionName, // 加入處理後的名字
+            id: companionId,  // 自動產生 id
             type: companion.type,
             weapon: companion.weapon,
             armor: companion.armor,
@@ -635,28 +540,27 @@
             totalArm: companion.totalArm,
             MaxHP: companion.con * 3, // MaxHP
             HP: companion.con * 3, // 初始HP
+            status: [], // 初始狀態
             description: companion.description,
         });
 
         // 儲存
-        localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
-        console.log("同伴加入", hiredCompanions);
-
-        // 同時更新隊伍成員
-        partyToTeamMember();
+        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+        console.log("同伴加入", teamMembers);
     }
 
-    // 同伴離開隊伍（輸入id或name都可以）
+    // 同伴離開隊伍（輸入 id 或 name 都可以）
     function removeCompanion(companionId) {
         // 讀取所有同伴資料
-        let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
-        let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
-        // 找到這名同伴的資料
-        let companion = teamMember.find(m => m.id === companionId || m.name === companionId);
-        if (!companion) {
+        // 找到這名同伴的索引
+        let companionIndex = teamMembers.findIndex(m => m.id === companionId || m.name === companionId);
+        if (companionIndex === -1) {
             return; // 找不到就不執行
         }
+
+        let companion = teamMembers[companionIndex];
 
         // 脫下同伴的裝備
         equip(companion.id, "noWeapon");
@@ -665,24 +569,22 @@
         // 從主角物品中移除同伴專屬裝備
         const companionItems = itemDatabase.filter(i => i.owner === companion.name); // 找到專屬裝備
         let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-        let newPlayerItems = playerItems.filter(i => i !== companionItems.id);
-        localStorage.setItem("playerItems", JSON.stringify(playerItems));
+        let newPlayerItems = playerItems.filter(i => !companionItems.some(item => item.id === i));
+        localStorage.setItem("playerItems", JSON.stringify(newPlayerItems));
 
-        // 提取數字部分並減去 1，來取得在 hiredCompanions 的索引
-        const companionIndex = parseInt(companion.id.replace("companion", "")) - 1;
+        // 移除該同伴
+        teamMembers.splice(companionIndex, 1);
 
-        // 確保索引有效
-        if (companionIndex >= 0 && companionIndex < hiredCompanions.length) {
-            // 刪除指定索引的同伴
-            hiredCompanions.splice(companionIndex, 1);
+        // 重新排序 id，確保 companion1、companion2、companion3 依序排列
+        let companionCount = 1;
+        teamMembers.forEach(member => {
+            if (member.id.startsWith("companion")) {
+                member.id = `companion${companionCount++}`;
+            }
+        });
 
-            // 更新 localStorage
-            localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
-
-            // 同時更新隊伍成員
-            teamMember = teamMember.filter(member => member.id !== companion.id);
-            localStorage.setItem("teamMember", JSON.stringify(teamMember));
-        }
+        // 更新 localStorage
+        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
 
         // 如果是賽恩，取消「用血支付賽恩」的標記
         if (companion.name === "賽恩") {
@@ -693,37 +595,25 @@
     // 回滿隊伍 HP
     function resetHP() {
         // 讀取隊伍資訊
-        const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+        const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
         // 將 HP 設為最大值
-        teamMember.forEach(member => {
+        teamMembers.forEach(member => {
             member.HP = member.MaxHP;
-
-            // 同步儲存到角色和同伴資料
-            if (member.id === "player") {
-                localStorage.setItem("playerHP", member.HP);
-            } else {
-                let companionIndex = parseInt(member.id.match(/\d+/)[0]) - 1;
-                let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
-                if (hiredCompanions[companionIndex]) {
-                    hiredCompanions[companionIndex] = member
-                    localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
-                }
-            }
         });
-        localStorage.setItem("teamMember", JSON.stringify(teamMember));
+        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
     }
 
     // 顯示隊伍健康程度
     function showTeamHealth() {
         // 讀取隊伍資訊
-        const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+        const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
         // 顯示同伴
         const menu = document.getElementById("companion-list");
         menu.innerHTML = "";
     
-        teamMember.forEach(member => {
+        teamMembers.forEach(member => {
             let memberDiv = document.createElement("div");
             memberDiv.innerHTML = `
                 <div class="column-container item background">
@@ -759,13 +649,57 @@
 
 // 主角相關
 
+    // 將主角資料更新到隊伍（只有創角時用到）
+    function playerToTeamMembers() {
+        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+
+        // 讀取主角資料
+        const playerData = {
+            name: localStorage.getItem("playerName"),
+            id: "player",
+            type: localStorage.getItem("PlayerType"),
+            weapon: JSON.parse(localStorage.getItem("playerWeapon")) || [],
+            armor: JSON.parse(localStorage.getItem("playerArmor")) || [],
+            HP: parseInt(localStorage.getItem("playerHP")),
+            MaxHP: parseInt(localStorage.getItem("playerMaxHP")),
+            str: parseInt(localStorage.getItem("playerStr")),
+            dex: parseInt(localStorage.getItem("playerDex")),
+            con: parseInt(localStorage.getItem("playerCon")),
+            wis: parseInt(localStorage.getItem("playerWis")),
+            cha: parseInt(localStorage.getItem("playerCha")),
+            totalStr: parseInt(localStorage.getItem("playerTotalStr")),
+            totalDex: parseInt(localStorage.getItem("playerTotalDex")),
+            totalCha: parseInt(localStorage.getItem("playerTotalCha")),
+            totalArm: parseInt(localStorage.getItem("playerTotalArm")),
+            MaxHP: parseInt(localStorage.getItem("playerMaxHP")),
+            HP: parseInt(localStorage.getItem("playerMaxHP")),
+            status: [], // 初始狀態
+            description: "",
+        };
+
+        // 檢查隊伍內是否已有主角
+        let playerIndex = teamMembers.findIndex(member => member.id === "player");
+
+        if (playerIndex !== -1) {
+            // 如果找到主角，更新資料
+            teamMembers[playerIndex] = playerData;
+        } else {
+            // 否則將主角加入隊伍
+            teamMembers.push(playerData);
+        }
+
+        // 儲存隊伍成員
+        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+        console.log("隊伍更新:", teamMembers);
+    }
+
     // 主角 HP 增減
     function addPlayerHP(amount) {
-        let playerHP = parseInt(localStorage.getItem("playerHP"));
-        playerHP += amount;
-        localStorage.setItem("playerHP", playerHP);
-
-        partyToTeamMember();
+        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+        let player = teamMembers.find(m => m.id === "player");
+        player.HP += amount;
+        player.HP = Math.min(player.HP, player.MaxHP); // 確保 HP 不超過最大 HP
+        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
     }
 
     // 名聲增減
@@ -789,8 +723,16 @@
         }
     }
 
-    // 被逮捕
-    function arrested() {
+    // 主角的身分變更
+    function changePlayerType(type) {
+        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+        let player = teamMembers.find(m => m.id === "player");
+        player.type = type;
+        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+    }
+
+    // 被囚禁
+    function captured(type) {
         // 所有同伴退出隊伍
         removeCompanion("companion3");
         removeCompanion("companion2");
@@ -799,9 +741,16 @@
         // 沒收物品
         itemsGone();
 
-        // 主角的身分改為囚犯
-        localStorage.setItem("playerType", "囚犯");
-        partyToTeamMember();
+        // 主角的身分變更
+        changePlayerType(type);
+
+        // 主角穿上布衣
+        equip("player", "lootclothes01");
+    }
+
+    // 被逮捕
+    function arrested() {
+        captured("囚犯");
 
         // 計算刑期
         const playerCrime = parseInt(localStorage.getItem("playerCrime")) || 0;
@@ -840,98 +789,13 @@
         }
     }
 
-    // 被俘虜
-    function captured(event) {
-        // 所有同伴退出隊伍
-        removeCompanion("companion3");
-        removeCompanion("companion2");
-        removeCompanion("companion1");
-
-        // 沒收物品
-        itemsGone();
-
-        // 主角的身分改為囚犯
-        localStorage.setItem("playerType", "囚犯");
-        partyToTeamMember();
-
-        // 重置牢內變數
-        localStorage.removeItem("currentKey") // 清除key，重置一天進度
-
-        localStorage.setItem("inEvent", event); // 儲存事件
-        localStorage.setItem("npcName", event); // 用對話系統執行事件
-
-        // 跳轉到監獄頁面（根據當前頁面判斷路徑）
-        const pageName = window.location.pathname.split("/").pop();
-        if (pageName === "map.html") {
-            window.location.href = "town/prison.html";
-        } else {
-            window.location.href = "prison.html";
-        }
-    }
-
-    // 被釋放
+    // 被釋放（還沒用到）
     function released() {
-        // 主角的身分改為冒險者
-        localStorage.setItem("playerType", "冒險者");
-        partyToTeamMember();
-
+        // 取回物品
         itemsBack();
-    }
 
-    // 沒收物品
-    function itemsGone() {
-        // 脫下主角的裝備
-        equip("player", "noWeapon");
-        equip("player", "noArmor");
-
-        // 讀取主角的金錢、物品
-        const playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
-        const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-
-        // 讀取之前備份的金錢、物品
-        const backupMoney = parseInt(localStorage.getItem("playerMoney-backup")) || 0;
-        const backupItems = JSON.parse(localStorage.getItem("playerItems-backup")) || [];
-
-        // 合併後儲存到備份
-        const newBackupMoney = backupMoney + playerMoney;
-        const newBackupItems = backupItems.concat(playerItems);
-        localStorage.setItem("playerMoney-backup", newBackupMoney);
-        localStorage.setItem("playerItems-backup", JSON.stringify(newBackupItems));
-
-        // 移除主角的金錢、物品
-        localStorage.removeItem("playerMoney");
-        localStorage.removeItem("playerItems");
-    }
-
-    // 還原被沒收的物品
-    function itemsBack() {
-        // 讀取主角的金錢、物品
-        const playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
-        const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-
-        // 讀取之前備份的金錢、物品
-        const backupMoney = parseInt(localStorage.getItem("playerMoney-backup")) || 0;
-        const backupItems = JSON.parse(localStorage.getItem("playerItems-backup")) || [];
-
-        // 合併後儲存到當前資料
-        const newBackupMoney = backupMoney + playerMoney;
-        const newBackupItems = backupItems.concat(playerItems);
-        localStorage.setItem("playerMoney", newBackupMoney);
-        localStorage.setItem("playerItems", JSON.stringify(newBackupItems));
-
-        // 刪除備份
-        localStorage.removeItem("playerMoney-backup");
-        localStorage.removeItem("playerItems-backup");
-
-        // 讀取所有同伴資料
-        //let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
-    
-        // 如果艾德蒙在隊伍裡，就取得他的專屬裝備
-        //let companion = teamMember.find(m => m.name === "艾德蒙");
-        //if (companion) {
-        //    getItem(companion.weaponid);
-        //    getItem(companion.armorid);
-        //}
+        // 主角的身分改為冒險者
+        changePlayerType("冒險者");
     }
 
 // 物品相關
@@ -940,47 +804,47 @@
     const itemDatabase = [
         // 武器
             // 商店貨
-            { id: "weapon01", type: "weapon", name: "🗡️ 匕首", str: 5, dex: 0, description: "適合隨身攜帶的短劍。", price: 10 },
-            { id: "weapon02", type: "weapon", name: "🗡️ 硬頭錘", str: 8, dex: 0, description: "單手使用的鈍器。", price: 25 },
-            { id: "weapon03", type: "weapon", name: "🗡️ 單手劍", str: 10, dex: 0, description: "戰士的標準配備。", price: 45 },
-            { id: "weapon04", type: "weapon", name: "🗡️ 巨劍", str: 12, dex: -1, needStr: 13, description: "雙手持握的大型劍。<br>❗使用條件：力量 13", price: 70 },
-            { id: "weapon05", type: "weapon", name: "🗡️ 戰斧", str: 15, dex: -2, needStr: 16, description: "殺傷力驚人的重型武器。<br>❗使用條件：力量 16", price: 100 },
-            { id: "weapon06", type: "weapon", name: "🛡️ 盾牌", str: 5, arm: 5, dex: -1, description: "能保護自身也能當鈍器使用。", price: 45 },
-            //{ id: "weapon07", type: "weapon", name: "🗡️ 弓", str: 10, dex: 2, description: "拉開距離而獲得敏捷優勢。", price: 50 },
+            { id: "weapon01", type: "weapon", category: "穿刺", name: "🗡️ 匕首", str: 5, dex: 0, description: "適合隨身攜帶的短劍。", price: 10 },
+            { id: "weapon02", type: "weapon", category: "鈍擊", name: "🗡️ 硬頭錘", str: 8, dex: 0, description: "單手使用的鈍器。", price: 25 },
+            { id: "weapon03", type: "weapon", category: "揮砍", name: "🗡️ 單手劍", str: 10, dex: 0, description: "戰士的標準配備。", price: 45 },
+            { id: "weapon04", type: "weapon", category: "揮砍", name: "🗡️ 巨劍", str: 12, dex: -1, needStr: 13, description: "雙手持握的大型劍。<br>❗使用條件：力量 13❗", price: 70 },
+            { id: "weapon05", type: "weapon", category: "揮砍", name: "🗡️ 戰斧", str: 15, dex: -2, needStr: 16, description: "殺傷力驚人的重型武器。<br>❗使用條件：力量 16❗", price: 100 },
+            { id: "weapon06", type: "weapon", category: "鈍擊", name: "🛡️ 盾牌", str: 5, arm: 5, dex: -1, description: "能保護自身也能當鈍器使用。", price: 45 },
+            { id: "weapon07", type: "weapon", category: "遠程", name: "🏹 弓", str: 10, dex: 0, description: "能瞄準空中的敵人。", price: 60 },
             
             // 戰利品
-            { id: "lootWeapon01", type: "weapon", name: "🗡️ 老舊的匕首", str: 3, dex: 0, description: "適合隨身攜帶的小刀", price: 7 },
-            { id: "lootWeapon02", type: "weapon", name: "🗡️ 老舊的硬頭錘", str: 5, dex: 0, description: "單手使用的鈍器。", price: 17 },
-            { id: "lootWeapon03", type: "weapon", name: "🗡️ 老舊的單手劍", str: 7, dex: 0, description: "戰士的標準配備", price: 30 },
-            { id: "lootWeapon04", type: "weapon", name: "🗡️ 老舊的巨劍", str: 8, dex: -1, needStr: 13, description: "雙手持握的大型劍。<br>❗使用條件：力量 13", price: 46 },
-            { id: "lootWeapon05", type: "weapon", name: "🗡️ 老舊的戰斧", str: 10, dex: -2, description: "殺傷力驚人的重型武器<br>使用條件：力量 16", price: 66 },
-            { id: "lootWeapon06", type: "weapon", name: "🛡️ 老舊的盾牌", str: 3, arm: 3, dex: -1, description: "能保護自身也能當鈍器使用。", price: 30 },
+            { id: "lootWeapon01", type: "weapon", category: "穿刺", name: "🗡️ 老舊的匕首", str: 3, dex: 0, description: "適合隨身攜帶的小刀。", price: 7 },
+            { id: "lootWeapon02", type: "weapon", category: "鈍擊", name: "🗡️ 老舊的硬頭錘", str: 5, dex: 0, description: "單手使用的鈍器。", price: 17 },
+            { id: "lootWeapon03", type: "weapon", category: "揮砍", name: "🗡️ 老舊的單手劍", str: 7, dex: 0, description: "戰士的標準配備。", price: 30 },
+            { id: "lootWeapon04", type: "weapon", category: "揮砍", name: "🗡️ 老舊的巨劍", str: 8, dex: -1, needStr: 13, description: "雙手持握的大型劍。<br>❗使用條件：力量 13❗", price: 46 },
+            { id: "lootWeapon05", type: "weapon", category: "揮砍", name: "🗡️ 老舊的戰斧", str: 10, dex: -2, needStr: 16, description: "殺傷力驚人的重型武器。<br>❗使用條件：力量 16❗", price: 66 },
+            { id: "lootWeapon06", type: "weapon", category: "鈍擊", name: "🛡️ 老舊的盾牌", str: 3, arm: 3, dex: -1, description: "能保護自身也能當鈍器使用。", price: 30 },
 
-            { id: "lootWeapon11", type: "weapon", name: "🗡️ 小棍棒", str: 1, dex: 0, description: "只是一根普通的樹枝", price: 0 },
-            { id: "lootWeapon12", type: "weapon", name: "🗡️ 巨大的狼牙棒", str: 20, dex: -5, description: "將樹幹和獸骨綁起來<br>使用條件：力量 20", price: 10 },
-            { id: "lootWeapon13", type: "weapon", name: "🗡️ 尖銳的石頭", str: 1, dex: 0, description: "可以藏在衣服裡", price: 0 },
+            { id: "lootWeapon11", type: "weapon", category: "鈍擊", name: "🗡️ 小棍棒", str: 1, dex: 0, description: "只是一根普通的樹枝。", price: 0 },
+            { id: "lootWeapon12", type: "weapon", category: "鈍擊", name: "🗡️ 巨大的狼牙棒", str: 20, dex: -5, needStr: 20, description: "將樹幹和獸骨綁起來。<br>❗使用條件：力量 20❗", price: 10 },
+            { id: "lootWeapon13", type: "weapon", category: "鈍擊", name: "🗡️ 尖銳的石頭", str: 1, dex: 0, description: "可以藏在衣服裡。", price: 0 },
 
             // NPC專屬
-            { id: "npcWeapon01", type: "weapon", name: "🗡️ 雷納德的巨劍", str: 12, dex: -1, description: "雙手持握的大型劍", owner: "雷納德" },
-            { id: "npcWeapon02", type: "weapon", name: "🗡️ 塔爾穆克的戰斧", str: 15, dex: -2, description: "殺傷力驚人的重型武器", owner: "塔爾穆克" },
-            { id: "npcWeapon03", type: "weapon", name: "🗡️ 賽恩的匕首", str: 5, dex: 0, description: "適合隨身攜帶的短劍", owner: "賽恩" },
-            { id: "npcWeapon04", type: "weapon", name: "🗡️ 艾德蒙的劍", str: 10, dex: 0, description: "戰士的標準配備", owner: "艾德蒙" },
-            { id: "npcWeapon05", type: "weapon", name: "🗡️ 諾伊爾的劍", str: 10, dex: 0, description: "戰士的標準配備", owner: "諾伊爾" },
+            { id: "npcWeapon01", type: "weapon", category: "揮砍", name: "🗡️ 雷納德的巨劍", str: 12, dex: -1, description: "雙手持握的大型劍。", owner: "雷納德" },
+            { id: "npcWeapon02", type: "weapon", category: "揮砍", name: "🗡️ 塔爾穆克的戰斧", str: 15, dex: -2, description: "殺傷力驚人的重型武器。", owner: "塔爾穆克" },
+            { id: "npcWeapon03", type: "weapon", category: "穿刺", name: "🗡️ 賽恩的匕首", str: 5, dex: 0, description: "適合隨身攜帶的短劍。", owner: "賽恩" },
+            { id: "npcWeapon04", type: "weapon", category: "揮砍", name: "🗡️ 艾德蒙的劍", str: 10, dex: 0, description: "戰士的標準配備。", owner: "艾德蒙" },
+            { id: "npcWeapon05", type: "weapon", category: "遠程", name: "🏹 諾伊爾的弓", str: 10, dex: 0, description: "能瞄準空中的敵人。", owner: "諾伊爾" },
 
         // 護具
             // 商店貨
             { id: "armor01", type: "armor", name: "🛡️ 皮甲", arm: 3, dex: 0, description: "活動性佳的輕型盔甲。", price: 10 },
             { id: "armor02", type: "armor", name: "🛡️ 鱗甲", arm: 5, dex: 0, description: "以皮革和鐵片製成的鎧甲。", price: 25 },
             { id: "armor03", type: "armor", name: "🛡️ 鐵製胸甲", arm: 8, dex: 0, description: "包覆軀幹的堅固胸甲。", price: 45 },
-            { id: "armor04", type: "armor", name: "🛡️ 鎖子甲", arm: 10, dex: -1, needStr: 11, description: "以鐵環相扣製成的鎧甲。<br>❗使用條件：力量 11", price: 70 },
-            { id: "armor05", type: "armor", name: "🛡️ 全身板甲", arm: 12, dex: -2, needStr: 13, description: "完整保護全身的重型盔甲。<br>❗使用條件：力量 13", price: 100 },
+            { id: "armor04", type: "armor", name: "🛡️ 鎖子甲", arm: 10, dex: -1, needStr: 11, description: "以鐵環相扣製成的鎧甲。<br>❗使用條件：力量 11❗", price: 70 },
+            { id: "armor05", type: "armor", name: "🛡️ 全身板甲", arm: 12, dex: -2, needStr: 13, description: "完整保護全身的重型盔甲。<br>❗使用條件：力量 13❗", price: 100 },
     
             // 戰利品
             { id: "lootArmor01", type: "armor", name: "🛡️ 老舊的皮甲", arm: 2, dex: 0, description: "活動性佳的輕型盔甲。", price: 7 },
             { id: "lootArmor02", type: "armor", name: "🛡️ 老舊的鱗甲", arm: 3, dex: 0, description: "以皮革和鐵片製成的鎧甲。", price: 17 },
             { id: "lootArmor03", type: "armor", name: "🛡️ 老舊的鐵製胸甲", arm: 5, dex: -1, description: "包覆軀幹的堅固胸甲。", price: 30 },
-            { id: "lootArmor04", type: "armor", name: "🛡️ 老舊的鎖子甲", arm: 7, dex: -1, needStr: 11, description: "以鐵環相扣製成的鎧甲。<br>❗使用條件：力量 11", price: 46 },
-            { id: "lootArmor05", type: "armor", name: "🛡️ 老舊的全身板甲", arm: 8, dex: -2, needStr: 13, description: "完整保護全身的重型盔甲。<br>❗使用條件：力量 13", price: 66 },
+            { id: "lootArmor04", type: "armor", name: "🛡️ 老舊的鎖子甲", arm: 7, dex: -1, needStr: 11, description: "以鐵環相扣製成的鎧甲。<br>❗使用條件：力量 11❗", price: 46 },
+            { id: "lootArmor05", type: "armor", name: "🛡️ 老舊的全身板甲", arm: 8, dex: -2, needStr: 13, description: "完整保護全身的重型盔甲。<br>❗使用條件：力量 13❗", price: 66 },
 
             { id: "lootArmor11", type: "armor", name: "🛡️ 獸皮背心", arm: 0, dex: 0, description: "只能勉強遮蔽身體。", price: 1 },
             { id: "lootArmor12", type: "armor", name: "🛡️ 巨大的腰布", arm: 1, dex: 0, description: "可以披在身上當斗篷。", price: 0 },
@@ -1015,13 +879,13 @@
             //{ id: "clothes04", type: "armor", name: "🧥 貴族晚禮服", cha: 15, dex: -2, description: "極為華麗，能成為目光焦點，但穿起來十分緊繃", price: 150 },
             
             // 戰利品
-            { id: "lootclothes01", type: "armor", name: "🧥 布衣", description: "一般人最常穿的衣服。", price: 2 },
-            { id: "lootclothes02", type: "armor", name: "🧥 囚服", description: "囚犯穿的衣服。", price: 1 },
+            { id: "lootclothes01", type: "armor", name: "🧥 布衣", description: "以廉價布料製成的衣服，從平民到奴隸都會穿。", price: 2 },
+            //{ id: "lootclothes02", type: "armor", name: "🧥 囚服", description: "囚犯穿的衣服。", price: 1 },
 
         // 消耗品
-            { id: "supply01", type: "supply", name: "🫙 治療藥水", heal: 10, price: 5, usable: "true", consumable: "true"},
-            { id: "supply02", type: "supply", name: "🫙 中級治療藥水", heal: 20, price: 10, usable: "true", consumable: "true" },
-            { id: "supply03", type: "supply", name: "🫙 高級治療藥水", heal: 30, price: 15, usable: "true", consumable: "true" },
+            { id: "supply01", type: "supply", name: "🫙 治療藥水", description:"立即恢復生命值。", heal: 10, price: 5, usable: "true", consumable: "true"},
+            { id: "supply02", type: "supply", name: "🫙 中級治療藥水", description:"立即恢復生命值。", heal: 20, price: 10, usable: "true", consumable: "true" },
+            { id: "supply03", type: "supply", name: "🫙 高級治療藥水", description:"立即恢復生命值。", heal: 30, price: 15, usable: "true", consumable: "true" },
 
             { id: "lootSupply01", type: "supply", name: "🫙 蟲血", heal: 1, description: "富含營養，只是難以下嚥，常被當成打賭輸了的懲罰。", price: 0, usable: "true", consumable: "true" },
             { id: "lootSupply02", type: "supply", name: "🍾 血葡萄酒", heal: 5, description: "以生長在地底的血葡萄釀成的酒，味道像人血，是吸血鬼喜愛的飲品。", price: 15, usable: "true", consumable: "true" },
@@ -1034,10 +898,13 @@
             { id: "loot05", type: "loot", name: "💰 狐狸皮", description: "狐狸的毛皮，可以販賣。", price: 6 },
             { id: "loot06", type: "loot", name: "💰 蜘蛛絲", description: "巨型蜘蛛的絲線，可以販賣。", price: 18 },
             { id: "loot07", type: "loot", name: "💰 木材", description: "樹妖的木材，可以販賣。", price: 10 },
-            { id: "loot08", type: "loot", name: "🫘 食人花種子", description: "蘊藏著蠢蠢欲動的生命，商人不願意買下，但有人在公會高價收購。", price: 0 },
+            { id: "loot08", type: "loot", name: "🫘 食人花種子", description: "蘊藏著蠢蠢欲動的生命，商人不願意買，但有人在公會高價收購。", price: 0 },
             { id: "loot09", type: "loot", name: "💰 堅硬羽毛", description: "獅鷲的羽毛，可以販賣。", price: 30 },
             { id: "loot10", type: "loot", name: "💰 鐵絲", description: "可以用來撬鎖。", price: 0 },
             { id: "loot11", type: "loot", name: "💰 馬卡斯的戒指", description: "從馬卡斯手上取下的金戒指。", price: 200 },
+            { id: "loot12", type: "loot", name: "💰 植物莖", description: "切下來的藤蔓，可以販賣。", price: 5 },
+            { id: "loot13", type: "loot", name: "💰 毒蘑菇", description: "不可食用的蘑菇，可以販賣。", price: 3 },
+            { id: "loot14", type: "loot", name: "💰 獠牙", description: "野豬的獠牙，可以販賣。", price: 10 },
 
         // 任務物品
             { id: "specialItem01", type: "specialItem", name: "📦 包裹", description: "要送到晨曦鎮的包裹。", price: 20 },
@@ -1064,6 +931,12 @@
             { id: "meal06", type: "meal", name: "🍗 香草烤野雞", description: "豪邁地將整隻野雞裹上迷迭香與辛香料，慢火炭烤至外皮金黃香酥，肉汁橫流，香氣四溢。", heal: 30, price: 3}  
     ];
 
+    // 狀態資料庫
+    const statusData = {
+        "穿刺": { name: "流血", duration: 3 },
+        "鈍擊": { name: "倒地", duration: 1 },
+    };
+
     // 獲得物品或金錢
     function getItem(itemId, count = 1) {
         if (!itemId) {
@@ -1072,7 +945,7 @@
 
         if (itemId.startsWith("$")) {
             // 如果是 $ 開頭，代表金幣
-            let money = parseInt(itemId.slice(1), 10);
+            let money = parseInt(itemId.slice(1), 10); // 取得$後的金額
             let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
             playerMoney += money;
             localStorage.setItem("playerMoney", playerMoney);
@@ -1093,7 +966,7 @@
     function loseItem(itemId, count = 1) {
         if (itemId.startsWith("$")) {
             // 如果是金錢
-            let money = parseInt(itemId.slice(1), 10);
+            let money = parseInt(itemId.slice(1), 10); // 取得$後的金額
             let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
             playerMoney = Math.max(0, playerMoney - money * count); // 金錢不得小於 0
             localStorage.setItem("playerMoney", playerMoney);
@@ -1121,11 +994,10 @@
         // 脫下護具 equip("player", "noArmor")
     function equip(memberId, itemId) {
         // 讀取所有成員的資料
-        const hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
-        const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+        const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
         // 取得該成員的資料
-        let member = teamMember.find(m => m.id === memberId);
+        let member = teamMembers.find(m => m.id === memberId);
 
         // 讀取玩家的物品
         let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
@@ -1174,31 +1046,35 @@
         member.totalCha = (member.cha || 0) + (weapon.cha || 0) + (armor.cha || 0);
 
         // 更新 localStorage
-        localStorage.setItem("teamMember", JSON.stringify(teamMember));
+        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
         localStorage.setItem("playerItems", JSON.stringify(playerItems));
 
         // 同步儲存到上場成員和可行動成員
-        let presentMember = JSON.parse(localStorage.getItem("presentMember")) || [];
-        let presentData = presentMember.find(m => m.id === memberId);
+        let presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
+        let presentData = presentMembers.find(m => m.id === memberId);
         if (presentData) {
             presentData.totalStr = member.totalStr;
             presentData.totalArm = member.totalArm;
             presentData.totalDex = member.totalDex;
             presentData.totalCha = member.totalCha;
+            presentData.weapon = member.weapon;
+            presentData.armor = member.armor;
         }
-        localStorage.setItem("presentMember", JSON.stringify(presentMember));
+        localStorage.setItem("presentMembers", JSON.stringify(presentMembers));
 
-        let actableMember = JSON.parse(localStorage.getItem("actableMember")) || [];
-        let actableData = actableMember.find(m => m.id === memberId);
+        let actableMembers = JSON.parse(localStorage.getItem("actableMembers")) || [];
+        let actableData = actableMembers.find(m => m.id === memberId);
         if (actableData) {
             actableData.totalStr = member.totalStr;
             actableData.totalArm = member.totalArm;
             actableData.totalDex = member.totalDex;
             actableData.totalCha = member.totalCha;
+            actableData.weapon = member.weapon;
+            actableData.armor = member.armor;
         }
-        localStorage.setItem("actableMember", JSON.stringify(actableMember));
+        localStorage.setItem("actableMembers", JSON.stringify(actableMembers));
 
-        // 同步儲存到角色和同伴資料
+        // 同步儲存到主角資料
         if (member.id === "player") {
             localStorage.setItem("playerWeapon", JSON.stringify(member.weapon));
             localStorage.setItem("playerArmor", JSON.stringify(member.armor));
@@ -1206,12 +1082,6 @@
             localStorage.setItem("playerTotalArm", member.totalArm);
             localStorage.setItem("playerTotalDex", member.totalDex);
             localStorage.setItem("playerTotalCha", member.totalCha);
-        } else {
-            let companionIndex = parseInt(member.id.match(/\d+/)[0]) - 1;
-            if (hiredCompanions[companionIndex]) {
-                hiredCompanions[companionIndex] = member
-                localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
-            }
         }
     }
 
@@ -1360,6 +1230,62 @@
         }
     }
 
+    // 沒收物品
+    function itemsGone() {
+        // 脫下主角的裝備
+        equip("player", "noWeapon");
+        equip("player", "noArmor");
+
+        // 讀取主角的金錢、物品
+        const playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+        const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+        // 讀取之前備份的金錢、物品
+        const backupMoney = parseInt(localStorage.getItem("playerMoney-backup")) || 0;
+        const backupItems = JSON.parse(localStorage.getItem("playerItems-backup")) || [];
+
+        // 合併後儲存到備份
+        const newBackupMoney = backupMoney + playerMoney;
+        const newBackupItems = backupItems.concat(playerItems);
+        localStorage.setItem("playerMoney-backup", newBackupMoney);
+        localStorage.setItem("playerItems-backup", JSON.stringify(newBackupItems));
+
+        // 移除主角的金錢、物品
+        localStorage.removeItem("playerMoney");
+        localStorage.removeItem("playerItems");
+    }
+
+    // 取回物品
+    function itemsBack() {
+        // 讀取主角的金錢、物品
+        const playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+        const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+        // 讀取之前備份的金錢、物品
+        const backupMoney = parseInt(localStorage.getItem("playerMoney-backup")) || 0;
+        const backupItems = JSON.parse(localStorage.getItem("playerItems-backup")) || [];
+
+        // 合併後儲存到當前資料
+        const newBackupMoney = backupMoney + playerMoney;
+        const newBackupItems = backupItems.concat(playerItems);
+        localStorage.setItem("playerMoney", newBackupMoney);
+        localStorage.setItem("playerItems", JSON.stringify(newBackupItems));
+
+        // 刪除備份
+        localStorage.removeItem("playerMoney-backup");
+        localStorage.removeItem("playerItems-backup");
+
+        // 讀取所有同伴資料
+        //let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+    
+        // 如果艾德蒙在隊伍裡，就取得他的專屬裝備
+        //let companion = teamMembers.find(m => m.name === "艾德蒙");
+        //if (companion) {
+        //    getItem(companion.weaponid);
+        //    getItem(companion.armorid);
+        //}
+    }
+
 // 場景相關
 
     // 快速旅行
@@ -1386,8 +1312,8 @@
         // 如果是和對話者戰鬥
         if (enemyName === "npcName") {
             const npcName = localStorage.getItem("npcName");
-            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
-            const member = teamMember.find(m => m.name === npcName);
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            const member = teamMembers.find(m => m.name === npcName);
 
             // 如果對方是隨從或俘虜
             if (member && (member.type === "隨從" || member.type === "俘虜")) {
@@ -1426,5 +1352,34 @@
         } else {
             window.location.href = "../encounter.html";
         }
+    }
+
+    // 新的一天
+    function nextDay() {
+        // 重置事件進度
+        localStorage.removeItem("currentKey"); // 清除對話 key
+
+        // 重置酒館
+        localStorage.removeItem("tavernClose"); // 重置打烊
+        localStorage.removeItem("drinkingStart");
+        localStorage.removeItem("drinkingResults");
+        localStorage.removeItem("drinkingEnd");
+            
+        // 通緝等級每天下降 1 級
+        addWantedLevel(-1);
+
+        // 抽天氣
+        const weathers = [ 
+            { icon: "☀️", name: "晴天", description: "有陽光，不死生物不會出沒。" },
+            { icon: "🌤️", name: "晴時多雲", description: "有陽光，不死生物不會出沒。" },
+            { icon: "☁️", name: "多雲", description: "不死生物會出沒。" },
+            { icon: "☁️", name: "陰天", description: "不死生物會出沒。" },
+            { icon: "🌧️", name: "小雨", description: "植物少量增長，不死生物會出沒。" },
+            { icon: "⛈️", name: "大雷雨", description: "智慧生物不會出門，植物大量增長，不死生物會出沒。" },
+            { icon: "🌫️", name: "濃霧", description: "容易潛行，不死生物會出沒。" },
+        ];
+        let randomIndex = Math.floor(Math.random() * weathers.length);
+        let selectedWeather = weathers[randomIndex];
+        localStorage.setItem("weather", JSON.stringify(selectedWeather));
     }
 

@@ -270,11 +270,11 @@
             const menu = document.getElementById("companion-list");
             menu.innerHTML = "";
 
-            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
             // 決定誰會出現
             mercenaries.forEach(companion => {
-                let isHired = hiredCompanions.some(hired => hired.name === companion.name);
+                let isHired = teamMembers.some(hired => hired.name === companion.name);
                 // 已雇用角色不會出現，其他角色 50% 機率出現
                 if (!isHired && Math.random() < 0.5) { 
                     tavernCompanions.push({ name: companion.name, description: companion.description, cost: companion.cost, con: companion.con, str: companion.Str, dex: companion.Dex });
@@ -289,7 +289,7 @@
                 let companionDiv = document.createElement("div");
                 companionDiv.classList.add("companion");
                     
-                let isHired = hiredCompanions.some(hired => hired.name === companion.name);
+                let isHired = teamMembers.some(hired => hired.name === companion.name);
                     
                 companionDiv.innerHTML = `
                     <hr>
@@ -329,9 +329,9 @@
             // 找到這個同伴的資料
             let companion = mercenaries.find(comp => comp.name === npcName);
 
-            // 限制最多 3 個同伴
-            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
-            if (hiredCompanions.length >= 3) {
+            // 隊伍最多 4 人
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            if (teamMembers.length >= 4) {
                 alert("隊伍人數已滿");
                 showDialogue("start");
                 return;
@@ -358,8 +358,8 @@
             document.getElementById("companion-list").innerHTML = ""; // 清空傭兵列表
 
             // 顯示坐下訊息
-            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
-            if (teamMember.length > 1) {
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            if (teamMembers.length > 1) {
                 document.getElementById("text").textContent = texts.sitTogether; // 和同伴坐下
             } else {
                 document.getElementById("text").textContent = texts.sit; // 獨自坐下
@@ -379,7 +379,7 @@
 
         // 檢查是否有點餐
         function checkOrder() {
-            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
             // 從物品資料庫篩選料理資料
             const mealDatabase = itemDatabase.filter(i => i.type === "meal");
@@ -417,8 +417,8 @@
                 
                 // 如果啤酒比隊伍人數多，取得多出的啤酒 emoji 並依數量生成
                 let beerDisplay;
-                if (beers > teamMember.length) {
-                    beerDisplay = "🍺".repeat(beers - teamMember.length);
+                if (beers > teamMembers.length) {
+                    beerDisplay = "🍺".repeat(beers - teamMembers.length);
                 }
 
                 // 取得其他餐點的 emoji 並依數量生成
@@ -432,11 +432,11 @@
                 //document.getElementById("table").style.background = "#2E0F00"; // 桌子顏色
                 document.getElementById("table").innerHTML = `
                     <div class="column-container">
-                        ${teamMember.length > 0 ? `<p class="column center">
+                        ${teamMembers.length > 0 ? `<p class="column center">
                             ${mealDisplay ? `<span style="font-size: 1.2em;">🍽️</span>` : ""}
                             ${beers > 0 ? `🍺` : "" }
                         </p>` : "" }
-                        ${teamMember.length > 1 ? `<p class="column center">
+                        ${teamMembers.length > 1 ? `<p class="column center">
                             ${mealDisplay ? `<span style="font-size: 1.2em;">🍽️</span>` : ""}
                             ${beers > 1 ? `🍺` : "" }
                         </p>` : "" }
@@ -449,11 +449,11 @@
                     </p>
                     
                     <div class="column-container">
-                        ${teamMember.length > 2 ? `<p class="column center">
+                        ${teamMembers.length > 2 ? `<p class="column center">
                             ${mealDisplay ? `<span style="font-size: 1.2em;">🍽️</span>` : ""}
                             ${beers > 2 ? `🍺` : "" }
                         </p>` : "" }
-                        ${teamMember.length > 3 ? `<p class="column center">
+                        ${teamMembers.length > 3 ? `<p class="column center">
                             ${mealDisplay ? `<span style="font-size: 1.2em;">🍽️</span>` : ""}
                             ${beers > 3 ? `🍺` : "" }
                         </p>` : "" }
@@ -465,32 +465,37 @@
                     <button id="eat-btn">享用</button>
                 `;
                 document.getElementById("eat-btn").addEventListener("click", function () {
-                    // 加總料理的治療量
+                    // 計算料理的總治療量
                     let totalHeal = orderedMeals.reduce((sum, meal) => sum + meal.heal, 0);
 
-                    // 計算平均治療量，並四捨五入為整數
-                    let averageHeal = Math.floor(totalHeal / teamMember.length);  // 使用 Math.floor() 來確保沒有小數
+                    while (totalHeal > 0) {
+                        // 找出未補滿的隊員
+                        let unhealedMembers = teamMembers.filter(member => member.HP < member.MaxHP);
+                        if (unhealed.length === 0) break; // 如果都補滿了，結束迴圈
 
-                    // 平均分配治療量
-                    teamMember.forEach(member => {
-                        member.HP = Math.min(member.HP + averageHeal, member.MaxHP);
+                        // 計算平均治療量（只對未補滿的隊員）
+                        let averageHeal = Math.floor(totalHeal / unhealedMembers.length);  // 四捨五入
 
-                        // 同步儲存到角色和同伴資料
-                        if (member.id === "player") {
-                            localStorage.setItem("playerHP", member.HP);
-                        } else {
-                            let companionIndex = parseInt(member.id.match(/\d+/)[0]) - 1;
-                            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
-                            if (hiredCompanions[companionIndex]) {
-                                hiredCompanions[companionIndex] = member
-                                localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
-                            }
+                        // 如果 `averageHeal` 小於 1，表示治療量不足以平分，直接給第一個未補滿的隊員
+                        if (averageHeal < 1) {
+                            unhealedMembers[0].HP = Math.min(unhealedMembers[0].HP + totalHeal, unhealedMembers[0].MaxHP);
+                            totalHeal = 0; // 治療量已經用完，結束迴圈
+                            break;
                         }
-                    });
-                    localStorage.setItem("teamMember", JSON.stringify(teamMember));
+                    
+                        // 分配治療量
+                        unhealedMembers.forEach(member => {
+                            let healAmount = Math.min(averageHeal, member.MaxHP - member.HP); // 確保不會超過 MaxHP
+                            member.HP += healAmount;
+                            totalHeal -= healAmount; // 扣除已使用的治療量
+                        });
+                    }
+
+                    // 儲存
+                    localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
 
                     // 顯示用餐訊息
-                    if (teamMember.length > 1) {
+                    if (teamMembers.length > 1) {
                         document.getElementById("text").textContent = texts.eatTogether; // 和同伴用餐
                     } else {
                         document.getElementById("text").textContent = texts.eat; // 獨自用餐
@@ -521,7 +526,7 @@
         // 顯示隊伍
         function showTeam() {
             // 讀取隊伍資訊
-            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
             // 清除傭兵獵表
             document.getElementById("companion-list").innerHTML = "";
@@ -531,12 +536,12 @@
                 <br>
                 <div class="column-container">
                     <div class="column center background">
-                        <h4>${teamMember[0].name}</h4>
-                        <h4 class="hp">${teamMember[0].HP} / ${teamMember[0].MaxHP}</h4>
+                        <h4>${teamMembers[0].name}</h4>
+                        <h4 class="hp">${teamMembers[0].HP} / ${teamMembers[0].MaxHP}</h4>
                     </div>
-                    ${teamMember[1] ? `<div class="column center background">
-                        <h4>${teamMember[1].name}</h4>
-                        <h4 class="hp">${teamMember[1].HP} / ${teamMember[1].MaxHP}</h4>
+                    ${teamMembers[1] ? `<div class="column center background">
+                        <h4>${teamMembers[1].name}</h4>
+                        <h4 class="hp">${teamMembers[1].HP} / ${teamMembers[1].MaxHP}</h4>
                     </div>` : ""}
                 </div>
             `;
@@ -544,13 +549,13 @@
             // 顯示同伴（下排）
             document.getElementById("seat-bottom").innerHTML = `
                 <div class="column-container">
-                    ${teamMember[2] ? `<div class="column center background">
-                        <h4>${teamMember[2].name}</h4>
-                        <h4 class="hp">${teamMember[2].HP} / ${teamMember[2].MaxHP}</h4>
+                    ${teamMembers[2] ? `<div class="column center background">
+                        <h4>${teamMembers[2].name}</h4>
+                        <h4 class="hp">${teamMembers[2].HP} / ${teamMembers[2].MaxHP}</h4>
                     </div>` : ""}
-                    ${teamMember[3] ? `<div class="column center background">
-                        <h4>${teamMember[3].name}</h4>
-                        <h4 class="hp">${teamMember[3].HP} / ${teamMember[3].MaxHP}</h4>
+                    ${teamMembers[3] ? `<div class="column center background">
+                        <h4>${teamMembers[3].name}</h4>
+                        <h4 class="hp">${teamMembers[3].HP} / ${teamMembers[3].MaxHP}</h4>
                     </div>` : ""}
                 </div>
             `;
@@ -566,8 +571,8 @@
             }
 
             // 如果酒館沒有人，也沒有同伴，就不能玩
-            const hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
-            if (tavernCompanions.length === 0 && hiredCompanions === 0) {
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            if (tavernCompanions.length === 0 && teamMembers === 1) {
                 document.getElementById("text").textContent = texts.drinkingNoOne;
                 window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
                 return;
@@ -596,7 +601,7 @@
             drinkingMember = [{ name: playerName, con: playerCon }];
     
             // 加入同伴
-            hiredCompanions.forEach(companion => {
+            teamMembers.forEach(companion => {
                 if (companion.type === "傭兵") { // 只有類型是 "傭兵" 才加入
                     drinkingMember.push({ name: companion.name, con: companion.con });
                 }

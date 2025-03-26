@@ -35,7 +35,7 @@
             <button onclick="showShop('equipment')">🔨 鐵匠鋪</button>
             <button onclick="showShop('supply')">🫙 雜貨店</button>
             <button onclick="showShop('clothes')">🧥 服飾店</button>
-            <button onclick="loadPlayerItem()">💰 收購商</button>
+            <button onclick="loadPlayerItem()">💰 舊貨商</button>
         </div>
 
         <!-- 商品列表 -->
@@ -144,8 +144,8 @@
 
             } else {
                 // 偷竊失敗時
-                let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
-                let member = teamMember.find(m => m.name === "雷納德");
+                let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+                let member = teamMembers.find(m => m.name === "雷納德");
                 if (member) {
                     //如果雷納德在，會阻止主角
                     addPlayerFame(-1);

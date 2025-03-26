@@ -39,9 +39,11 @@
         // 頁面載入時
         window.onload = function() {
             loadPartyData(); // 讀取隊伍資料
-            partyToTeamMember(); // 將主角和同伴加入隊伍
             showTeamMenu(); // 顯示隊伍選單
             npcPreferences(); // NPC偏好設定
+
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            console.log(teamMembers);
         };
         
         // 對話資料庫
@@ -739,13 +741,13 @@
 
         // 顯示隊伍選單
         function showTeamMenu() {
-            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
             const menu = document.getElementById("member-list");
             menu.innerHTML = "";  // 清空選單內容
 
             // 創建每個成員的資料
-            teamMember.forEach((member, index) => {
+            teamMembers.forEach((member, index) => {
                 const characterDiv = document.createElement("div");
 
                 if (index === 0) {
@@ -790,10 +792,10 @@
             localStorage.setItem("npcId", memberId);
 
             // 讀取所有成員的資料
-            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
             // 找到這個成員的資料
-            const member = teamMember.find(m => m.id === memberId);
+            const member = teamMembers.find(m => m.id === memberId);
             const memberName = member.name;
 
             localStorage.setItem("npcName", memberName);
@@ -806,8 +808,8 @@
             }
 
             // 檢查是否在監獄中
-            const playerType = localStorage.getItem("playerType");
-            if (playerType === "囚犯") {
+            const PlayerType = localStorage.getItem("PlayerType");
+            if (PlayerType === "囚犯") {
                 showDialogue("監獄中");
                 return;
             }
@@ -851,15 +853,15 @@
             } 
 
             // 讀取成員資料
-            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
             // 讀取交談對象
             const npcId = localStorage.getItem("npcId");
-            let npc = teamMember.find(m => m.id === npcId);
+            let npc = teamMembers.find(m => m.id === npcId);
 
             // 隊伍其他人的總力量
             let teamStr = 0; 
-            teamMember.forEach(member => {
+            teamMembers.forEach(member => {
                 if (member.id !== npcId) {
                     teamStr += member.totalStr;
                 }
@@ -898,11 +900,11 @@
             const playerTotalCha = parseInt(localStorage.getItem("playerTotalCha"));
 
             // 讀取成員資料
-            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
             // 讀取交談對象
             const npcId = localStorage.getItem("npcId");
-            let npc = teamMember.find(m => m.id === npcId);
+            let npc = teamMembers.find(m => m.id === npcId);
 
             // 計算說服成功率
             let persuadeChance = playerTotalCha / (playerTotalCha + npc.wis);

@@ -111,19 +111,14 @@
 
         // 重生
         function respawn() {    
-            // 讀取所有同伴資料
-            let hiredCompanions = JSON.parse(localStorage.getItem("hiredCompanions")) || [];
+            // 讀取隊伍資料
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
-            // 每個同伴的 HP 恢復 1
-            hiredCompanions.forEach(companion => {
-                companion.HP = 1; // 設定每個同伴的 HP 為 1
+            // 每個成員的 HP 恢復 1
+            teamMembers.forEach(member => {
+                member.HP = 1; // 設定每個同伴的 HP 為 1
             });
-            localStorage.setItem("hiredCompanions", JSON.stringify(hiredCompanions));
-
-            // 主角 HP 恢復 1
-            localStorage.setItem("playerHP", 1);
-
-            partyToTeamMember();
+            localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
             
             // 讀取重生狀態
             let respawn = parseInt(localStorage.getItem("respawn"));
@@ -153,7 +148,7 @@
             // 清除戰鬥狀態
             localStorage.removeItem("situation"); // 清除情況
             localStorage.removeItem("enemies"); // 清除敵人
-            localStorage.removeItem("presentMember"); // 清除上場成員
+            localStorage.removeItem("presentMembers"); // 清除上場成員
             localStorage.removeItem("escapeMember"); // 清除逃跑成員
             localStorage.removeItem("robEnemy"); // 清除搶劫狀態
             localStorage.removeItem("lootResult"); // 清除戰利品訊息

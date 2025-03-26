@@ -40,10 +40,10 @@
             memberId = localStorage.getItem("npcId");
 
             // 讀取所有成員的資料
-            const teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
             // 找到這個成員的資料
-            const member = teamMember.find(m => m.id === memberId);
+            const member = teamMembers.find(m => m.id === memberId);
             console.log("成員", member);
             
             // 查找武器和護具的名稱
@@ -169,10 +169,10 @@
         // 顯示屬性描述
         function getStatDescription(stat, memberId) {
             // 讀取出戰成員
-            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];        
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];        
 
             // 找到角色的資料
-            member = teamMember.find(m => m.id === memberId);
+            member = teamMembers.find(m => m.id === memberId);
 
             // 顯示描述
             let description = "";
@@ -246,33 +246,33 @@
         // 切換為上一個角色
         function lastMember(memberId) {
             // 讀取出戰成員
-            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];        
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];        
 
             // 找到角色的索引
-            let index = teamMember.findIndex(m => m.id === memberId);
+            let index = teamMembers.findIndex(m => m.id === memberId);
 
             // 計算上一個角色的索引
-            let prevIndex = (index - 1 + teamMember.length) % teamMember.length;
+            let prevIndex = (index - 1 + teamMembers.length) % teamMembers.length;
 
             // 切換到上一個角色
-            localStorage.setItem("npcId", teamMember[prevIndex].id);
-            showCharacterSheet(teamMember[prevIndex].id);
+            localStorage.setItem("npcId", teamMembers[prevIndex].id);
+            showCharacterSheet(teamMembers[prevIndex].id);
         }
 
         // 切換為下一個角色
         function nextMember(memberId) {
             // 讀取出戰成員
-            let teamMember = JSON.parse(localStorage.getItem("teamMember")) || [];        
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];        
 
             // 找到角色的索引
-            let index = teamMember.findIndex(m => m.id === memberId);
+            let index = teamMembers.findIndex(m => m.id === memberId);
 
             // 計算下一個角色的索引
-            let nextIndex = (index + 1 + teamMember.length) % teamMember.length;
+            let nextIndex = (index + 1 + teamMembers.length) % teamMembers.length;
 
             // 切換到下一個角色
-            localStorage.setItem("npcId", teamMember[nextIndex].id);
-            showCharacterSheet(teamMember[nextIndex].id);
+            localStorage.setItem("npcId", teamMembers[nextIndex].id);
+            showCharacterSheet(teamMembers[nextIndex].id);
         }
 
         // 選擇裝備
