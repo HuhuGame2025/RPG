@@ -48,6 +48,7 @@ button {
     color: #ccc;
     font-size: 1em;
     border: none;
+    /*border: 1px solid #333;*/
     padding: 10px 15px;
     margin: 10px 5px;
     cursor: pointer;
@@ -116,13 +117,14 @@ hr {
     width: 100%;
 }
 
-/* 離開建築的按鈕 */
+/* 返回按鈕 */
 .exit-button {
     position: absolute;
     left: 0; /* 靠左對齊 */
     margin: 0;
     padding: 0;
     background: none;
+    border: none;
     color: #666;
     font-size: 0.9em;
 }
@@ -233,7 +235,7 @@ hr {
 /* 按鈕列裡的按鈕 */
 .row-buttons button {
     flex: 1; /* 佔滿剩餘空間 */
-    margin: 0 5px;
+    margin: 5px;
     padding-left: 5px;
     padding-right: 5px;
     font-size: 1em;
@@ -288,7 +290,7 @@ hr {
 
 
 /* 選擇敵人 */
-.enemy-container button {
+#enemy-list button {
     background-color: #111;
     width: 100%;
     text-align: left;
@@ -296,12 +298,12 @@ hr {
     margin: 10px 0px; /* 和.item一樣 */
 }
 
-.enemy-container button:hover {
+#enemy-list button:hover {
     background-color: #4D0000; /* 背景變紅 */
     color: #fff;
 }
 
-.enemy-container .selected {
+#enemy-list .selected {
     background-color: #4D0000; /* 背景變紅 */
     color: #fff;
 }
@@ -316,6 +318,11 @@ hr {
     font-size: 0.9em;
     margin: 0;
     color: #984B4B;
+}
+
+/* 狀態圖示 */
+.status-icon {
+    font-size: 0.7em;
 }
 
 /* 主選單按鈕列 */

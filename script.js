@@ -214,9 +214,11 @@
         const npcGender = localStorage.getItem("npcGender") || "he";
         if (npcGender === "he") {
             replaceText("她", "他");
+            replaceText("少女", "少年");
         } else if (npcGender === "she") {
             replaceText("他", "她");
             replaceText("其她", "其他");
+            replaceText("少年", "少女");
         }
 
         // 老練的冒險者
@@ -450,7 +452,7 @@
         { name: "塔爾穆克", type: "傭兵", description: "身材魁武的獸人狂戰士，背著一把巨大的戰斧，眼神充滿怒火。", cost: 150, con: 18, str: 18, dex: 9, wis: 10, cha: 7, weaponId: "npcWeapon02", armorId: "npcArmor02" },
         { name: "賽恩", type: "傭兵", description: "蒙面的刺客，整張臉隱藏在面罩下，沉默寡言，散發著一絲危險氣息。", cost: 120, con: 12, str: 14, dex: 18, wis:14, cha: 10, weaponId: "npcWeapon03", armorId: "npcArmor03" },
         { name: "艾德蒙", type: "傭兵", description: "看起來像個小混混，不太正經，喜歡自吹自擂，給人感覺不怎麼可靠。", cost: 100, con: 12, str: 12, dex: 10, wis: 8, cha: 8, weaponId: "npcWeapon04", armorId: "npcArmor04" },
-        { name: "諾伊爾", type: "傭兵", description: "初出茅廬的年輕精靈，一臉純真，但比起協助你，他看起來更需要協助。", cost: 90, con: 9, str: 9, dex: 14, wis: 16, cha: 18, weaponId: "npcWeapon05", armorId: "npcArmor05" }
+        { name: "諾伊爾", type: "傭兵", description: "初出茅廬的高等精靈少年，一臉純真，但比起協助你，他看起來更需要協助。", cost: 90, con: 9, str: 9, dex: 14, wis: 16, cha: 18, weaponId: "npcWeapon05", armorId: "npcArmor05" }
     ];
 
     // 讀取隊伍資料
@@ -933,8 +935,9 @@
 
     // 狀態資料庫
     const statusData = {
-        "穿刺": { name: "流血", duration: 3 },
-        "鈍擊": { name: "倒地", duration: 1 },
+        "穿刺": { icon: "🩸", name: "流血", duration: 3 },
+        "鈍擊": { icon: "💫", name: "倒地", duration: 1 },
+        "飛行": { icon: "🪽", name: "飛行", duration: 1 },
     };
 
     // 獲得物品或金錢

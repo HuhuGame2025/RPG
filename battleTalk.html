@@ -37,8 +37,8 @@
                     text: "你想怎麼樣？",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade()" },
-                        { text: "放了我，這些錢就給你（$50）", next: "", action: "pay()" },
+                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
                 },
@@ -68,9 +68,9 @@
                 },
                 "說服成功": {
                     npc: "npc",
-                    text: "唉，說得有道理……我大概不適合當盜賊吧。",
+                    text: "唉，其實我也不擅長打架……我大概不適合當壞人吧。",
                     choices: [
-                        { text: "就此別過", next: "", action: "returnMap()" },
+                        { text: "再見", next: "", action: "returnMap()" },
                         { text: "想加入我的隊伍嗎？", next: "", action: "invite()" },
                     ]
                 },
@@ -109,6 +109,13 @@
                         { text: "（繼續）", next: "start" },
                     ]
                 },
+                "AfterAttack": {
+                    npc: "npc",
+                    text: "你都動手了才在那邊假仁假義，誰會信你啊？",
+                    choices: [
+                        { text: "（繼續）", next: "start" },
+                    ]
+                },
             },
             "哥布林": {
                 "start": {
@@ -116,8 +123,8 @@
                     text: "什麼？要認輸了嗎？",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade()" },
-                        { text: "放了我，這些錢就給你（$50）", next: "", action: "pay()" },
+                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
                 },
@@ -149,7 +156,7 @@
                     npc: "npc",
                     text: "唔呃……老實說我也不想死啊，那就當作我們沒見過吧！",
                     choices: [
-                        { text: "就此別過", next: "", action: "returnMap()" },
+                        { text: "再見", next: "", action: "returnMap()" },
                         { text: "想加入我的隊伍嗎？", next: "", action: "invite()" },
                     ]
                 },
@@ -188,6 +195,13 @@
                         { text: "（繼續）", next: "start" },
                     ]
                 },
+                "AfterAttack": {
+                    npc: "npc",
+                    text: "一邊毆打一邊安撫？你還真是個瘋子！",
+                    choices: [
+                        { text: "（繼續）", next: "start" },
+                    ]
+                },
             },
             "獸人": {
                 "start": {
@@ -195,8 +209,8 @@
                     text: "我和人類沒什麼好說的！",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade()" },
-                        { text: "放了我，這些錢就給你（$50）", next: "", action: "pay()" },
+                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
                 },
@@ -228,7 +242,7 @@
                     npc: "npc",
                     text: "哼，我也不想被說只會欺負弱小，趁我後悔前快消失吧！",
                     choices: [
-                        { text: "就此別過", next: "", action: "returnMap()" },
+                        { text: "再見", next: "", action: "returnMap()" },
                         { text: "想加入我的隊伍嗎？", next: "", action: "invite()" },
                     ]
                 },
@@ -262,7 +276,14 @@
                 },
                 "AfterKill": {
                     npc: "npc",
-                    text: "給我閉嘴！我要殺了你，為我死去的同伴復仇！",
+                    text: "閉嘴！我要殺了你，為我死去的同伴復仇！",
+                    choices: [
+                        { text: "（繼續）", next: "start" },
+                    ]
+                },
+                "AfterAttack": {
+                    npc: "npc",
+                    text: "說什麼都沒用！你已經惹毛我了！",
                     choices: [
                         { text: "（繼續）", next: "start" },
                     ]
@@ -274,8 +295,8 @@
                     text: "嗷嗷嗷嗚——",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade()" },
-                        { text: "放了我，這些錢就給你（$50）", next: "", action: "pay()" },
+                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
                 },
@@ -307,7 +328,7 @@
                     npc: "npc",
                     text: "我……不喜歡……受傷……",
                     choices: [
-                        { text: "就此別過", next: "", action: "returnMap()" },
+                        { text: "再見", next: "", action: "returnMap()" },
                         { text: "想加入我的隊伍嗎？", next: "", action: "invite()" },
                     ]
                 },
@@ -346,6 +367,13 @@
                         { text: "（繼續）", next: "start" },
                     ]
                 },
+                "AfterAttack": {
+                    npc: "npc",
+                    text: "太遲了！",
+                    choices: [
+                        { text: "（繼續）", next: "start" },
+                    ]
+                },
             },
             "吸血鬼": {
                 "start": {
@@ -353,8 +381,8 @@
                     text: "你想談談？",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade()" },
-                        { text: "放了我，這些錢就給你（$50）", next: "", action: "pay()" },
+                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
                 },
@@ -386,7 +414,7 @@
                     npc: "npc",
                     text: "要放棄像你這麼迷人的獵物，真是令我心痛，但我很想看看你會成長到什麼地步，期待下次再見了。",
                     choices: [
-                        { text: "就此別過", next: "", action: "returnMap()" },
+                        { text: "再見", next: "", action: "returnMap()" },
                         { text: "想加入我的隊伍嗎？", next: "", action: "invite()" },
                     ]
                 },
@@ -425,6 +453,13 @@
                         { text: "（繼續）", next: "start" },
                     ]
                 },
+                "AfterAttack": {
+                    npc: "npc",
+                    text: "如果你想說服某人，至少該表現出善意吧？",
+                    choices: [
+                        { text: "（繼續）", next: "start" },
+                    ]
+                },
             },
             "巨魔": {
                 "start": {
@@ -432,8 +467,8 @@
                     text: "有屁快放！",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade()" },
-                        { text: "放了我，這些錢就給你（$50）", next: "", action: "pay()" },
+                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
                 },
@@ -465,7 +500,7 @@
                     npc: "npc",
                     text: "嗯……喔？仔細一看，你真是個漂亮的小娃娃！殺掉你太可惜了，連我都不忍心。",
                     choices: [
-                        { text: "就此別過", next: "", action: "returnMap()" },
+                        { text: "再見", next: "", action: "returnMap()" },
                         { text: "想加入我的隊伍嗎？", next: "邀請失敗" },
                     ]
                 },
@@ -497,6 +532,13 @@
                         { text: "（繼續）", next: "start" },
                     ]
                 },
+                "AfterAttack": {
+                    npc: "npc",
+                    text: "放屁！你想揍我，我也想揍你！",
+                    choices: [
+                        { text: "（繼續）", next: "start" },
+                    ]
+                },
             },
             "小仙子": {
                 "start": {
@@ -504,8 +546,8 @@
                     text: "欸？你想說什麼？",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們別再互相傷害了（魅力）", next: "", action: "persuade()" },
-                        { text: "放了我，這些錢就給你（$50）", next: "", action: "pay()" },
+                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
                 },
@@ -537,7 +579,7 @@
                     npc: "npc",
                     text: "嗯嗯，我也不喜歡打架。那我們就和平的道別吧，祝你有段美好的旅程！",
                     choices: [
-                        { text: "就此別過", next: "", action: "returnMap()" },
+                        { text: "再見", next: "", action: "returnMap()" },
                         { text: "想加入我的隊伍嗎？", next: "", action: "invite()" },
                     ]
                 },
@@ -576,6 +618,13 @@
                         { text: "（繼續）", next: "start" },
                     ]
                 },
+                "AfterAttack": {
+                    npc: "npc",
+                    text: "別騙人了，你剛剛不是才發動攻擊嗎？",
+                    choices: [
+                        { text: "（繼續）", next: "start" },
+                    ]
+                },
             },
             "守衛": {
                 "start": {
@@ -584,7 +633,7 @@
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
                         { text: "我是被冤枉的（魅力）", next: "", action: "persuade()" },
-                        { text: "放了我，這些錢就給你（$50）", next: "付錢失敗" },
+                        { text: "錢給你，放過我吧（$50）", next: "付錢失敗" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
                 },
@@ -635,7 +684,14 @@
                 },
                 "AfterKill": {
                     npc: "npc",
-                    text: "你竟敢襲擊守衛！我要把你送上絞架！",
+                    text: "你竟敢謀殺守衛！我要把你送上絞架！",
+                    choices: [
+                        { text: "（繼續）", next: "start" },
+                    ]
+                },
+                "AfterAttack": {
+                    npc: "npc",
+                    text: "你襲擊了守衛，還想逃過制裁？",
                     choices: [
                         { text: "（繼續）", next: "start" },
                     ]
@@ -836,13 +892,20 @@
             const playerTotalCha = parseInt(localStorage.getItem("playerTotalCha"));
 
             // 讀取所有敵人資料
-            const enemyCount = JSON.parse(localStorage.getItem("enemyCount"));
+            const enemyCount = JSON.parse(localStorage.getItem("enemyCount")); // 初始敵人數量
             const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
             const enemyWis = enemies.length > 0 ? enemies[0].wis : ""; // 取第一個敵人的感知
+            const hurtEnemies = enemies.filter(e => e.HP < e.MaxHP); // 找出被攻擊過的敵人
+            console.log(hurtEnemies);
 
-            // 檢查是否殺過敵人的同伴
+            // 檢查是否攻擊過敵人
             if (enemyCount > enemies.length) {
+                // 如果殺了敵人的同伴
                 showDialogue('AfterKill');
+                return;
+            } else if (hurtEnemies.length > 0) {
+                // 如果攻擊過敵人
+                showDialogue('AfterAttack');
                 return;
             }
 

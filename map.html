@@ -14,6 +14,7 @@
             margin-left: auto;
             margin-right: auto;
             background-color: rgba(61, 97, 64, 0.7); /* 綠色 */
+            border-collapse: collapse;
         }
 
         /* 地圖單元格 */
@@ -23,15 +24,40 @@
             width: 50px;
             height: 50px;
             text-align: center;
+            vertical-align: middle;
             border: none;
             padding: 0;
+        }
+        td span {
+            position: absolute;
+            top: 18px; /* 比玩家稍高 */
+            left: 25px;
+            transform: translate(-50%, -50%); 
+        }
+
+        /* 森林 */
+        .forest-tree1 {
+            top: -5px;
+            left: 10px;
+            font-size: 30px;
+        }
+        .forest-tree2 {
+            top: 8px;
+            left: -8px;
+            font-size: 30px;
+        }
+
+        /* 沙漠 */
+        td:has(.desert) {
+            font-size: 14px;
+            background-color: rgba(163, 105, 46, 0.7); 
         }
 
         /* 湖泊 */
         td:has(.lake) {
-            font-size: 40px;
+            font-size: 10px;
             color: #33BEFF;
-            background-color: #00A7F5; 
+            background-color: rgba(0, 167, 245, 0.5); 
             border-radius: 20px;
         }
 
@@ -46,23 +72,18 @@
             position: absolute;
             top: 25px;
             left: 25px;
-            transform: translate(-50%, -40%); /* 比城鎮圖示稍低 */
         }
         .companion {
             font-size: 24px;
             position: absolute;
-            top: 25px;
-            left: 25px;
-            transform: translate(-50%, -20%); /* 比玩家圖示稍低 */
+            top: 32px;
+            left: 22px;
         }
 
         /* 任務標誌 */
         .quest {
             font-size: 32px;
             position: absolute;
-            top: 25px;
-            left: 25px;
-            transform: translate(-50%, -50%);
             background-color: rgba(150, 0, 0, 0.2);
             border-radius: 50%;
         }
@@ -142,13 +163,14 @@
             loadBackground(); // 讀取背景
         };
 
-        // 5x5 地圖 (x=0~4,y=0~4)
+        // 6x6 地圖 (x=0~5,y=0~5)
         const mapData = [
-            ["🌳", "🏘️", "", "🌳", "🌳"],
-            ["🌳", "", "", "", "🌳"],
-            ["≋", "🌳", "🌳", "", ""],
-            ["🏰", "≋", "🌳", "", "🏘️"],
-            ["", "🌳", "🛖", "🌳", ""]
+            ["", "🏘️", "", "🌲", "🪨", "🌲"],
+            ["🌲", "", "", "", "🌲", "🌲"],
+            ["🌲", "🌲", "🌲", "", "🌲", "🪨"],
+            ["🪨", "🐟", "🛖", "", "", "🐟"],
+            ["🌲", "🏰", "🐟", "🌲", "", "🏘️"],
+            ["", "🌲", "🌲", "🪨", "🌲", ""],
         ];
 
         // 定義圖標
@@ -159,8 +181,10 @@
             orcVillage: " 🏘️ ",
             cabin: "🛖",
             castle: "🏰",
-            lake: "≋",
-            forest: "🌳",
+            forest: "🌲",
+            cave: "🪨",
+            desert: "🌵",
+            lake: "🐟",
             quest: "❗",
         };
 
@@ -172,7 +196,7 @@
         };
 
         // 讀取角色位置，預設在正中央 (2,2)
-        let playerPos = JSON.parse(localStorage.getItem("playerPos")) || { x: 2, y: 2 };
+        let playerPos = JSON.parse(localStorage.getItem("playerPos")) || { x: 1, y: 1 };
 
         // 顯示文本
         const texts = {
@@ -381,8 +405,8 @@
                 "start": {
                     text: "這裡是空無一人的中庭，前方是雄偉的主樓，左右兩側各有一座高塔。",
                     choices: [
-                        { text: "前往左側高塔", next: "左側門外", condition: "!isTrue('古堡獅鷲戰鬥')" },
-                        { text: "前往左側高塔", next: "左側門外_無聲", condition: "isTrue('古堡獅鷲戰鬥')" },
+                        { text: "前往左側高塔", next: "左側門外", condition: "!isTrue('古堡巨鷹戰鬥')" },
+                        { text: "前往左側高塔", next: "左側門外_無聲", condition: "isTrue('古堡巨鷹戰鬥')" },
                         { text: "前往右側高塔", next: "右側門外" },
                         { text: "前往主樓", next: "主樓門外" },
                         { text: "撤出古堡", next: "", action: "exitEvent()" },
@@ -417,8 +441,8 @@
                             choices: [
                                 { text: "搜索枯骨", next: "搜索枯骨", condition: "!isTrue('古堡枯骨搜刮')", action: "(getItem('$25'), turnSwitch('古堡枯骨搜刮'))" },
                                 { text: "上樓", next: "左側塔頂" },
-                                { text: "離開高塔", next: "遇到獅鷲", condition: "!isTrue('古堡獅鷲戰鬥')" },
-                                { text: "離開高塔", next: "start", condition: "isTrue('古堡獅鷲戰鬥')" },
+                                { text: "離開高塔", next: "遇到巨鷹", condition: "!isTrue('古堡巨鷹戰鬥')" },
+                                { text: "離開高塔", next: "start", condition: "isTrue('古堡巨鷹戰鬥')" },
                             ]
                         },
                     "搜索枯骨": {
@@ -447,10 +471,10 @@
                             { text: "下樓", next: "左側一樓_無聲" },
                         ]
                     },
-                    "遇到獅鷲": {
-                        text: "當你走出高塔時，一隻獅鷲從天而降，對著你憤怒地咆嘯。",
+                    "遇到巨鷹": {
+                        text: "當你走出高塔時，一隻巨鷹從天而降，對著你憤怒地咆嘯。",
                         choices: [
-                            { text: "準備戰鬥", next: "start", action: "(battle(2, '獅鷲', 1), triggerSwitch('古堡獅鷲戰鬥'))" },
+                            { text: "準備戰鬥", next: "start", action: "(battle(2, '巨鷹', 1), triggerSwitch('古堡巨鷹戰鬥'))" },
                         ]
                     },
 
@@ -646,16 +670,16 @@
                     "右側塔頂": {
                         text: "你來到了塔頂，從這裡可以清楚看見另一座高塔。",
                         choices: [
-                            { text: "觀察另一座塔", next: "看見左側獅鷲", condition: "!isTrue('古堡獅鷲戰鬥')" },
-                            { text: "觀察另一座塔", next: "看見左側", condition: "isTrue('古堡獅鷲戰鬥')" },
+                            { text: "觀察另一座塔", next: "看見左側巨鷹", condition: "!isTrue('古堡巨鷹戰鬥')" },
+                            { text: "觀察另一座塔", next: "看見左側", condition: "isTrue('古堡巨鷹戰鬥')" },
                             { text: "觀察主樓", next: "看見主樓" },
                             { text: "下樓", next: "右側二樓", condition: "!isTrue('古堡掀布')" },
                             { text: "下樓", next: "右側二樓_掀布", condition: "isTrue('古堡掀布') && !isTrue('古堡釋放小孩')" },
                             { text: "下樓", next: "右側二樓_釋放", condition: "isTrue('古堡釋放小孩')" },
                         ]
                     },
-                        "看見左側獅鷲": {
-                            text: "你看見另一座塔上棲息著一頭獅鷲。",
+                        "看見左側巨鷹": {
+                            text: "你看見另一座塔上棲息著一頭巨鷹。",
                             choices: [
                                 { text: "移開視線", next: "back" },
                             ]
@@ -799,7 +823,7 @@
                     },
                     "送到牧場3": {
                         npc: "吸血鬼守衛",
-                        text: "到了，這裡就是血奴住的地方。<br><br>你可以自由活動，但要作息正常，維持健康。<br><br>每晚會有一位吸血鬼來飲用你的血，不要想耍什麼把戲，否則我們就把你餵給獅鷲。",
+                        text: "到了，這裡就是血奴住的地方。<br><br>你可以自由活動，但要作息正常，維持健康。<br><br>每晚會有一位吸血鬼來飲用你的血，不要想耍什麼把戲，否則我們就把你餵給巨鷹。",
                         choices: [
                             { text: "（繼續）", next: "", action: "(exitEvent(), goTo('town/underground'))" },
                         ]
@@ -880,9 +904,9 @@
             const table = document.getElementById("map");
             table.innerHTML = "";
     
-            for (let y = 0; y < 5; y++) {
+            for (let y = 0; y < 6; y++) {
                 let row = document.createElement("tr");
-                for (let x = 0; x < 5; x++) {
+                for (let x = 0; x < 6; x++) {
                     let cell = document.createElement("td");
             
                     // 根據 mapData 的內容填入圖示
@@ -894,7 +918,24 @@
                     }
 
                     // 調整樣式
-                    if (mapData[y][x] === icons.lake) {
+                    if (mapData[y][x] === icons.forest) {
+                        // 如果是森林
+                        let Icon = document.createElement("span");
+                        Icon.innerHTML = `
+                            <span class="forest-tree1");>🌲</span>
+                            <span class="forest-tree2");>🌲</span>
+                        `;
+                        Icon.classList.add("forest");
+                        cell.innerHTML = ""; // 清空原本的icon
+                        cell.appendChild(Icon);
+
+                    } else if (mapData[y][x] === icons.desert) {
+                        // 如果是沙漠
+                        let Icon = document.createElement("span");
+                        Icon.classList.add("desert");
+                        cell.appendChild(Icon);
+
+                    } else if (mapData[y][x] === icons.lake) {
                         // 如果是湖泊
                         let Icon = document.createElement("span");
                         Icon.classList.add("lake");
@@ -960,7 +1001,7 @@
             let newY = playerPos.y + dy;
 
             // 確保不超出範圍，並且不能走進湖泊
-            if (newX >= 0 && newX < 5 && newY >= 0 && newY < 5 && mapData[newY][newX] !== icons.lake) {
+            if (newX >= 0 && newX < 6 && newY >= 0 && newY < 6 && mapData[newY][newX] !== icons.lake) {
                 playerPos.x = newX;
                 playerPos.y = newY;
                 localStorage.setItem("playerPos", JSON.stringify(playerPos));
@@ -983,6 +1024,12 @@
                     window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
                     return;
 
+                } else if (mapData[newY][newX] === icons.cave) {
+                    // 洞穴
+                    localStorage.setItem("playerTerrain", "洞穴");
+                    localStorage.setItem("backgroundStyle", "url('images/cave.jpg')");
+                    window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
+                    return;
                 }
 
                 localStorage.removeItem("situation"); // 如果在安全區，清除之前的情況
@@ -1041,7 +1088,6 @@
             // 位於盜賊巢穴
             } else if (playerPos.x === locations.thieves.x && playerPos.y === locations.thieves.y) {
                 let event = "盜賊巢穴";
-                localStorage.setItem("backgroundStyle", "url('images/cave.jpg')"); // 變更背景圖
 
                 // 檢查是否已完成事件
                 const completedEvents = JSON.parse(localStorage.getItem("completedEvents")) || [];
