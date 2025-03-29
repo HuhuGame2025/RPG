@@ -178,7 +178,7 @@
 
             Object.keys(count).forEach(itemId => {
                 let item = itemData.find(i => i.id === itemId); // 從資料庫查找物品
-
+                
                 if (item) {
                     let itemDiv = document.createElement("div");
                     itemDiv.classList.add("item", "background");
@@ -197,7 +197,9 @@
                                     ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}` : item.str)}<br>` : ""}
                                     ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}` : item.cha)}<br>` : ""}
                                     ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}` : item.arm)}<br>` : ""}
-                                    ${item.dex ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}` : ""}
+                                    ${item.heal ? `恢復 ${item.heal} HP` : ""}
+                                    ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
+                                    ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
                                 </p>
                                 ${item.type !== "specialItem" && !item.owner ? 
                                     `<button onclick="discardItem('${item.id}')" style="margin: auto;">

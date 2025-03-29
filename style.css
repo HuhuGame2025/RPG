@@ -325,6 +325,15 @@ hr {
     font-size: 0.7em;
 }
 
+/* 戰鬥訊息 */
+.battle-text {
+    font-size: 0.9em;
+    color: #aaa;
+}
+
+
+
+
 /* 主選單按鈕列 */
 .button-bar {
     position: fixed;

@@ -60,11 +60,11 @@
         const texts = {
             noTarget: "請先選擇一個敵人為目標",
             noAttacker: "請選擇由誰發動攻擊",
-            fightWin: (name, damage) => `擊中敵人(${damage})！`,
-            fightWinWithStatus: (name, damage, status) => `擊中敵人(${damage})，使他${status}了！`,
-            fightLose: (name) => `打算攻擊，但被躲開了`,
+            fightWin: (damage) => `擊中敵人(${damage})！`,
+            fightWinWithStatus: (damage, status) => `擊中敵人(${damage})，使他${status}了！`,
+            fightLose: "打算攻擊，但被躲開了",
             fightFlyingEnemy: "無法觸及空中的敵人",
-            killEnemy: (name, damage) => `打敗了敵人(${damage})！`,
+            killEnemy: (damage) => `打敗了敵人(${damage})！`,
             die: (deadMembers) => `${deadMembers}倒下了！`,
             teamFightWin: (damage) => `你們聯手，對敵人造成了重創！(${damage})`,
             teamFightLose: "敵人非常頑強，避開了所有的攻擊",
@@ -336,62 +336,60 @@
         }
 
         // 攻擊邏輯
-        function fight(attacker, target) {
-            // 讀取可行動成員的資料
-            let actableMembers = JSON.parse(localStorage.getItem("actableMembers")) || [];
-            //console.log("可行動的成員", actableMembers);
-
-            let attackerName;
-            let attackerDex = 0; // 我方總敏捷
-            let attackerStr = 0; // 我方總力量
-            let attackerWeapon = []; // 我方武器
-          
-            if (attacker === "team") {
-                // 聯手攻擊，加總可行動成員的資料
-                actableMembers.forEach(member => {
-                    attackerName = "聯手";
-                    attackerStr += member.totalStr;
-                    attackerDex += member.totalDex;
-                    attackerWeapon.push(member.weapon); // 武器
-                });
-            } else {
-                // 單獨攻擊，找到攻擊者的資料
-                let member = actableMembers.find(comp => comp.id === attacker);
-                attackerName = member.name;
-                attackerStr = member.totalStr;
-                attackerDex = member.totalDex;
-                attackerWeapon.push(member.weapon); // 武器
-            }
-            
+        function fight(attackerId, target) {            
             // 獲取敵人資料
             let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
             let targetEnemy = enemies.find(e => e.id === target);
+            let isPlant = targetEnemy.type.includes("植物");
+            let isProne = Object.values(targetEnemy.status).some(s => s.name === "倒地");
+            let isFly = Object.values(targetEnemy.status).some(s => s.name === "飛行");
+
+            let situation = parseInt(localStorage.getItem("situation"));
+
+            // 讀取可行動成員的資料
+            let actableMembers = JSON.parse(localStorage.getItem("actableMembers")) || [];
+          
+            // 確認攻擊者人數
+            let attacker = [];
+            if (attackerId === "team") {
+                // 聯手攻擊，計入所有可行動成員
+                attacker = actableMembers;
+            } else {
+                // 單獨攻擊，找到攻擊者
+                singleAttacker  = actableMembers.find(comp => comp.id === attackerId);
+                attacker = [singleAttacker]; // 包成陣列
+            }
+
+            // 如果敵人飛行中，只有遠程武器有效
+            if (isFly) {
+                attacker = attacker.filter(member => 
+                    member.weapon && member.weapon.category === "遠程"
+                );
+            }
+
+            // 取得攻擊者資料
+            let attackerName = [], attackerDex = 0, attackerStr = 0, attackerWeapon = [];
+            attacker.forEach(member => {
+                attackerName.push(member.name);
+                attackerDex += member.totalDex; // 我方總敏捷
+                attackerStr += member.totalStr; // 我方總力量
+                attackerWeapon.push(member.weapon); // 我方武器
+            });
 
             // 計算命中率
-                let hitChance;
-                let situation = parseInt(localStorage.getItem("situation"));
-                let isPlant = targetEnemy.type.includes("植物");
-                let isProne = Object.values(targetEnemy.status).some(s => s.name === "倒地");
-                let isFly = Object.values(targetEnemy.status).some(s => s.name === "飛行");
-
-                if (situation === 4 || isProne || isPlant) { 
-                    // 如果敵人無防備、目標倒地、目標是植物，命中率 100%
-                    hitChance = 1;
-                } else if (isFly) {
-                    // 如果目標在飛行，命中率 0%
-                    hitChance = 0;
-                } else {
-                    // 預設情況，以雙方敏捷計算命中率
-                    hitChance = attackerDex / (attackerDex + targetEnemy.totalDex);
-                }
-
-                let randomValue = Math.random(); // 產生 0~1 的隨機數
-                // 檢查命中率
-                console.log(`攻擊者: ${attackerName}, 敏捷: ${attackerDex}, 力量: ${attackerStr}, 目標: ${target}, 目標敏捷: ${targetEnemy.totalDex}`);
-                console.log(`計算的命中率: ${(hitChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+            let hitChance;
+            if (situation === 4 || isProne || isPlant) { 
+                // 如果敵人無防備、目標倒地、目標是植物，命中率 100%
+                hitChance = 1;
+            } else {
+                // 預設情況，以雙方敏捷計算命中率
+                hitChance = attackerDex / (attackerDex + targetEnemy.totalDex);
+            }
+            console.log(`攻擊者: ${attackerName}, 敏捷: ${attackerDex}, 力量: ${attackerStr}, 目標: ${target}, 目標敏捷: ${targetEnemy.totalDex}`);
+            console.log(`計算的命中率: ${(hitChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
             // 攻擊結果
-            if (randomValue <= hitChance) {
+            if (Math.random() <= hitChance) {
                 // 攻擊成功，對目標造成傷害
                 let damage = Math.max(attackerStr - targetEnemy.totalArm, 0); // 傷害 = 我方力量總和 - 敵人護甲
                 targetEnemy.HP = Math.max(targetEnemy.HP - damage, 0); // HP 減少，不會低於0
@@ -407,44 +405,38 @@
                 // 檢查敵人是否死亡
                 if (targetEnemy.HP <= 0) {
                     // 敵人死亡
-                    if (attacker === "team") {
+                    if (attackerId === "team") {
                         // 顯示聯手擊殺訊息（在隊伍的欄位）
                         document.getElementById("team-action").textContent = texts.teamKillEnemy(damage);
                     } else {
                         // 顯示單獨擊殺訊息（在攻擊者的欄位）
-                        //document.getElementById(`${attacker}-action`).textContent = texts.killEnemy(attackerName, damage);
-                        localStorage.setItem(`${attacker}-action-text`, texts.killEnemy(attackerName, damage));
+                        localStorage.setItem(`${attackerId}-action-text`, texts.killEnemy(damage));
                     }
                     // 清除目標
                     selectedTarget = null;
 
                 } else {
                     // 敵人活著
-                    if (attacker === "team") {
+                    if (attackerId === "team") {
                         // 顯示聯手攻擊成功訊息（在隊伍的欄位）
-                        //document.getElementById("team-action").textContent = texts.teamFightWin(damage);
-                        localStorage.setItem(`${attacker}-action-text`, texts.teamFightWin(damage));
+                        localStorage.setItem(`${attackerId}-action-text`, texts.teamFightWin(damage));
 
                     } else {
                         // 顯示單獨攻擊成功訊息（在攻擊者的欄位）
-                        //document.getElementById(`${attacker}-action`).textContent = texts.fightWin(attackerName, damage);
-                        localStorage.setItem(`${attacker}-action-text`, texts.fightWin(attackerName, damage));
+                        localStorage.setItem(`${attackerId}-action-text`, texts.fightWin(damage));
                     }
 
                     // 檢查是否附加狀態
                     attackerWeapon.forEach(weapon => {
-                        // 如果持有武器，用武器的力量擲骰
-                        if (weapon && roll(weapon.str)) {
-                            // 根據武器種類添加狀態
-                            let weaponCategory = weapon.category;
-                            if (!statusData[weaponCategory]) return; // 無狀態就跳過
-                            targetEnemy.status.push(statusData[weaponCategory]);
+                        // 如果武器有附加狀態，用武器的力量擲骰
+                        let status = statusData[weapon.category];
+                        if (status && roll(weapon.str * status.multiplier)) {
+                            // 添加狀態
+                            targetEnemy.status.push(status);
 
                             // 顯示附加狀態的訊息
-                            let status = statusData[weaponCategory].name;
-                            //document.getElementById(`${attacker}-action`).textContent = texts.fightWinWithStatus(attackerName, damage, status);
-                            localStorage.setItem(`${attacker}-action-text`, texts.fightWinWithStatus(attackerName, damage, status));
-                            console.log("造成" + status);
+                            localStorage.setItem(`${attackerId}-action-text`, texts.fightWinWithStatus(damage, status.name));
+                            console.log("造成" + status.name);
                         }
                     });
 
@@ -454,38 +446,35 @@
 
             } else {
                 // 攻擊失敗
-                if (isFly) {
-                    // 如果目標在飛行
-                    if (attacker === "team") {
+                if (isFly && hitChance === 0) {
+                    // 如果目標在飛行，且沒有遠程武器
+                    if (attackerId === "team") {
                         // 顯示聯手攻擊無法觸及訊息（在隊伍的欄位）
                         document.getElementById("team-action").textContent = texts.fightFlyingEnemy;
                     } else {
                         // 顯示單獨攻擊無法觸及訊息（在攻擊者的欄位）
-                        //document.getElementById(`${attacker}-action`).textContent = texts.fightFlyingEnemy;
-                        localStorage.setItem(`${attacker}-action-text`, texts.fightFlyingEnemy);
+                        localStorage.setItem(`${attackerId}-action-text`, texts.fightFlyingEnemy);
                     }
                     
                 } else {
                     // 預設情況
-                    if (attacker === "team") {
+                    if (attackerId === "team") {
                         // 顯示聯手攻擊失敗訊息（在隊伍的欄位）
                         document.getElementById("team-action").textContent = texts.teamFightLose;
                     } else {
                         // 顯示單獨攻擊失敗訊息（在攻擊者的欄位）
-                        //document.getElementById(`${attacker}-action`).textContent = texts.fightLose(attackerName);
-                        localStorage.setItem(`${attacker}-action-text`, texts.fightLose(attackerName));
+                        localStorage.setItem(`${attackerId}-action-text`, texts.fightLose);
                     }
                 }
             }
 
             // 攻擊結束後
-            if (attacker === "team") {
+            if (attackerId === "team") {
                 // 聯手攻擊，隱藏可行動成員的攻擊、逃跑按鈕
                 actableMembers.forEach(member => {
                     document.querySelectorAll(`.${member.id}-btn button`).forEach(button => {
                         button.style.display = "none";
                     });
-                    //localStorage.removeItem(`${member.id}-btn-show`); // 隱藏按鈕
 
                     removeactableMembers(member.id); // 將攻擊者移出可行動成員
                 });
@@ -496,11 +485,11 @@
                 });
             } else {
                 // 單獨攻擊，隱藏攻擊者的攻擊、逃跑按鈕
-                document.querySelectorAll(`.${attacker}-btn button`).forEach(button => {
+                document.querySelectorAll(`.${attackerId}-btn button`).forEach(button => {
                     button.style.display = "none";
                 });
 
-                removeactableMembers(attacker); // 將攻擊者移出可行動成員
+                removeactableMembers(attackerId); // 將攻擊者移出可行動成員
             }
 
             endAction();
@@ -743,18 +732,15 @@
                         localStorage.setItem(`${enemy.id}-action-text`, texts.enemyWin(hurtMember.name, damage));
 
                         // 檢查是否附加狀態
-                            // 如果持有武器，用武器的力量擲骰
-                            if (enemy.weapon && roll(enemy.weapon.str)) {
-                                // 根據武器種類添加狀態
-                                let weaponCategory = enemy.weapon.category;
-                                if (!statusData[weaponCategory]) return; // 無狀態就跳過
-                                hurtMember.status.push(statusData[weaponCategory]);
+                            // 如果武器有附加狀態，用武器的力量擲骰
+                            let status = statusData[enemy.weapon.category];
+                            if (status && roll(enemy.weapon.str * status.multiplier)) {
+                                // 添加狀態
+                                hurtMember.status.push(status);
 
                                 // 顯示附加狀態的訊息（在敵人的欄位）
-                                let status = statusData[weaponCategory].name;
-                                //document.getElementById(`${enemy.id}-action`).textContent = texts.enemyWinWithStatus(hurtMember.name, damage, status);
-                                localStorage.setItem(`${enemy.id}-action-text`, texts.enemyWinWithStatus(hurtMember.name, damage, status));
-                                console.log("造成" + status);
+                                localStorage.setItem(`${enemy.id}-action-text`, texts.enemyWinWithStatus(hurtMember.name, damage, status.name));
+                                console.log("造成" + status.name);
                             }
                     }
                     //console.log(teamMembers);

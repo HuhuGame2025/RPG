@@ -509,17 +509,23 @@
         let companionName = companion.adj ? `${companion.adj}${companion.name}` : companion.name;
 
         // 根據裝備ID找到同伴的裝備資料
-        const weapon = itemDatabase.find(item => item.id === companion.weaponId) || { str: 0, arm: 0, dex: 0 };
-        const armor = itemDatabase.find(item => item.id === companion.armorId) || { str: 0, arm: 0, dex: 0 };
+        const weapon = itemDatabase.find(item => item.id === companion.weaponId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
+        const armor = itemDatabase.find(item => item.id === companion.armorId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
 
         companion.weapon = weapon;
         companion.armor = armor;
 
         // 計算角色穿戴裝備後的總屬性
-        companion.totalStr = (companion.str || 0) + (weapon.str || 0) + (armor.str || 0);
+        companion.totalStr = companion.str + (weapon.str || 0) + (armor.str || 0);
+        companion.totalCha = companion.cha + (weapon.cha || 0) + (armor.cha || 0);
         companion.totalArm = (companion.arm || 0) + (weapon.arm || 0) + (armor.arm || 0);
-        companion.totalDex = (companion.dex || 0) + (weapon.dex || 0) + (armor.dex || 0);
-        companion.totalCha = (companion.cha || 0) + (weapon.cha || 0) + (armor.cha || 0);
+
+        // 檢查力量是否足夠，不夠才承受敏捷減值
+        if (companion.str < weapon.needStr || companion.str < armor.needStr) {
+            companion.totalDex = companion.dex + (weapon.dex || 0) + (armor.dex || 0);
+        } else {
+            companion.totalDex = companion.dex;
+        }
 
         // 生成同伴的id
         const companionId = `companion${teamMembers.length}`;
@@ -807,46 +813,47 @@
         // 武器
             // 商店貨
             { id: "weapon01", type: "weapon", category: "穿刺", name: "🗡️ 匕首", str: 5, dex: 0, description: "適合隨身攜帶的短劍。", price: 10 },
-            { id: "weapon02", type: "weapon", category: "鈍擊", name: "🗡️ 硬頭錘", str: 8, dex: 0, description: "單手使用的鈍器。", price: 25 },
+            { id: "weapon02", type: "weapon", category: "鈍擊", name: "🔨 硬頭錘", str: 8, dex: 0, description: "單手使用的鈍器。", price: 25 },
             { id: "weapon03", type: "weapon", category: "揮砍", name: "🗡️ 單手劍", str: 10, dex: 0, description: "戰士的標準配備。", price: 45 },
-            { id: "weapon04", type: "weapon", category: "揮砍", name: "🗡️ 巨劍", str: 12, dex: -1, needStr: 13, description: "雙手持握的大型劍。<br>❗使用條件：力量 13❗", price: 70 },
-            { id: "weapon05", type: "weapon", category: "揮砍", name: "🗡️ 戰斧", str: 15, dex: -2, needStr: 16, description: "殺傷力驚人的重型武器。<br>❗使用條件：力量 16❗", price: 100 },
-            { id: "weapon06", type: "weapon", category: "鈍擊", name: "🛡️ 盾牌", str: 5, arm: 5, dex: -1, description: "能保護自身也能當鈍器使用。", price: 45 },
-            { id: "weapon07", type: "weapon", category: "遠程", name: "🏹 弓", str: 10, dex: 0, description: "能瞄準空中的敵人。", price: 60 },
+            { id: "weapon04", type: "weapon", category: "揮砍", name: "🗡️ 巨劍", str: 12, dex: -1, needStr: 13, description: "雙手持握的大型劍。", price: 70 },
+            { id: "weapon05", type: "weapon", category: "揮砍", name: "🗡️ 戰斧", str: 15, dex: -2, needStr: 16, description: "殺傷力驚人的重型武器。", price: 100 },
+            { id: "weapon06", type: "weapon", category: "遠程", name: "🏹 短弓", str: 10, dex: 0, description: "能瞄準空中的敵人。", price: 60 },
+            { id: "weapon07", type: "weapon", category: "鈍擊", name: "🛡️ 盾牌", str: 5, arm: 5, dex: -1, description: "能保護自身也能當鈍器使用。", price: 45 },
             
             // 戰利品
             { id: "lootWeapon01", type: "weapon", category: "穿刺", name: "🗡️ 老舊的匕首", str: 3, dex: 0, description: "適合隨身攜帶的小刀。", price: 7 },
-            { id: "lootWeapon02", type: "weapon", category: "鈍擊", name: "🗡️ 老舊的硬頭錘", str: 5, dex: 0, description: "單手使用的鈍器。", price: 17 },
+            { id: "lootWeapon02", type: "weapon", category: "鈍擊", name: "🔨 老舊的硬頭錘", str: 5, dex: 0, description: "單手使用的鈍器。", price: 17 },
             { id: "lootWeapon03", type: "weapon", category: "揮砍", name: "🗡️ 老舊的單手劍", str: 7, dex: 0, description: "戰士的標準配備。", price: 30 },
-            { id: "lootWeapon04", type: "weapon", category: "揮砍", name: "🗡️ 老舊的巨劍", str: 8, dex: -1, needStr: 13, description: "雙手持握的大型劍。<br>❗使用條件：力量 13❗", price: 46 },
-            { id: "lootWeapon05", type: "weapon", category: "揮砍", name: "🗡️ 老舊的戰斧", str: 10, dex: -2, needStr: 16, description: "殺傷力驚人的重型武器。<br>❗使用條件：力量 16❗", price: 66 },
-            { id: "lootWeapon06", type: "weapon", category: "鈍擊", name: "🛡️ 老舊的盾牌", str: 3, arm: 3, dex: -1, description: "能保護自身也能當鈍器使用。", price: 30 },
+            { id: "lootWeapon04", type: "weapon", category: "揮砍", name: "🗡️ 老舊的巨劍", str: 8, dex: -1, needStr: 13, description: "雙手持握的大型劍。", price: 46 },
+            { id: "lootWeapon05", type: "weapon", category: "揮砍", name: "🗡️ 老舊的戰斧", str: 10, dex: -2, needStr: 16, description: "殺傷力驚人的重型武器。", price: 66 },
+            { id: "lootWeapon06", type: "weapon", category: "遠程", name: "🏹 老舊的短弓", str: 7, dex: 0, description: "能瞄準空中的敵人。", price: 40 },
+            { id: "lootWeapon07", type: "weapon", category: "鈍擊", name: "🛡️ 老舊的盾牌", str: 3, arm: 3, dex: -1, description: "能保護自身也能當鈍器使用。", price: 30 },
 
             { id: "lootWeapon11", type: "weapon", category: "鈍擊", name: "🗡️ 小棍棒", str: 1, dex: 0, description: "只是一根普通的樹枝。", price: 0 },
-            { id: "lootWeapon12", type: "weapon", category: "鈍擊", name: "🗡️ 巨大的狼牙棒", str: 20, dex: -5, needStr: 20, description: "將樹幹和獸骨綁起來。<br>❗使用條件：力量 20❗", price: 10 },
+            { id: "lootWeapon12", type: "weapon", category: "鈍擊", name: "🗡️ 巨大的狼牙棒", str: 20, dex: -6, needStr: 20, description: "將樹幹和獸骨綁起來。", price: 10 },
             { id: "lootWeapon13", type: "weapon", category: "鈍擊", name: "🗡️ 尖銳的石頭", str: 1, dex: 0, description: "可以藏在衣服裡。", price: 0 },
 
             // NPC專屬
-            { id: "npcWeapon01", type: "weapon", category: "揮砍", name: "🗡️ 雷納德的巨劍", str: 12, dex: -1, description: "雙手持握的大型劍。", owner: "雷納德" },
-            { id: "npcWeapon02", type: "weapon", category: "揮砍", name: "🗡️ 塔爾穆克的戰斧", str: 15, dex: -2, description: "殺傷力驚人的重型武器。", owner: "塔爾穆克" },
+            { id: "npcWeapon01", type: "weapon", category: "揮砍", name: "🗡️ 雷納德的巨劍", str: 12, dex: -1, needStr: 13, description: "雙手持握的大型劍。", owner: "雷納德" },
+            { id: "npcWeapon02", type: "weapon", category: "揮砍", name: "🗡️ 塔爾穆克的戰斧", str: 15, dex: -2, needStr: 16, description: "殺傷力驚人的重型武器。", owner: "塔爾穆克" },
             { id: "npcWeapon03", type: "weapon", category: "穿刺", name: "🗡️ 賽恩的匕首", str: 5, dex: 0, description: "適合隨身攜帶的短劍。", owner: "賽恩" },
             { id: "npcWeapon04", type: "weapon", category: "揮砍", name: "🗡️ 艾德蒙的劍", str: 10, dex: 0, description: "戰士的標準配備。", owner: "艾德蒙" },
-            { id: "npcWeapon05", type: "weapon", category: "遠程", name: "🏹 諾伊爾的弓", str: 10, dex: 0, description: "能瞄準空中的敵人。", owner: "諾伊爾" },
+            { id: "npcWeapon05", type: "weapon", category: "遠程", name: "🏹 諾伊爾的短弓", str: 10, dex: 0, description: "能瞄準空中的敵人。", owner: "諾伊爾" },
 
         // 護具
             // 商店貨
             { id: "armor01", type: "armor", name: "🛡️ 皮甲", arm: 3, dex: 0, description: "活動性佳的輕型盔甲。", price: 10 },
             { id: "armor02", type: "armor", name: "🛡️ 鱗甲", arm: 5, dex: 0, description: "以皮革和鐵片製成的鎧甲。", price: 25 },
             { id: "armor03", type: "armor", name: "🛡️ 鐵製胸甲", arm: 8, dex: 0, description: "包覆軀幹的堅固胸甲。", price: 45 },
-            { id: "armor04", type: "armor", name: "🛡️ 鎖子甲", arm: 10, dex: -1, needStr: 11, description: "以鐵環相扣製成的鎧甲。<br>❗使用條件：力量 11❗", price: 70 },
-            { id: "armor05", type: "armor", name: "🛡️ 全身板甲", arm: 12, dex: -2, needStr: 13, description: "完整保護全身的重型盔甲。<br>❗使用條件：力量 13❗", price: 100 },
+            { id: "armor04", type: "armor", name: "🛡️ 鎖子甲", arm: 10, dex: -1, needStr: 11, description: "以鐵環相扣製成的鎧甲。", price: 70 },
+            { id: "armor05", type: "armor", name: "🛡️ 全身板甲", arm: 12, dex: -2, needStr: 13, description: "完整保護全身的重型盔甲。", price: 100 },
     
             // 戰利品
             { id: "lootArmor01", type: "armor", name: "🛡️ 老舊的皮甲", arm: 2, dex: 0, description: "活動性佳的輕型盔甲。", price: 7 },
             { id: "lootArmor02", type: "armor", name: "🛡️ 老舊的鱗甲", arm: 3, dex: 0, description: "以皮革和鐵片製成的鎧甲。", price: 17 },
             { id: "lootArmor03", type: "armor", name: "🛡️ 老舊的鐵製胸甲", arm: 5, dex: -1, description: "包覆軀幹的堅固胸甲。", price: 30 },
-            { id: "lootArmor04", type: "armor", name: "🛡️ 老舊的鎖子甲", arm: 7, dex: -1, needStr: 11, description: "以鐵環相扣製成的鎧甲。<br>❗使用條件：力量 11❗", price: 46 },
-            { id: "lootArmor05", type: "armor", name: "🛡️ 老舊的全身板甲", arm: 8, dex: -2, needStr: 13, description: "完整保護全身的重型盔甲。<br>❗使用條件：力量 13❗", price: 66 },
+            { id: "lootArmor04", type: "armor", name: "🛡️ 老舊的鎖子甲", arm: 7, dex: -1, needStr: 11, description: "以鐵環相扣製成的鎧甲。", price: 46 },
+            { id: "lootArmor05", type: "armor", name: "🛡️ 老舊的全身板甲", arm: 8, dex: -2, needStr: 13, description: "完整保護全身的重型盔甲。", price: 66 },
 
             { id: "lootArmor11", type: "armor", name: "🛡️ 獸皮背心", arm: 0, dex: 0, description: "只能勉強遮蔽身體。", price: 1 },
             { id: "lootArmor12", type: "armor", name: "🛡️ 巨大的腰布", arm: 1, dex: 0, description: "可以披在身上當斗篷。", price: 0 },
@@ -894,7 +901,7 @@
 
         // 戰利品
             { id: "loot01", type: "loot", name: "💰 龍鱗", description: "龍的鱗片。", price: 60 },
-            { id: "loot02", type: "loot", name: "💰 蜥蜴尾巴", description: "火蜥蜴的尾巴，可以販賣。", price: 8 },
+            { id: "loot02", type: "loot", name: "💰 斷尾", description: "巨蜥的尾巴，可以販賣。", price: 8 },
             { id: "loot03", type: "loot", name: "💰 仙粉", description: "仙子的魔法粉末，可以販賣。", price: 5 },
             { id: "loot04", type: "loot", name: "💰 狼皮", description: "野狼的毛皮，可以販賣。", price: 12 },
             { id: "loot05", type: "loot", name: "💰 狐狸皮", description: "狐狸的毛皮，可以販賣。", price: 6 },
@@ -935,8 +942,8 @@
 
     // 狀態資料庫
     const statusData = {
-        "穿刺": { icon: "🩸", name: "流血", duration: 3 },
-        "鈍擊": { icon: "💫", name: "倒地", duration: 1 },
+        "穿刺": { icon: "🩸", name: "流血", duration: 3, multiplier: 1 },
+        "鈍擊": { icon: "💫", name: "倒地", duration: 1, multiplier: 0.4 },
         "飛行": { icon: "🪽", name: "飛行", duration: 1 },
     };
 
@@ -1017,12 +1024,6 @@
         } else {
             let item = itemDatabase.find(i => i.id === itemId); // 找到這件裝備的資料
 
-            // 檢查力量是否足夠
-            if (member.str < item.needStr) {
-                alert("力量不足，無法使用");
-                return;
-            }
-
             if (item.type === "weapon") {
                 if (member.weapon) playerItems.push(member.weapon.id); // 將原本的武器放回主角物品
                 member.weapon = item; // 更換武器
@@ -1039,14 +1040,20 @@
         }
 
         // 確保裝備物品的屬性正確
-        let weapon = member.weapon ? member.weapon : { str: 0, arm: 0, dex: 0, cha: 0 };
-        let armor = member.armor ? member.armor : { str: 0, arm: 0, dex: 0, cha: 0 };
+        let weapon = member.weapon ? member.weapon : { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
+        let armor = member.armor ? member.armor : { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
             
         // 計算角色的總屬性，確保基礎屬性不受影響
-        member.totalStr = (member.str || 0) + (weapon.str || 0) + (armor.str || 0);
+        member.totalStr = member.str + (weapon.str || 0) + (armor.str || 0);
+        member.totalCha = member.cha + (weapon.cha || 0) + (armor.cha || 0);
         member.totalArm = (member.arm || 0) + (weapon.arm || 0) + (armor.arm || 0);
-        member.totalDex = (member.dex || 0) + (weapon.dex || 0) + (armor.dex || 0);
-        member.totalCha = (member.cha || 0) + (weapon.cha || 0) + (armor.cha || 0);
+
+        // 檢查力量是否足夠，不夠才承受敏捷減值
+        if (member.str < weapon.needStr || member.str < armor.needStr) {
+            member.totalDex = member.dex + (weapon.dex || 0) + (armor.dex || 0);
+        } else {
+            member.totalDex = member.dex;
+        }
 
         // 更新 localStorage
         localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
@@ -1158,8 +1165,9 @@
                             ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
                             ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
                             ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
-                            ${item.dex ? `敏捷 ${(item.dex > 0 ? `+${item.dex}<br>` : item.dex)}` : ""}
+                            ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
                             ${item.heal ? `恢復 ${item.heal} HP` : ""}
+                            ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
                         </p>
                         <!-- 如果是商店，顯示偷竊按鈕 -->
                         ${itemType && itemType !== "meal" ? `<button onclick="stealItem('${item.id}')" style="margin: auto;">

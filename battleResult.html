@@ -150,11 +150,18 @@
             localStorage.removeItem("enemies"); // 清除敵人
             localStorage.removeItem("presentMembers"); // 清除上場成員
             localStorage.removeItem("escapeMember"); // 清除逃跑成員
-            localStorage.removeItem("robEnemy"); // 清除搶劫狀態
+            localStorage.removeItem("robEnemy"); // 清除搶劫
             localStorage.removeItem("lootResult"); // 清除戰利品訊息
             localStorage.removeItem("battleResult");
             localStorage.removeItem("respawn");
             localStorage.removeItem("encounter"); // 清除指定遭遇
+
+            // 清空隊員的狀態
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            teamMembers.forEach(member => {
+                member.status = [];
+            });
+            localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
 
             // 預設跳轉到地圖
             let destination = 'map.html';

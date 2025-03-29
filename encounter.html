@@ -156,7 +156,7 @@
                 { name: "蠕蟲", type: ["野獸"], terrain: ["森林"], con: 1, str: 1, dex: 7, wis: 0, cha: 0, action: "在地上捲成一球", actionBattle: "蠕動著長長的身體", loot:"lootSupply01" },
                 { name: "史萊姆", type: ["野獸"], terrain: ["森林"], con: 2, str: 3, dex: 5, wis: 0, cha: 0, action: "看似一灘黏液", actionBattle: "黏液聚集成一團流過來", loot:"" },
                 { name: "狐狸", type: ["野獸"], terrain: ["草原", "森林"], con: 5, str: 5, dex: 14, wis: 3, cha: 8, action: "正在舔自己的毛", actionBattle: "警戒地圍著你跑來跑去", loot:"loot05" },
-                { name: "火蜥蜴", type: ["野獸"], terrain: ["草原"], con: 8, str: 12, dex: 12, wis: 3, cha: 2, action: "正悠閒地曬太陽", actionBattle: "身上的鱗片冒出火苗", loot:"loot02" },
+                { name: "巨蜥", type: ["野獸"], terrain: ["草原"], con: 8, str: 12, dex: 12, wis: 3, cha: 2, action: "正悠閒地曬太陽", actionBattle: "吐出分岔的長舌頭", loot:"loot02" },
                 { name: "野豬", type: ["野獸"], terrain: ["草原", "森林"], con: 8, str: 12, dex: 10, wis: 4, cha: 3, action: "在泥巴裡打滾", actionBattle: "前腳刨地準備衝撞", loot:"loot14" },
                 { name: "野狼", type: ["野獸"], terrain: ["草原", "森林"], con: 10, str: 14, dex: 13, wis: 4, cha: 5, action: "趴在地上用後腳抓癢", actionBattle: "虎視眈眈地盯著你", loot:"loot04" },
                 { name: "巨型蜘蛛", type: ["野獸"], terrain: ["洞穴"], con: 22, str: 16, dex: 12, wis: 4, cha: 0, action: "處於靜止狀態", actionBattle: "八條腿高速爬行過來", loot:"loot06" },
@@ -234,7 +234,7 @@
             // 隨機選擇一種敵人
             let randomIndex = Math.floor(Math.random() * possibleEnemies.length);
             let selectedEnemy = possibleEnemies[randomIndex];
-            //selectedEnemy = enemies[12]; // 測試用
+            selectedEnemy = enemies[0]; // 測試用
 
             // 使用加權隨機決定敵人數量
                 let enemyCount;
@@ -282,16 +282,23 @@
                 }   
 
                 // 根據裝備ID找到敵人的裝備資料
-                const weapon = itemDatabase.find(item => item.id === selectedEnemy.weaponId) || { str: 0, arm: 0, dex: 0 };
-                const armor = itemDatabase.find(item => item.id === selectedEnemy.armorId) || { str: 0, arm: 0, dex: 0 };
+                const weapon = itemDatabase.find(item => item.id === selectedEnemy.weaponId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
+                const armor = itemDatabase.find(item => item.id === selectedEnemy.armorId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
 
                 selectedEnemy.weapon = weapon;
                 selectedEnemy.armor = armor;
 
                 // 計算敵人穿戴裝備後的總屬性
-                selectedEnemy.totalStr = (selectedEnemy.str || 0) + (weapon.str || 0) + (armor.str || 0);
+                selectedEnemy.totalStr = selectedEnemy.str + (weapon.str || 0) + (armor.str || 0);
+                selectedEnemy.totalCha = selectedEnemy.cha + (weapon.cha || 0) + (armor.cha || 0);
                 selectedEnemy.totalArm = (selectedEnemy.arm || 0) + (weapon.arm || 0) + (armor.arm || 0);
-                selectedEnemy.totalDex = (selectedEnemy.dex || 0) + (weapon.dex || 0) + (armor.dex || 0);
+
+                // 檢查力量是否足夠，不夠才承受敏捷減值
+                if (selectedEnemy.str < weapon.needStr || selectedEnemy.str < armor.needStr) {
+                    selectedEnemy.totalDex = selectedEnemy.dex + (weapon.dex || 0) + (armor.dex || 0);
+                } else {
+                    selectedEnemy.totalDex = selectedEnemy.dex;
+                }
 
                 // 生成敵人的id
                 const enemyId = `enemy${enemiesEncountered.length + 1}`;

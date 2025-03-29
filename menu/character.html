@@ -750,32 +750,21 @@
             teamMembers.forEach((member, index) => {
                 const characterDiv = document.createElement("div");
 
-                if (index === 0) {
-                    // 主角
-                    characterDiv.innerHTML = `
-                        <div class="item center background">
+                characterDiv.innerHTML = `
+                    <div class="item center background column-container">
+                        <div class="column center">
                             <span class="note">${member.type}</span>
                             <h3>${member.name}</h3>
                             <h4 class="hp" style="margin:5px 0;">${member.HP} / ${member.MaxHP}</h4>
-                            <div class="row-buttons">
-                                <button onclick="characterSheet('player')">🔎<span class="small">查看</span></button>
-                            </div>
                         </div>
-                    `;
-                } else {
-                    // 同伴
-                    characterDiv.innerHTML = `
-                        <div class="item center background">
-                            <span class="note">${member.type}</span>
-                            <h3>${member.name}</h3>
-                            <h4 class="hp" style="margin:5px 0;">${member.HP} / ${member.MaxHP}</h4>
-                            <div class="row-buttons">
-                                <button onclick="characterSheet('companion${index}')">🔎<span class="small">查看</span></button>
-                                <button onclick="getDialogueNpc('companion${index}')">💬<span class="small">交談</span></button>
-                            </div>
+                        <div class="column row-buttons">
+                            <button onclick="characterSheet('companion${index}')">🔎<br><span class="small">查看</span></button>
+                            ${member.id !== "player" ? `
+                                <button onclick="getDialogueNpc('companion${index}')">💬<br><span class="small">交談</span></button>
+                            `: "" }
                         </div>
-                    `;
-                }
+                    </div>
+                `;
 
                 menu.appendChild(characterDiv);
             });

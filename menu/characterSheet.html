@@ -145,6 +145,7 @@
                         <button class="column center" onclick="chooseEquipment(member.name, 'weapon')">${weaponName}</button>
                         <button class="column center" onclick="chooseEquipment(member.name, 'armor')">${armorName}</button>
                     </div>
+                    <div id="note"></div>
                 </div>
                 <div id="item-list"></div>
 
@@ -280,6 +281,25 @@
             // 讀取對象id
             memberId = localStorage.getItem("npcId");
 
+            // 找到這個成員的資料
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            const member = teamMembers.find(m => m.id === memberId);
+            let item = itemDatabase.find(i => i.id === member[itemType].id);
+
+            // 顯示裝備中的物品描述
+            let note = document.getElementById("note");            
+            note.innerHTML = `
+                <p class="column small note">
+                    ${item.description ? `${item.description}<br>` : ""}
+                    ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
+                    ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
+                    ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
+                    ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
+                    ${item.heal ? `恢復 ${item.heal} HP` : ""}
+                    ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
+                </p>
+            `;
+
             // 讀取主角的物品
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
 
@@ -299,21 +319,24 @@
                 // 顯示這個類型的裝備，隱藏其他人的專屬裝備
                 if (item && item.type === itemType && (!item.owner || item.owner === memberName)) {
                     let itemDiv = document.createElement("div");
+                    itemDiv.classList.add("item", "background");
 
                     itemDiv.innerHTML = `
                         <div class="column-container" style="cursor: pointer;">
                             <span class="column">${item.name} × ${count[itemId]}</span>
-                            <button onclick="(equip(memberId, '${item.id}'), showCharacterSheet())">
+                            <button style="margin:0 5px; padding: 5px 15px;" onclick="(equip(memberId, '${item.id}'), showCharacterSheet())">
                                 <span class="small">選擇</span>
                             </button>
                         </div>
                         <div class="hided" style="display: none;">
-                            <p class="small note">
-                                ${item.description}<br>
-                                ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}` : item.str)}<br>` : ""}
-                                ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}` : item.cha)}<br>` : ""}
-                                ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}` : item.arm)}<br>` : ""}
-                                ${item.dex ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}` : ""}
+                            <p class="column small note">
+                                ${item.description ? `${item.description}<br>` : ""}
+                                ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
+                                ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
+                                ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
+                                ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
+                                ${item.heal ? `恢復 ${item.heal} HP` : ""}
+                                ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
                             </p>
                         </div>
                     `;
@@ -336,19 +359,17 @@
 
             if (itemType === "weapon") {
                 unequipButtonDiv.innerHTML = `
-                    <div class="column-container" style="cursor: pointer;">
-                        <span class="column"></span>
+                    <div class="menu">
                         <button onclick="(equip(memberId, 'noWeapon'), showCharacterSheet())">
-                            <span class="small">卸下武器</span>
+                            卸下武器
                         </button>
                     </div>
                 `;
             } else if (itemType === "armor") {
                 unequipButtonDiv.innerHTML = `
-                    <div class="column-container" style="cursor: pointer;">
-                        <span class="column"></span>
+                    <div class="menu">
                         <button onclick="(equip(memberId, 'noArmor'), showCharacterSheet())">
-                            <span class="small">脫下護具</span>
+                            脫下護具
                         </button>
                     </div>
                 `;
