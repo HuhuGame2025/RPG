@@ -50,24 +50,25 @@
             const weaponName = (member.weapon && member.weapon.name) ? member.weapon.name : "（無武器）";
             const armorName = (member.armor && member.armor.name) ? member.armor.name : "（無護具）";
 
-            // 計算裝備的加值
-            let itemStr = member.totalStr - member.str;
-            let itemDex = member.totalDex - member.dex;
-            let itemCha = member.totalCha - member.cha;
-            let itemArm = member.totalArm;
+            // 計算屬性加值
+            let addStr = member.str.total - member.str.basic;
+            let addDex = member.dex.total - member.dex.basic;
+            let addCha = member.cha.total - member.cha.basic;
+            let addWis = member.wis.total - member.wis.basic;
+            let addArm = member.arm.total;
 
             // 如果數值為正數，前面加上 `+`
-            itemStr = itemStr > 0 ? `+${itemStr}` : itemStr;
-            itemDex = itemDex > 0 ? `+${itemDex}` : itemDex;
-            itemCha = itemCha > 0 ? `+${itemCha}` : itemCha;
-            itemArm = itemArm > 0 ? `+${itemArm}` : itemArm;
+            addStr = addStr > 0 ? `+${addStr}` : addStr;
+            addDex = addDex > 0 ? `+${addDex}` : addDex;
+            addCha = addCha > 0 ? `+${addCha}` : addCha;
+            addWis = addWis > 0 ? `+${addWis}` : addWis;
+            addArm = addArm > 0 ? `+${addArm}` : addArm;
 
             // 顯示角色詳情
             const menu = document.getElementById("character-sheet");
             menu.innerHTML = "";
 
             let characterDiv = document.createElement("div");
-                                       
             characterDiv.innerHTML = `
                 <div class="item">
                     <div class="center">${member.type}</div>
@@ -79,12 +80,21 @@
                 </div>
 
                 <div class="item">
-                    <span>生命值</span>
+                    <span class="small">生命值</span>
                     <div class="column-container background">
                         <span class="column center hp" id="HP-bar"></span>
                         <span class="column center">${member.HP} / ${member.MaxHP}</span>
                         <span class="column center note" id="HP-description"></span>
                     </div>
+                </div>
+
+                <div class="item">
+                    <span class="small">情緒</span>
+                    <div class="column-container background">
+                        <span class="column" id="mood-level"></span>
+                        <span class="column-small">${member.mood}</span>
+                    </div>
+                    <div id="emotion-list"></div>
                 </div>
                     
                 <div class="item">
@@ -92,7 +102,7 @@
                     <div class="column-container background">
                         <span class="column center">🫀 體質</span>
                         <div class="column row-buttons">
-                            <span class="column center">${member.con}</span>
+                            <span class="column center">${member.con.basic}</span>
                             <span class="column center"></span>
                         </div>
                         <span class="column center note" id="con-description"></span>
@@ -100,47 +110,47 @@
                     <div class="column-container background">
                         <span class="column center">⚔️ 力量</span>
                         <div class="column row-buttons">
-                            <span class="column center">${member.totalStr}</span>
-                            <span class="column center">(${itemStr})</span>
+                            <span class="column center">${member.str.total}</span>
+                            <span class="column center">(${addStr})</span>
                         </div>
                         <span class="column center note" id="str-description"></span>
                     </div>
                     <div class="column-container background">
                         <span class="column center">🏃 敏捷</span>
                         <div class="column row-buttons">
-                            <span class="column center">${member.totalDex}</span>
-                            <span class="column center">(${itemDex})</span>
+                            <span class="column center">${member.dex.total}</span>
+                            <span class="column center">(${addDex})</span>
                         </div>
                         <span class="column center note" id="dex-description"></span>
                     </div>
                     <div class="column-container background">
                         <span class="column center">👁️ 感知</span>
                         <div class="column row-buttons">
-                            <span class="column center">${member.wis}</span>
-                            <span class="column center"></span>
+                            <span class="column center">${member.wis.total}</span>
+                            <span class="column center">(${addWis})</span>
                         </div>
                         <span class="column center note" id="wis-description"></span>
                     </div>
                     <div class="column-container background">
                         <span class="column center">✨ 魅力</span>
                         <div class="column row-buttons">
-                            <span class="column center">${member.totalCha}</span>
-                            <span class="column center">(${itemCha})</span>
+                            <span class="column center">${member.cha.total}</span>
+                            <span class="column center">(${addCha})</span>
                         </div>
                         <span class="column center note" id="cha-description"></span>
                     </div>
                     <div class="column-container background">
                         <span class="column center">🛡️ 護甲</span>
                         <div class="column row-buttons">
-                            <span class="column center">${member.totalArm}</span>
-                            <span class="column center">(${itemArm})</span>
+                            <span class="column center">${member.arm.total}</span>
+                            <span class="column center">(${addArm})</span>
                         </div>
                         <span class="column center note"></span>
                     </div>
                 </div>
 
                 <div class="item">
-                    <span>裝備</span>
+                    <span class="small">裝備</span>
                     <div class="column-container">
                         <button class="column center" onclick="chooseEquipment(member.name, 'weapon')">${weaponName}</button>
                         <button class="column center" onclick="chooseEquipment(member.name, 'armor')">${armorName}</button>
@@ -155,20 +165,81 @@
             `;
             menu.appendChild(characterDiv);
 
+            // 顯示情緒
+            showEmotion(memberId);
+
             // 顯示屬性描述
-            document.getElementById("HP-bar").textContent = getStatDescription("HP-bar", `${member.id}`);
-            document.getElementById("HP-description").textContent = getStatDescription("HP", `${member.id}`);
-            document.getElementById("con-description").textContent = getStatDescription("con", `${member.id}`);
-            document.getElementById("str-description").textContent = getStatDescription("str", `${member.id}`);
-            document.getElementById("dex-description").textContent = getStatDescription("dex", `${member.id}`);
-            document.getElementById("wis-description").textContent = getStatDescription("wis", `${member.id}`);
-            document.getElementById("cha-description").textContent = getStatDescription("cha", `${member.id}`);
+            document.getElementById("HP-bar").textContent = showStatDescription("HP-bar", `${member.id}`);
+            document.getElementById("HP-description").textContent = showStatDescription("HP", `${member.id}`);
+            document.getElementById("con-description").textContent = showStatDescription("con", `${member.id}`);
+            document.getElementById("str-description").textContent = showStatDescription("str", `${member.id}`);
+            document.getElementById("dex-description").textContent = showStatDescription("dex", `${member.id}`);
+            document.getElementById("wis-description").textContent = showStatDescription("wis", `${member.id}`);
+            document.getElementById("cha-description").textContent = showStatDescription("cha", `${member.id}`);
             
             window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
         }
 
+        // 顯示情緒
+        function showEmotion(memberId) {
+            // 找到這個成員的資料
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            const member = teamMembers.find(m => m.id === memberId);
+
+            // 顯示心情
+            if (member.mood >= 10){
+                document.getElementById("mood-level").textContent = "❤️‍🔥 狂喜";
+            } else if (member.mood >= 5){
+                document.getElementById("mood-level").textContent = "🎶 愉快";
+            } else if (member.mood <= -5){
+                document.getElementById("mood-level").textContent = "💢 沮喪";
+            } else if (member.mood <= -10){
+                document.getElementById("mood-level").textContent = "💥 崩潰";
+            } else {
+                document.getElementById("mood-level").textContent = "👌 平靜";
+            }
+
+            // 顯示展開按鈕
+            const note = `
+                <div style="text-align: right">
+                    <span class="note small">[詳細]</span>
+                </div>
+            `;
+            
+            document.getElementById("emotion-list").innerHTML = note;
+
+            // 點擊時，顯示或收起情緒列表
+            let itemElement = document.getElementById("emotion-list");
+            let hidedElement = document.getElementById("emotion-list");
+
+            itemElement.addEventListener("click", () => {
+                if (hidedElement.innerHTML === note) {
+                    // 顯示情緒
+                    const menu = document.getElementById("emotion-list");
+                    menu.innerHTML = "";
+
+                    member.emotion.forEach(emotion => {
+                        let emotionDiv = document.createElement("div");
+                        emotionDiv.innerHTML = `
+                            <div class="column-container note small">
+                                <span class="column">
+                                    ${emotion.name}
+                                    ${emotion.note ? `（${emotion.note}）` : "" }
+                                </span>
+                                <span class="column-small">${emotion.mood > 0 ? "+" : ""}${emotion.mood}</span>
+                            </div>
+                        `;
+
+                        menu.appendChild(emotionDiv);
+                    })
+                } else {
+                    hidedElement.innerHTML = note;
+                }
+            });
+        }
+
         // 顯示屬性描述
-        function getStatDescription(stat, memberId) {
+        function showStatDescription(stat, memberId) {
             // 讀取出戰成員
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];        
 
@@ -204,18 +275,18 @@
                     }
                     break;
                 case "str":
-                    if (member.totalStr < 8) {
+                    if (member.str.total < 8) {
                         description = "軟弱無力";
-                    } else if (member.totalStr <= 12) {
+                    } else if (member.str.total <= 12) {
                         description = "普通";
                     } else {
                         description = "孔武有力";
                     }
                     break;
                 case "dex":
-                    if (member.totalDex < 8) {
+                    if (member.dex.total < 8) {
                         description = "動作笨拙";
-                    } else if (member.totalDex <= 12) {
+                    } else if (member.dex.total <= 12) {
                         description = "正常";
                     } else {
                         description = "身手矯捷";
@@ -231,9 +302,9 @@
                     }
                     break;
                 case "cha":
-                    if (member.totalCha < 8) {
+                    if (member.cha.total < 8) {
                         description = "使人反感";
-                    } else if (member.totalCha <= 12) {
+                    } else if (member.cha.total <= 12) {
                         description = "平凡";
                     } else {
                         description = "令人著迷";
@@ -281,24 +352,27 @@
             // 讀取對象id
             memberId = localStorage.getItem("npcId");
 
-            // 找到這個成員的資料
+            // 找到這個成員身上的裝備
             const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             const member = teamMembers.find(m => m.id === memberId);
-            let item = itemDatabase.find(i => i.id === member[itemType].id);
 
-            // 顯示裝備中的物品描述
-            let note = document.getElementById("note");            
-            note.innerHTML = `
-                <p class="column small note">
-                    ${item.description ? `${item.description}<br>` : ""}
-                    ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
-                    ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
-                    ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
-                    ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
-                    ${item.heal ? `恢復 ${item.heal} HP` : ""}
-                    ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
-                </p>
-            `;
+            if (member[itemType]) {
+                let item = itemDatabase.find(i => i.id === member[itemType].id);
+
+                // 顯示裝備中的物品描述
+                let note = document.getElementById("note");            
+                note.innerHTML = `
+                    <p class="column small note">
+                        ${item.description ? `${item.description}<br>` : ""}
+                        ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
+                        ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
+                        ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
+                        ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
+                        ${item.heal ? `恢復 ${item.heal} HP` : ""}
+                        ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
+                    </p>
+                `;
+            }
 
             // 讀取主角的物品
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];

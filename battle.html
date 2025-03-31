@@ -340,11 +340,7 @@
             // 獲取敵人資料
             let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
             let targetEnemy = enemies.find(e => e.id === target);
-            let isPlant = targetEnemy.type.includes("植物");
-            let isProne = Object.values(targetEnemy.status).some(s => s.name === "倒地");
             let isFly = Object.values(targetEnemy.status).some(s => s.name === "飛行");
-
-            let situation = parseInt(localStorage.getItem("situation"));
 
             // 讀取可行動成員的資料
             let actableMembers = JSON.parse(localStorage.getItem("actableMembers")) || [];
@@ -360,10 +356,10 @@
                 attacker = [singleAttacker]; // 包成陣列
             }
 
-            // 如果敵人飛行中，只有遠程武器有效
+            // 如果敵人飛行中，只計入遠程武器
             if (isFly) {
                 attacker = attacker.filter(member => 
-                    member.weapon && member.weapon.category === "遠程"
+                    member.weapon && member.weapon.category === "遠程",
                 );
             }
 
@@ -371,27 +367,30 @@
             let attackerName = [], attackerDex = 0, attackerStr = 0, attackerWeapon = [];
             attacker.forEach(member => {
                 attackerName.push(member.name);
-                attackerDex += member.totalDex; // 我方總敏捷
-                attackerStr += member.totalStr; // 我方總力量
+                attackerDex += member.dex.total; // 我方總敏捷
+                attackerStr += member.str.total; // 我方總力量
                 attackerWeapon.push(member.weapon); // 我方武器
             });
 
-            // 計算命中率
-            let hitChance;
+            // 以雙方敏捷擲骰
+            let result = roll(attackerDex, targetEnemy.dex.total);
+
+            // 檢查是否有例外
+            let situation = parseInt(localStorage.getItem("situation"));
+            let isPlant = targetEnemy.type.includes("植物");
+            let isProne = Object.values(targetEnemy.status).some(s => s.name === "倒地");
+
             if (situation === 4 || isProne || isPlant) { 
-                // 如果敵人無防備、目標倒地、目標是植物，命中率 100%
-                hitChance = 1;
-            } else {
-                // 預設情況，以雙方敏捷計算命中率
-                hitChance = attackerDex / (attackerDex + targetEnemy.totalDex);
+                // 如果敵人無防備、目標倒地、目標是植物，自動成功
+                result = { success: true, chance: 1 };
             }
-            console.log(`攻擊者: ${attackerName}, 敏捷: ${attackerDex}, 力量: ${attackerStr}, 目標: ${target}, 目標敏捷: ${targetEnemy.totalDex}`);
-            console.log(`計算的命中率: ${(hitChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+            console.log(`攻擊者: ${attackerName}, 敏捷: ${attackerDex}, 目標: ${target}, 目標敏捷: ${targetEnemy.dex.total}`);
+            console.log(`攻擊命中率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
             // 攻擊結果
-            if (Math.random() <= hitChance) {
+            if (result.success === true) {
                 // 攻擊成功，對目標造成傷害
-                let damage = Math.max(attackerStr - targetEnemy.totalArm, 0); // 傷害 = 我方力量總和 - 敵人護甲
+                let damage = Math.max(attackerStr - targetEnemy.arm.total, 0); // 傷害 = 我方力量總和 - 敵人護甲
                 targetEnemy.HP = Math.max(targetEnemy.HP - damage, 0); // HP 減少，不會低於0
                 document.getElementById(`${target}-HP`).textContent = targetEnemy.HP;
 
@@ -430,7 +429,7 @@
                     attackerWeapon.forEach(weapon => {
                         // 如果武器有附加狀態，用武器的力量擲骰
                         let status = statusData[weapon.category];
-                        if (status && roll(weapon.str * status.multiplier)) {
+                        if (status && roll(weapon.str * status.multiplier).success) {
                             // 添加狀態
                             targetEnemy.status.push(status);
 
@@ -508,10 +507,10 @@
                 // 一起逃跑，找到 dex 最低的成員資料
                 let minDex = Infinity; // 設定初始值為無限大
                 actableMembers.forEach(member => {
-                    if (member.totalDex < minDex) { // 如果找到更低的 dex，重置陣列，將該角色加入陣列
-                        minDex = member.totalDex; //更新最低 dex
+                    if (member.dex.total < minDex) { // 如果找到更低的 dex，重置陣列，將該角色加入陣列
+                        minDex = member.dex.total; //更新最低 dex
                         minDexMembers = [member];
-                    } else if (member.totalDex === minDex) {
+                    } else if (member.dex.total === minDex) {
                         minDexMembers.push(member); // 如果dex相同，將該角色加入陣列
                     }
                 });
@@ -521,39 +520,35 @@
                 // 單獨逃跑，找到逃跑者的資料
                 let member = actableMembers.find(comp => comp.id === escaper);
                 escaperName = member.name;
-                escaperDex = member.totalDex;
+                escaperDex = member.dex.total;
             }
 
             // 讀取第一個敵人的資料
             let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-            let enemyDex = enemies.length > 0 ? enemies[0].totalDex : 0; // 取第一個敵人的敏捷
+            let enemyDex = enemies.length > 0 ? enemies[0].dex.total : 0; // 取第一個敵人的敏捷
             let enemyType = enemies.length > 0 ? enemies[0].type : ""; // 取第一個敵人的類型
             let actableEnemies = JSON.parse(localStorage.getItem("actableEnemies")) || [];
 
-            // 計算逃跑成功率
-            let runChance;
+            // 以雙方敏捷擲骰
+            let result = roll(escaperDex, enemyDex);
+
+            // 檢查是否有例外
             let situation = parseInt(localStorage.getItem("situation"));
             let isPlant = enemyType.includes("植物");
             let allFly = enemies.filter(s => !s.status.some(s => s.name === "飛行")).length === 0;
 
             if (situation === 4 || isPlant ||  allFly) { 
-                // 如果敵人無防備、敵人是植物、敵人全倒地、敵人全飛行中，成功率100%
-                runChance = 1;
+                // 如果敵人無防備、敵人是植物、敵人全倒地、敵人全飛行中，自動成功
+                result = { success: true, chance: 1 };
             } else if (escaper !== "team" && presentMembers.length > actableEnemies.length) {
-                // 如果單獨逃跑時，上場成員比可行動敵人多，敵人就無法分心追趕，成功率100%
-                runChance = 1;
-            } else {
-                // 預設情況，以雙方敏捷計算命中率
-                runChance = escaperDex / (escaperDex + enemyDex);
+                // 如果單獨逃跑時，上場成員比可行動敵人多，敵人就無法分心追趕，自動成功
+                result = { success: true, chance: 1 };
             }
-            let randomValue = Math.random(); // 產生 0~1 的隨機小數
-
-            // 檢查成功率
             console.log(`逃跑者: ${escaperName}, 敏捷: ${escaperDex}, 敵人敏捷: ${enemyDex}`);
-            console.log(`計算的逃跑成功率: ${(runChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+            console.log(`逃跑成功率: ${(result.chance*100).toFixed(2)}%`);
 
             // 逃跑結果
-            if (randomValue <= runChance) {
+            if (result.success === true) {
                 // 逃跑成功
                 if (escaper === "team") {
                     actableMembers.forEach(member => {
@@ -658,8 +653,8 @@
             // 讀取第一個敵人的資料
             let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
             let enemyType = enemies.length > 0 ? enemies[0].type : 0;
-            let enemyDex = enemies[0].totalDex; 
-            let enemyStr = enemies[0].totalStr;
+            let enemyDex = enemies[0].dex.total; 
+            let enemyStr = enemies[0].str.total;
 
             // 讀取可行動敵人
             let actableEnemies = JSON.parse(localStorage.getItem("actableEnemies"))
@@ -699,18 +694,18 @@
                     hitChance = 1;
                 } else {
                     // 預設情況，以雙方敏捷計算命中率
-                    hitChance = enemyDex / (enemyDex + hurtMember.totalDex);
+                    hitChance = enemyDex / (enemyDex + hurtMember.dex.total);
                 }
 
                 let randomValue = Math.random(); // 產生 0~1 的隨機小數
                 // 檢查命中率
-                console.log(`攻擊者: ${enemy.name}, 敏捷: ${enemyDex}, 目標: ${hurtMember.name}, 目標敏捷: ${hurtMember.totalDex}`);
+                console.log(`攻擊者: ${enemy.name}, 敏捷: ${enemyDex}, 目標: ${hurtMember.name}, 目標敏捷: ${hurtMember.dex.total}`);
                 console.log(`計算的敵人命中率: ${(hitChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
                 // 攻擊結果
                 if (randomValue < hitChance) {
                     // 敵人攻擊成功，對角色造成傷害
-                    let damage = Math.max(enemyStr - hurtMember.totalArm, 0); // 傷害 = 攻擊者的力量 - 目標的護甲
+                    let damage = Math.max(enemyStr - hurtMember.arm.total, 0); // 傷害 = 攻擊者的力量 - 目標的護甲
                     hurtMember.HP = Math.max(hurtMember.HP - damage, 0); // HP減少，不會低於0
                     document.getElementById(`${hurtMember.id}-HP`).textContent = hurtMember.HP;
 
@@ -734,7 +729,7 @@
                         // 檢查是否附加狀態
                             // 如果武器有附加狀態，用武器的力量擲骰
                             let status = statusData[enemy.weapon.category];
-                            if (status && roll(enemy.weapon.str * status.multiplier)) {
+                            if (status && roll(enemy.weapon.str * status.multiplier).success) {
                                 // 添加狀態
                                 hurtMember.status.push(status);
 
@@ -985,8 +980,8 @@
                 let maxDexMembers = [];
                 let maxDex = -Infinity; // 設定初始值為負無限
                 nonPrisoners.forEach(member => {
-                    if (member.totalDex > maxDex) { // 如果找到更高的 dex，重置陣列，將該角色加入陣列
-                        maxDex = member.totalDex; //更新最高 dex
+                    if (member.dex.total > maxDex) { // 如果找到更高的 dex，重置陣列，將該角色加入陣列
+                        maxDex = member.dex.total; //更新最高 dex
                         maxDexMembers = [member];
                     }
                 });
@@ -994,11 +989,11 @@
                 // 檢查俘虜是否逃跑
                 prisoners.forEach(member => {
                     // 計算逃跑成功率
-                    let runChance = member.totalDex / (member.totalDex + maxDex);
+                    let runChance = member.dex.total / (member.dex.total + maxDex);
                     
                     let randomValue = Math.random(); // 產生 0~1 的隨機小數
                     // 檢查成功率
-                    console.log(`俘虜敏捷: ${member.totalDex}, 隊伍最高敏捷: ${maxDex}`);
+                    console.log(`俘虜敏捷: ${member.dex.total}, 隊伍最高敏捷: ${maxDex}`);
                     console.log(`計算的逃跑機率: ${(runChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
                     // 結果
@@ -1054,8 +1049,8 @@
                 let maxStrMembers = [];
                 let maxStr = -Infinity; // 設定初始值為負無限
                 presentMembers.forEach(member => {
-                    if (member.totalStr > maxStr) { // 如果找到更高的 str，重置陣列，將該角色加入陣列
-                        maxStr = member.totalStr; //更新最高 str
+                    if (member.str.total > maxStr) { // 如果找到更高的 str，重置陣列，將該角色加入陣列
+                        maxStr = member.str.total; //更新最高 str
                         maxStrMembers = [member];
                     }
                 });

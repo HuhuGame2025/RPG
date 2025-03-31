@@ -56,6 +56,15 @@
 
         // 抽選隨機情況
         function rollSituation() {
+            // 如果有指定遭遇
+            const encounter = JSON.parse(localStorage.getItem("encounter"));
+            if (encounter) {
+                // 使用指定的情況
+                let situation = encounter.situation; 
+                localStorage.setItem("situation", situation);
+                return;
+            }
+
             // 讀取上次的情況
             let situation = parseInt(localStorage.getItem("situation"));
             
@@ -123,20 +132,40 @@
             situation = weightedSituations[Math.floor(Math.random() * weightedSituations.length)];
             //situation = 8; // 測試用
 
-            // 如果潛行中，過敏捷檢定（有濃霧時自動成功）
-            if (isTrue("stealth") && roll("totaldex") || isTrue("stealth") && weather.name === "濃霧") {
-                if (situation === 2) {
-                    situation = 4; // 一般遇敵，變成提早發現敵人
-                } else if (situation === 3 || situation === 5) {
-                    situation = 1; // 被偷襲、被跟蹤，變成平安無事
-                }
-            }
+            // 如果潛行中，過敏捷檢定
+            if (isTrue("stealth")) {
+                // 找到 dex 最低的成員資料
+                const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+                let minDex = Infinity; // 設定初始值為無限大
+                teamMembers.forEach(member => {
+                    if (member.dex.total < minDex) { // 如果找到更低的 dex，重置陣列，將該角色加入陣列
+                        minDex = member.dex.total; //更新最低 dex
+                        minDexMembers = [member];
+                    } else if (member.dex.total === minDex) {
+                        minDexMembers.push(member); // 如果dex相同，將該角色加入陣列
+                    }
+                });
 
-            // 如果有指定遭遇
-            const encounter = JSON.parse(localStorage.getItem("encounter"));
-            if (encounter) {
-                // 使用指定的情況
-                situation = encounter.situation; 
+                // 擲骰
+                let result = roll(minDex, 10);
+
+                // 檢查是否有例外
+                let fog = weather.name === "濃霧";
+
+                if (fog) { 
+                    // 如果有濃霧，自動成功
+                    result = { success: true, chance: 1 };
+                }
+                console.log(`潛行成功率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+
+                // 潛行結果
+                if (result === true) {
+                    if (situation === 2) {
+                        situation = 4; // 一般遇敵，變成提早發現敵人
+                    } else if (situation === 3 || situation === 5) {
+                        situation = 1; // 被偷襲、被跟蹤，變成平安無事
+                    }
+                }
             }
 
             // 儲存到 localStorage
@@ -234,7 +263,7 @@
             // 隨機選擇一種敵人
             let randomIndex = Math.floor(Math.random() * possibleEnemies.length);
             let selectedEnemy = possibleEnemies[randomIndex];
-            selectedEnemy = enemies[0]; // 測試用
+            //selectedEnemy = enemies[0]; // 測試用
 
             // 使用加權隨機決定敵人數量
                 let enemyCount;
@@ -281,24 +310,48 @@
                     adj = encounter.enemyAdj; // 使用指定的形容詞
                 }   
 
-                // 根據裝備ID找到敵人的裝備資料
+                // 取得敵人的裝備資料，如果沒有裝備就都是 0
                 const weapon = itemDatabase.find(item => item.id === selectedEnemy.weaponId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
                 const armor = itemDatabase.find(item => item.id === selectedEnemy.armorId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
 
                 selectedEnemy.weapon = weapon;
                 selectedEnemy.armor = armor;
 
-                // 計算敵人穿戴裝備後的總屬性
-                selectedEnemy.totalStr = selectedEnemy.str + (weapon.str || 0) + (armor.str || 0);
-                selectedEnemy.totalCha = selectedEnemy.cha + (weapon.cha || 0) + (armor.cha || 0);
-                selectedEnemy.totalArm = (selectedEnemy.arm || 0) + (weapon.arm || 0) + (armor.arm || 0);
+                // 將裝備屬性存入敵人屬性中
+                let enemyStr = { basic: selectedEnemy.str, weapon: weapon.str || 0, armor: armor.str || 0 };
+                let enemyCha = { basic: selectedEnemy.cha, weapon: weapon.cha || 0, armor: armor.cha || 0 };
+                let enemyArm = { basic: selectedEnemy.arm || 0, weapon: weapon.arm || 0, armor: armor.arm || 0 };
+                let enemyDex = { basic: selectedEnemy.str };
+                let enemyWis = { basic: selectedEnemy.wis };
 
                 // 檢查力量是否足夠，不夠才承受敏捷減值
-                if (selectedEnemy.str < weapon.needStr || selectedEnemy.str < armor.needStr) {
-                    selectedEnemy.totalDex = selectedEnemy.dex + (weapon.dex || 0) + (armor.dex || 0);
+                if (enemyStr.basic < weapon.needStr) {
+                    enemyDex.weapon = weapon.dex || 0;
                 } else {
-                    selectedEnemy.totalDex = selectedEnemy.dex;
+                    enemyDex.weapon = 0;
                 }
+                if (enemyStr.basic < armor.needStr) {
+                    enemyDex.armor = armor.dex || 0;
+                } else {
+                    enemyDex.armor = 0;
+                }
+
+                // 加總屬性
+                enemyStr.total = Object.entries(enemyStr)
+                    .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+                enemyDex.total = Object.entries(enemyDex)
+                    .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+                enemyWis.total = Object.entries(enemyWis)
+                    .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+                enemyCha.total = Object.entries(enemyCha)
+                    .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+                enemyArm.total = Object.entries(enemyArm)
+                    .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
 
                 // 生成敵人的id
                 const enemyId = `enemy${enemiesEncountered.length + 1}`;
@@ -313,14 +366,11 @@
                     weapon: selectedEnemy.weapon,
                     armor: selectedEnemy.armor,
                     con: selectedEnemy.con,
-                    str: selectedEnemy.str,
-                    dex: selectedEnemy.dex,
-                    wis: selectedEnemy.wis,
-                    cha: selectedEnemy.cha,
-                    totalStr: selectedEnemy.totalStr,
-                    totalDex: selectedEnemy.totalDex,
-                    totalCha: selectedEnemy.totalCha,
-                    totalArm: selectedEnemy.totalArm,
+                    str: enemyStr,
+                    dex: enemyDex,
+                    wis: enemyWis,
+                    cha: enemyCha,
+                    arm: enemyArm,
                     loot: selectedEnemy.loot,
                     money: selectedEnemy.money,
                     action: selectedEnemy.action,

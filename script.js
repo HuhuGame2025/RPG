@@ -30,15 +30,27 @@
 
     // 讀取背景圖
     function loadBackground(image) {
-        let savedBackground = localStorage.getItem("backgroundStyle");
+        let savedBackground = localStorage.getItem("savedBackground");
         if (image) {
-            document.body.style.backgroundImage = "url('images/" + image +".jpg')";
-            localStorage.setItem("backgroundStyle", "url('images/" + image +".jpg')");
+            // 直接指定
+            localStorage.setItem("savedBackground", image);
         } else if (savedBackground) {
-            document.body.style.backgroundImage = savedBackground;
+            // 沒有指定，就從存檔中讀取
+            image = savedBackground;
         } else {
-            document.body.style.backgroundImage = "url('images/field.jpg')"; // 預設為原野背景
+            image = "field"; // 預設為原野背景
         }
+
+        // 根據目前頁面調整圖片路徑
+        let folderName = window.location.pathname.split("/").slice(-2, -1)[0];
+        if (folderName === "RPG") {
+            imagePath = `url('images/${image}.jpg')`;
+        } else {
+            imagePath = `url('../images/${image}.jpg')`;
+        }
+
+        // 顯示背景圖
+        document.body.style.backgroundImage = imagePath;
     }
 
     // 顯示對話
@@ -304,41 +316,35 @@
     // 屬性擲骰
         // 骰主角屬性：roll("dex");
         // 骰指定數值：roll("5");
-    function roll(attribute, successKey, failKey) {
+        // 攻擊：roll(attaker.dex, target.dex);
+    function roll(attribute1, attribute2 = 10, successKey, failKey) {
         // 讀取主角屬性
+        const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+        member = teamMembers.find(m => m.id === "player");
+
         const playerAttributes = {
-            con: parseInt(localStorage.getItem("playerCon")) || 0,
-            str: parseInt(localStorage.getItem("playerStr")) || 0,
-            dex: parseInt(localStorage.getItem("playerDex")) || 0,
-            wis: parseInt(localStorage.getItem("playerWis")) || 0,
-            cha: parseInt(localStorage.getItem("playerCha")) || 0,
-            totalstr: parseInt(localStorage.getItem("playerTotalStr")) || 0,
-            totaldex: parseInt(localStorage.getItem("playerTotalDex")) || 0,
-            totalcha: parseInt(localStorage.getItem("playerTotalCha")) || 0,
-            totalarm: parseInt(localStorage.getItem("playerTotalArm")) || 0
+            con: member.con.total,
+            str: member.str.total,
+            dex: member.dex.total,
+            wis: member.wis.total,
+            cha: member.cha.total,
         };
         
-        let difficultyLevel;
-
-        if (attribute in playerAttributes) {
-            // 用主角屬性值來骰
-            difficultyLevel = playerAttributes[attribute];
-        } else {
-            // 用輸入的數值來骰
-            difficultyLevel = attribute;
+        // 如果是輸入屬性名稱，就用主角屬性值來骰
+        if (attribute1 in playerAttributes) {
+            attribute1 = playerAttributes[attribute1];
         }
 
-        // 擲 1d20 骰子
-        const roll = Math.floor(Math.random() * 20) + 1;
-        console.log(`${attribute}: ${difficultyLevel}, 擲骰結果: ${roll}`);
+        // 計算成功率
+        let chance = (10 + (attribute1 - attribute2) / 2 ) / 20;
 
-        // 回傳結果，顯示對話
-        if (roll <= difficultyLevel) {
+        // 顯示對話(如有指定)、回傳結果
+        if (Math.random() <= chance) {
             if (successKey) showDialogue(successKey);
-            return true;
+            return { success: true, chance: chance };
         } else {
             if (failKey) showDialogue(failKey);
-            return false;
+            return { success: false, chance: chance };
         }
     }
 
@@ -463,9 +469,9 @@
         teamMembers.forEach((member, index) => {
             let memberItem = document.getElementById(member.id);
 
-            // 顯示同伴資料
+            // 顯示成員資料
             if (memberItem) {
-                memberItem.style.display = "block"; // 顯示已雇用的同伴區域
+                memberItem.style.display = "block";
                 if (document.getElementById(`${member.id}-name`)) {
                     document.getElementById(`${member.id}-name`).textContent = member.name;
                 }
@@ -500,6 +506,67 @@
         }
     }
 
+    // 主角加入隊伍（創角時）
+    function playerToTeamMembers() {
+        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+
+        // 讀取主角資料
+        const playerData = {
+            name: localStorage.getItem("playerName"),
+            id: "player",
+            type: localStorage.getItem("PlayerType"),
+            HP: parseInt(localStorage.getItem("playerHP")),
+            MaxHP: parseInt(localStorage.getItem("playerMaxHP")),
+            str: { basic: parseInt(localStorage.getItem("playerStr")) },
+            dex: { basic: parseInt(localStorage.getItem("playerDex")) },
+            con: { basic: parseInt(localStorage.getItem("playerCon")) },
+            wis: { basic: parseInt(localStorage.getItem("playerWis")) },
+            cha: { basic: parseInt(localStorage.getItem("playerCha")) },
+            arm: { basic: 0 },
+            MaxHP: parseInt(localStorage.getItem("playerMaxHP")),
+            HP: parseInt(localStorage.getItem("playerMaxHP")),
+            status: [], // 初始狀態
+            mood: 0,
+            emotion: [], // 初始狀態
+            description: "",
+        };
+
+        // 加總屬性
+        playerData.str.total = Object.entries(playerData.str)
+            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        playerData.dex.total = Object.entries(playerData.dex)
+            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        playerData.con.total = Object.entries(playerData.con)
+            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        playerData.wis.total = Object.entries(playerData.wis)
+            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        playerData.cha.total = Object.entries(playerData.cha)
+            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        playerData.arm.total = Object.entries(playerData.arm)
+            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+
+        // 檢查隊伍內是否已有主角
+        let playerIndex = teamMembers.findIndex(member => member.id === "player");
+
+        if (playerIndex !== -1) {
+            // 如果找到主角，更新資料
+            teamMembers[playerIndex] = playerData;
+        } else {
+            // 否則將主角加入隊伍
+            teamMembers.push(playerData);
+        }
+
+        // 儲存隊伍成員
+        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+        console.log("隊伍更新:", teamMembers);
+    }
+
     // 同伴加入隊伍
     function addCompanion(companion) {
         // 讀取隊伍資料
@@ -507,25 +574,6 @@
 
         // 如果有形容詞，則加到名字前面
         let companionName = companion.adj ? `${companion.adj}${companion.name}` : companion.name;
-
-        // 根據裝備ID找到同伴的裝備資料
-        const weapon = itemDatabase.find(item => item.id === companion.weaponId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
-        const armor = itemDatabase.find(item => item.id === companion.armorId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
-
-        companion.weapon = weapon;
-        companion.armor = armor;
-
-        // 計算角色穿戴裝備後的總屬性
-        companion.totalStr = companion.str + (weapon.str || 0) + (armor.str || 0);
-        companion.totalCha = companion.cha + (weapon.cha || 0) + (armor.cha || 0);
-        companion.totalArm = (companion.arm || 0) + (weapon.arm || 0) + (armor.arm || 0);
-
-        // 檢查力量是否足夠，不夠才承受敏捷減值
-        if (companion.str < weapon.needStr || companion.str < armor.needStr) {
-            companion.totalDex = companion.dex + (weapon.dex || 0) + (armor.dex || 0);
-        } else {
-            companion.totalDex = companion.dex;
-        }
 
         // 生成同伴的id
         const companionId = `companion${teamMembers.length}`;
@@ -535,25 +583,32 @@
             name: companionName, // 加入處理後的名字
             id: companionId,  // 自動產生 id
             type: companion.type,
-            weapon: companion.weapon,
-            armor: companion.armor,
-            str: companion.str,
-            dex: companion.dex,
-            con: companion.con,
-            wis: companion.wis,
-            cha: companion.cha,
-            totalStr: companion.totalStr,
-            totalDex: companion.totalDex,
-            totalCha: companion.totalCha,
-            totalArm: companion.totalArm,
+            str: { basic: companion.str, },
+            dex: { basic: companion.dex, },
+            con: { basic: companion.con, },
+            wis: { basic: companion.wis, },
+            cha: { basic: companion.cha, },
+            arm: { basic: 0 },
             MaxHP: companion.con * 3, // MaxHP
             HP: companion.con * 3, // 初始HP
             status: [], // 初始狀態
+            mood: 0,
+            emotion: [], // 初始狀態
             description: companion.description,
         });
 
         // 儲存
         localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+
+        // 將同伴裝備加入物品中並穿上
+        if (companion.weaponId) {
+            getItem(companion.weaponId);
+            equip(companionId, companion.weaponId);
+        }
+        if (companion.armorId) {
+            getItem(companion.armorId);
+            equip(companionId, companion.armorId);
+        }
         console.log("同伴加入", teamMembers);
     }
 
@@ -614,6 +669,13 @@
 
     // 顯示隊伍健康程度
     function showTeamHealth() {
+        const texts = {
+            good: "精力充沛",
+            faint: "奄奄一息",
+            bad: "非常疲憊",
+            okay: "目前還有體力",
+        };
+
         // 讀取隊伍資訊
         const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
@@ -646,7 +708,7 @@
             if (member.HP === member.MaxHP) {
                 actionElement.textContent = texts.good; // 滿血
             } else if (member.HP <= 0) {
-                actionElement.textContent = texts.dead; // 死亡
+                actionElement.textContent = texts.faint; // 昏迷
             } else if (member.HP <= member.MaxHP * 0.5) {
                 actionElement.textContent = texts.bad; // 重傷
             } else {
@@ -656,50 +718,6 @@
     }
 
 // 主角相關
-
-    // 將主角資料更新到隊伍（只有創角時用到）
-    function playerToTeamMembers() {
-        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
-
-        // 讀取主角資料
-        const playerData = {
-            name: localStorage.getItem("playerName"),
-            id: "player",
-            type: localStorage.getItem("PlayerType"),
-            weapon: JSON.parse(localStorage.getItem("playerWeapon")) || [],
-            armor: JSON.parse(localStorage.getItem("playerArmor")) || [],
-            HP: parseInt(localStorage.getItem("playerHP")),
-            MaxHP: parseInt(localStorage.getItem("playerMaxHP")),
-            str: parseInt(localStorage.getItem("playerStr")),
-            dex: parseInt(localStorage.getItem("playerDex")),
-            con: parseInt(localStorage.getItem("playerCon")),
-            wis: parseInt(localStorage.getItem("playerWis")),
-            cha: parseInt(localStorage.getItem("playerCha")),
-            totalStr: parseInt(localStorage.getItem("playerTotalStr")),
-            totalDex: parseInt(localStorage.getItem("playerTotalDex")),
-            totalCha: parseInt(localStorage.getItem("playerTotalCha")),
-            totalArm: parseInt(localStorage.getItem("playerTotalArm")),
-            MaxHP: parseInt(localStorage.getItem("playerMaxHP")),
-            HP: parseInt(localStorage.getItem("playerMaxHP")),
-            status: [], // 初始狀態
-            description: "",
-        };
-
-        // 檢查隊伍內是否已有主角
-        let playerIndex = teamMembers.findIndex(member => member.id === "player");
-
-        if (playerIndex !== -1) {
-            // 如果找到主角，更新資料
-            teamMembers[playerIndex] = playerData;
-        } else {
-            // 否則將主角加入隊伍
-            teamMembers.push(playerData);
-        }
-
-        // 儲存隊伍成員
-        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
-        console.log("隊伍更新:", teamMembers);
-    }
 
     // 主角 HP 增減
     function addPlayerHP(amount) {
@@ -790,8 +808,8 @@
 
         // 跳轉到監獄頁面（根據當前頁面判斷路徑）
         const pageName = window.location.pathname.split("/").pop();
-        if (pageName === "map.html") {
-            window.location.href = "town/prison.html";
+        if (pageName === "map.html" || pageName === "battle.html") {
+            window.location.href = "locations/prison.html";
         } else {
             window.location.href = "prison.html";
         }
@@ -940,13 +958,6 @@
             { id: "meal06", type: "meal", name: "🍗 香草烤野雞", description: "豪邁地將整隻野雞裹上迷迭香與辛香料，慢火炭烤至外皮金黃香酥，肉汁橫流，香氣四溢。", heal: 30, price: 3}  
     ];
 
-    // 狀態資料庫
-    const statusData = {
-        "穿刺": { icon: "🩸", name: "流血", duration: 3, multiplier: 1 },
-        "鈍擊": { icon: "💫", name: "倒地", duration: 1, multiplier: 0.4 },
-        "飛行": { icon: "🪽", name: "飛行", duration: 1 },
-    };
-
     // 獲得物品或金錢
     function getItem(itemId, count = 1) {
         if (!itemId) {
@@ -1005,32 +1016,30 @@
     function equip(memberId, itemId) {
         // 讀取所有成員的資料
         const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
-
+        
         // 取得該成員的資料
         let member = teamMembers.find(m => m.id === memberId);
 
         // 讀取玩家的物品
         let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+        let itemType;
 
         // 如果脫下裝備
         if (itemId === "noWeapon") {
             if (member.weapon) playerItems.push(member.weapon.id); // 將原本的武器放回主角物品
             member.weapon = null; // 清空武器
+            itemType = "weapon";
         } else if (itemId === "noArmor") {
             if (member.armor) playerItems.push(member.armor.id); // 將原本的護具放回主角物品
             member.armor = null; // 清空護具
+            itemType = "armor";
 
         // 如果穿上裝備
         } else {
             let item = itemDatabase.find(i => i.id === itemId); // 找到這件裝備的資料
-
-            if (item.type === "weapon") {
-                if (member.weapon) playerItems.push(member.weapon.id); // 將原本的武器放回主角物品
-                member.weapon = item; // 更換武器
-            } else if (item.type === "armor") {
-                if (member.armor) playerItems.push(member.armor.id); // 先將原本的護具放回主角物品
-                member.armor = item; // 更換護具
-            }
+            itemType = item.type;
+            if (member[itemType]) playerItems.push(member[itemType].id); // 將原本的裝備放回主角物品
+            member[itemType] = item; // 更換裝備
 
             // 從主角物品中移除穿上的裝備
             const itemIndex = playerItems.findIndex(i => i === itemId);
@@ -1039,21 +1048,40 @@
             }
         }
 
-        // 確保裝備物品的屬性正確
-        let weapon = member.weapon ? member.weapon : { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
-        let armor = member.armor ? member.armor : { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
+        // 取得裝備資料，如果沒有裝備就都是 0
+        let item = member[itemType] ? member[itemType] : { str: 0, dex: 0, cha: 0, arm: 0, needStr: 0 };
             
-        // 計算角色的總屬性，確保基礎屬性不受影響
-        member.totalStr = member.str + (weapon.str || 0) + (armor.str || 0);
-        member.totalCha = member.cha + (weapon.cha || 0) + (armor.cha || 0);
-        member.totalArm = (member.arm || 0) + (weapon.arm || 0) + (armor.arm || 0);
+        // 將裝備屬性存入角色屬性中
+        member.str[itemType] = item.str || 0;
+        member.cha[itemType] = item.cha || 0;
+        member.arm[itemType] = item.arm || 0;
 
         // 檢查力量是否足夠，不夠才承受敏捷減值
-        if (member.str < weapon.needStr || member.str < armor.needStr) {
-            member.totalDex = member.dex + (weapon.dex || 0) + (armor.dex || 0);
+        if (member.str.basic < item.needStr) {
+            member.dex[itemType] = item.dex || 0;
         } else {
-            member.totalDex = member.dex;
+            member.dex[itemType] = 0;
         }
+
+        // 加總屬性
+        member.str.total = Object.entries(member.str)
+            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        member.dex.total = Object.entries(member.dex)
+            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        member.con.total = Object.entries(member.con)
+            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        member.wis.total = Object.entries(member.wis)
+            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        member.cha.total = Object.entries(member.cha)
+            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        member.arm.total = Object.entries(member.arm)
+            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
 
         // 更新 localStorage
         localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
@@ -1063,10 +1091,10 @@
         let presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
         let presentData = presentMembers.find(m => m.id === memberId);
         if (presentData) {
-            presentData.totalStr = member.totalStr;
-            presentData.totalArm = member.totalArm;
-            presentData.totalDex = member.totalDex;
-            presentData.totalCha = member.totalCha;
+            presentData.str = member.str;
+            presentData.arm = member.arm;
+            presentData.dex = member.dex;
+            presentData.cha = member.cha;
             presentData.weapon = member.weapon;
             presentData.armor = member.armor;
         }
@@ -1075,10 +1103,10 @@
         let actableMembers = JSON.parse(localStorage.getItem("actableMembers")) || [];
         let actableData = actableMembers.find(m => m.id === memberId);
         if (actableData) {
-            actableData.totalStr = member.totalStr;
-            actableData.totalArm = member.totalArm;
-            actableData.totalDex = member.totalDex;
-            actableData.totalCha = member.totalCha;
+            actableData.str = member.str;
+            actableData.arm = member.arm;
+            actableData.dex = member.dex;
+            actableData.cha = member.cha;
             actableData.weapon = member.weapon;
             actableData.armor = member.armor;
         }
@@ -1088,10 +1116,6 @@
         if (member.id === "player") {
             localStorage.setItem("playerWeapon", JSON.stringify(member.weapon));
             localStorage.setItem("playerArmor", JSON.stringify(member.armor));
-            localStorage.setItem("playerTotalStr", member.totalStr);
-            localStorage.setItem("playerTotalArm", member.totalArm);
-            localStorage.setItem("playerTotalDex", member.totalDex);
-            localStorage.setItem("playerTotalCha", member.totalCha);
         }
     }
 
@@ -1297,7 +1321,103 @@
         //}
     }
 
-// 場景相關
+// 狀態與情緒
+
+    // 狀態資料庫
+    const statusData = {
+        "穿刺": { icon: "🩸", name: "流血", duration: 3, multiplier: 1 },
+        "鈍擊": { icon: "💫", name: "倒地", duration: 1, multiplier: 0.4 },
+        "飛行": { icon: "🪽", name: "飛行", duration: 1 },
+    };
+
+    // 情緒資料庫
+    const emotionData = [
+        // 共同
+        { type: "good", mood: 1, id: "fullHP", name: "精力充沛", note: "HP全滿", indefinite: true },
+        { type: "good", mood: 1, id: "battleWin", name: "戰鬥勝利" },
+        { type: "good", mood: 1, id: "criticalHit", name: "打出了爆擊" },
+        { type: "good", mood: 1, id: "completeQuest", name: "完成任務" },
+
+        { type: "bad", mood: -1, id: "lowHP", name: "非常疲憊" },
+        { type: "bad", mood: -1, id: "knockedDown", name: "在戰鬥中被擊倒" },
+        { type: "bad", mood: -1, id: "captured", name: "被俘虜", indefinite: true },
+        { type: "bad", mood: -1, id: "soaked", name: "淋成落湯雞", note: "大雷雨出門" },
+
+        // 主角專用
+        { type: "good", mood: 1, id: "rich", name: "發財了", note: "擁有 $1000", indefinite: true },
+        { type: "good", mood: 1, id: "rewarded", name: "獲得任務報酬", indefinite: true },
+        { type: "good", mood: 1, id: "famous", name: "鼎鼎有名", note: "名聲達到 10", indefinite: true },
+        { type: "good", mood: 1, id: "hasComp1", name: "擁有一名夥伴", indefinite: true },
+        { type: "good", mood: 2, id: "hasComp2", name: "擁有兩名夥伴", indefinite: true },
+        { type: "good", mood: 3, id: "hasComp3", name: "擁有三名夥伴", indefinite: true },
+
+        { type: "bad", mood: -1, id: "poor", name: "沒有錢", note: "財產少於 $ 50", indefinite: true },
+        { type: "bad", mood: -1, id: "robbed", name: "被搶劫" },
+        { type: "bad", mood: -1, id: "wanted", name: "被通緝", indefinite: true },
+        { type: "bad", mood: -1, id: "alone", name: "孤獨", note: "沒有夥伴", indefinite: true },
+        { type: "bad", mood: -1, id: "compFaint", name: "擔心夥伴", note: "有夥伴 HP 為 0", indefinite: true },
+        
+        // 夥伴專用
+        { type: "good", mood: 1, id: "treated", name: "隊長請客", note: "你在酒館招待了夥伴" },
+        { type: "good", mood: 1, id: "gift", name: "收到禮物" },
+        { type: "good", mood: 1, id: "comforted", name: "受到安慰", note: "你安慰了夥伴" },
+
+        // 雷納德
+        { type: "good", mood: 1, id: "teamwork", name: "團隊合作", note: "以聯手攻擊終結敵人" },
+        { type: "bad", mood: -1, id: "reactToStealing", name: "失望", note: "發現你偷竊" },
+        { type: "bad", mood: -1, id: "selfBlame", name: "自責", note: "你在戰鬥中被擊倒" },
+
+        // 塔爾穆克
+        { type: "good", mood: 1, id: "kill", name: "殺戮快感", note: "終結敵人" },
+        { type: "bad", mood: -1, id: "reactToPeace", name: "無聊，我要看到血流成河", note: "成功說服敵人停戰" },
+
+        // 賽恩
+        { type: "good", mood: 1, id: "fedblood", name: "鮮血款待", note: "你主動提供血" },
+        { type: "bad", mood: -1, id: "rejected", name: "被拒絕", note: "你拒絕被吸血" },
+        { type: "bad", mood: -1, id: "hateVampire", name: "討厭競爭者", note: "隊伍裡有吸血鬼" },
+
+        // 艾德蒙
+        { type: "good", mood: 1, id: "gambleWin", name: "賭博贏錢" },
+        { type: "bad", mood: -1, id: "gambleLose", name: "賭博輸錢" },
+
+        // 諾伊爾
+        { type: "good", mood: 1, id: "peace", name: "和平解決", note: "成功說服敵人停戰" },
+        { type: "bad", mood: -1, id: "hateWorm", name: "啊啊啊那是什麼", note: "遇到蠕蟲" },
+        
+        // 盜賊
+        { type: "good", mood: 1, id: "robEnemy", name: "強盜作風", note: "搶劫敵人" },
+
+        // 哥布林
+        { type: "bad", mood: -1, id: "hateOrc", name: "那個獸人會不會揍我", note: "隊伍裡有塔爾穆克或獸人" },
+
+        // 吸血鬼
+        { type: "bad", mood: -1, id: "stoppedBySain", name: "他以為他是誰", note: "昨晚吸血被賽恩阻止" },
+        { type: "bad", mood: -1, id: "hateSun", name: "晴天" },
+
+    ];
+
+    // 獲得情緒
+    function getEmotion(memberId, emotionId) {
+        // 取得該成員的資料
+        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+        let member = teamMembers.find(m => m.id === memberId);
+
+        // 找到情緒的資料
+        let newEmotion = emotionData.find(e => e.id === emotionId);
+
+        // 添加情緒
+        member.emotion.push(newEmotion);
+
+        // 計算心情值
+        member.mood += newEmotion.mood;
+
+        // 添加心情的影響
+
+        // 儲存
+        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+    }
+    
+// 場景跳轉相關
 
     // 快速旅行
     function fastTravel() {
@@ -1308,7 +1428,7 @@
         localStorage.setItem("playerPos", JSON.stringify(townPos));
 
         // 跳轉到城鎮頁面
-        window.location.href = 'town.html';
+        window.location.href = 'locations/town.html';
     }
 
     // 跳轉場景
@@ -1356,9 +1476,9 @@
         localStorage.setItem("encounter", JSON.stringify(encounter));
         console.log(encounter);
 
-        // 跳轉到遭遇頁面（根據當前頁面判斷路徑）
-        const pageName = window.location.pathname.split("/").pop();
-        if (pageName === "map.html" || pageName === "town.html") {
+        // 跳轉到遭遇頁面（根據目前頁面調整路徑）
+        let folderName = window.location.pathname.split("/").slice(-2, -1)[0];
+        if (folderName === "RPG") {
             window.location.href = "encounter.html";
         } else {
             window.location.href = "../encounter.html";
@@ -1370,14 +1490,28 @@
         // 重置事件進度
         localStorage.removeItem("currentKey"); // 清除對話 key
 
+        // 重置情緒
+        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+        teamMembers.forEach(member => {
+            // 只留下無限期的情緒
+            member.emotion = member.emotion.filter(e => e.indefinite === true);
+
+            // 重新統計心情值
+            member.mood = 0;
+            member.emotion.forEach(e =>{
+                member.mood += e.mood;
+            });
+        });
+        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+
+        // 通緝等級每天下降 1 級
+        addWantedLevel(-1);
+
         // 重置酒館
         localStorage.removeItem("tavernClose"); // 重置打烊
         localStorage.removeItem("drinkingStart");
         localStorage.removeItem("drinkingResults");
         localStorage.removeItem("drinkingEnd");
-            
-        // 通緝等級每天下降 1 級
-        addWantedLevel(-1);
 
         // 抽天氣
         const weathers = [ 
@@ -1393,4 +1527,3 @@
         let selectedWeather = weathers[randomIndex];
         localStorage.setItem("weather", JSON.stringify(selectedWeather));
     }
-

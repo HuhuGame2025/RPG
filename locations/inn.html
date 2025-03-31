@@ -23,7 +23,7 @@
     <!-- 主要內容區域 -->
     <div id= "main" class="main-content">
         <div class="header">    
-            <button class="exit-button" onclick="goTo('../town')">〈 離開</button>
+            <button class="exit-button" onclick="goTo('town')">〈 離開</button>
             <h1>旅館</h1>
         </div>
 
@@ -56,9 +56,7 @@
             showTeamHealth(); // 顯示隊伍健康程度
             loadEvent(); // 讀取進度
             npcPreferences(); // NPC偏好設定
-            
-            localStorage.setItem("backgroundStyle", "url('../images/inn.jpg')"); // 儲存背景圖
-            loadBackground(); // 讀取背景
+            loadBackground("inn"); // 讀取背景
         };
         
         // 對話資料庫
@@ -282,10 +280,6 @@
 
         // 顯示文本
         const texts = {
-            good: "精力充沛",
-            dead: "體力透支，無法繼續冒險",
-            bad: "還能勉強再撐一下",
-            okay: "目前還有體力",
             seedGrown: "夜裡，一個奇怪的聲響從你的背包裡傳來，食人花種子發芽了，兇猛的食人花幼苗對你發動攻擊。",
         };
 

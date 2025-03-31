@@ -23,7 +23,7 @@
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
         <div class="header">    
-            <button class="exit-button" onclick="goTo('../town')">〈 離開</button>
+            <button class="exit-button" onclick="goTo('town')">〈 離開</button>
             <h1>公會</h1>
         </div>
 
@@ -63,9 +63,7 @@
             getDialogueNpc(); // 判斷交談對象
             checkMissions(); // 檢查任務是否完成
             npcPreferences(); // NPC偏好設定
-
-            localStorage.setItem("backgroundStyle", "url('../images/guild.jpg')"); // 儲存背景圖
-            loadBackground(); // 讀取背景
+            loadBackground("guild"); // 讀取背景
         };
 
         // 對話資料庫

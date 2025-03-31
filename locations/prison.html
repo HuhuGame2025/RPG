@@ -59,17 +59,15 @@
             showCountDown(); // 顯示倒數天數
             loadEvent() || workEnd(); // 讀取進度，如果沒在事件中就跳到結束工作
             npcPreferences(); // NPC偏好設定
-
-            localStorage.setItem("backgroundStyle", "url('../images/prison.jpg')"); // 儲存背景圖
-            loadBackground(); // 讀取背景
+            loadBackground("prison"); // 讀取背景
 
         };
 
         // 顯示文本
         const texts = {
             good: "精力充沛",
-            dead: "體力透支，無法繼續冒險",
-            bad: "還能勉強再撐一下",
+            faint: "奄奄一息",
+            bad: "非常疲憊",
             okay: "目前還有體力",
             releaseCountDown: (day) => `這裡是你的牢房，再過 ${day} 天出獄。`,
             deathCountDown: (day) => `這裡是你的牢房，再過 ${day} 天就要執行絞刑。`,
@@ -419,7 +417,7 @@
             if (member.HP === member.MaxHP) {
                 actionElement.textContent = texts.good; // 滿血
             } else if (member.HP <= 0) {
-                actionElement.textContent = texts.dead; // 死亡
+                actionElement.textContent = texts.faint; // 昏迷
             } else if (member.HP <= member.MaxHP * 0.5) {
                 actionElement.textContent = texts.bad; // 重傷
             } else {

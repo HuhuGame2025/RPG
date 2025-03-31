@@ -109,7 +109,7 @@
         const TOTAL_MAX = 50;
 
         // 設定屬性描述函數
-        function getStatDescription(stat, value) {
+        function showStatDescription(stat, value) {
             let description = "";
             switch (stat) {
                 case "con":
@@ -173,7 +173,7 @@
             if (newValue >= MIN_STAT && newValue <= MAX_STAT && total + delta <= TOTAL_MAX) {
                 stats[stat] = newValue;
                 document.getElementById(stat).textContent = newValue;
-                document.getElementById(stat + "-description").textContent = getStatDescription(stat, newValue);
+                document.getElementById(stat + "-description").textContent = showStatDescription(stat, newValue);
                 remainingPoints -= delta;
                 document.getElementById("remainingPoints").textContent = remainingPoints;
             }
@@ -201,10 +201,6 @@
             localStorage.setItem("playerDex", stats.dex);
             localStorage.setItem("playerWis", stats.wis);
             localStorage.setItem("playerCha", stats.cha);
-            localStorage.setItem("playerTotalStr", stats.str);
-            localStorage.setItem("playerTotalDex", stats.dex);
-            localStorage.setItem("playerTotalCha", stats.cha);
-            localStorage.setItem("playerTotalArm", 0);
             localStorage.setItem("playerMaxHP", stats.con * 3);
             localStorage.setItem("playerMoney", 1000); // 起始資金
             localStorage.setItem("playerFame", 0); // 名聲
@@ -224,11 +220,11 @@
         }
 
         // 初始化頁面顯示描述
-        document.getElementById("con-description").textContent = getStatDescription("con", stats.con);
-        document.getElementById("str-description").textContent = getStatDescription("str", stats.str);
-        document.getElementById("dex-description").textContent = getStatDescription("dex", stats.dex);
-        document.getElementById("wis-description").textContent = getStatDescription("wis", stats.dex);
-        document.getElementById("cha-description").textContent = getStatDescription("cha", stats.dex);
+        document.getElementById("con-description").textContent = showStatDescription("con", stats.con);
+        document.getElementById("str-description").textContent = showStatDescription("str", stats.str);
+        document.getElementById("dex-description").textContent = showStatDescription("dex", stats.dex);
+        document.getElementById("wis-description").textContent = showStatDescription("wis", stats.dex);
+        document.getElementById("cha-description").textContent = showStatDescription("cha", stats.dex);
 
     </script>
 </body>

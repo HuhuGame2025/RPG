@@ -524,7 +524,7 @@
                             text: "當你帶著馬卡斯下樓時，聽見了一個令人背脊發涼的笑聲。<br><br>忽然間煙霧瀰漫，完全遮蔽了視線，你的意識漸漸變得模糊……",
                             choices: [
                                 { text: "接受命運", next: "昏過去" },
-                                { text: "堅持住（體質）", action: "roll('con', '堅持住', '昏過去')" },
+                                { text: "堅持住（體質）", action: "roll('con', 10, '堅持住', '昏過去')" },
                             ]
                         },
 
@@ -839,7 +839,7 @@
                         npc: "吸血鬼守衛",
                         text: "到了，這裡就是血奴住的地方。<br><br>你可以自由活動，但要作息正常，維持健康。<br><br>每晚會有一位吸血鬼來飲用你的血，不要想耍什麼把戲，否則我們就把你餵給巨鷹。",
                         choices: [
-                            { text: "（繼續）", next: "", action: "(exitEvent(), goTo('town/underground'))" },
+                            { text: "（繼續）", next: "", action: "(exitEvent(), goTo('locations/underground'))" },
                         ]
                     },
 
@@ -1032,27 +1032,26 @@
                 if (mapData[newY][newX] === "") {
                     // 草原
                     localStorage.setItem("playerTerrain", "草原");
-                    localStorage.setItem("backgroundStyle", "url('images/field.jpg')");
+                    loadBackground("field"); // 讀取背景
                     window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
                     return;
 
                 } else if (mapData[newY][newX] === icons.forest) {
                     // 森林
                     localStorage.setItem("playerTerrain", "森林");
-                    localStorage.setItem("backgroundStyle", "url('images/forest.jpg')");
+                    loadBackground("forest"); // 讀取背景
                     window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
                     return;
 
                 } else if (mapData[newY][newX] === icons.cave) {
                     // 洞穴
                     localStorage.setItem("playerTerrain", "洞穴");
-                    localStorage.setItem("backgroundStyle", "url('images/cave.jpg')");
+                    loadBackground("cave"); // 讀取背景
                     window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
                     return;
                 }
 
                 localStorage.removeItem("situation"); // 如果在安全區，清除之前的情況
-                loadBackground(); // 讀取背景
                 showSituation(); // 顯示情況
             }
         }
@@ -1079,7 +1078,7 @@
 
             // 位於城鎮
             } else if (locationIcon === icons.town) {
-                localStorage.setItem("backgroundStyle", "url('images/town.jpg')"); // 變更背景圖
+                loadBackground("town"); // 讀取背景
                 const townPos = JSON.parse(localStorage.getItem("townPos")); // 讀取最近的城鎮位置
                 localStorage.setItem("playerPos", JSON.stringify(townPos)); // 更新主角的位置
 
@@ -1096,13 +1095,13 @@
                         localStorage.setItem("npcName", "守衛");
                         showDialogue("被守衛攔下");
                     } else {
-                        window.location.href = 'town.html'; // 跳轉到城鎮
+                        window.location.href = 'locations/town.html'; // 跳轉到城鎮
                     }
                 });
 
             // 位於小屋
             } else if (locationIcon === icons.cabin) {
-                localStorage.setItem("backgroundStyle", "url('images/cabin.jpg')"); // 變更背景圖
+                loadBackground("cabin"); // 讀取背景
             
             // 位於盜賊巢穴
             } else if (playerPos.x === locations.thieves.x && playerPos.y === locations.thieves.y) {
@@ -1141,7 +1140,7 @@
             // 位於古堡
             } else if (locationIcon === icons.castle) {
                 let event = "古堡";
-                localStorage.setItem("backgroundStyle", "url('images/castle.jpg')"); // 變更背景圖
+                loadBackground("castle"); // 讀取背景
 
                 // 檢查是否已完成事件
                 const completedEvents = JSON.parse(localStorage.getItem("completedEvents")) || [];
@@ -1231,7 +1230,6 @@
                     showDialogue("start");
                 });
             }
-            loadBackground(); // 讀取背景
         }
 
         // 顯示天氣
@@ -1244,7 +1242,7 @@
                 const note = "[說明]";
                 document.getElementById("weather-description").textContent = note;
 
-                // 點擊問號時，顯示或收起敘述
+                // 點擊時，顯示或收起敘述
                 let itemElement = document.getElementById("weather");
                 let hidedElement = document.getElementById("weather-description");
 
@@ -1270,9 +1268,20 @@
                 stealthToggle.checked = false; // 否則取消勾選
             }
 
+            // 找到 dex 最低的成員資料
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            let minDex = Infinity; // 設定初始值為無限大
+            teamMembers.forEach(member => {
+                if (member.dex.total < minDex) { // 如果找到更低的 dex，重置陣列，將該角色加入陣列
+                    minDex = member.dex.total; //更新最低 dex
+                    minDexMembers = [member];
+                } else if (member.dex.total === minDex) {
+                    minDexMembers.push(member); // 如果dex相同，將該角色加入陣列
+                }
+            });
+
             // 顯示潛行成功率
-            const playerTotalDex = parseInt(localStorage.getItem("playerTotalDex"));
-            document.getElementById("stealth-chance").textContent = playerTotalDex * 5 + "%";
+            document.getElementById("stealth-chance").textContent = minDex * 5 + "%";
 
             // 如果有濃霧，潛行 100% 成功
             const weather = JSON.parse(localStorage.getItem("weather")) || [];

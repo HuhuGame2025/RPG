@@ -23,7 +23,7 @@
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
         <div class="header">    
-            <button class="exit-button" onclick="goTo('../town')">〈 離開</button>
+            <button class="exit-button" onclick="goTo('town')">〈 離開</button>
             <h1>商店街</h1>
         </div>
 
@@ -58,9 +58,7 @@
             wantedCheck(); // 檢查是否被通緝中
             loadPartyData();
             npcPreferences(); // NPC偏好設定
-
-            localStorage.setItem("backgroundStyle", "url('../images/town.jpg')"); // 儲存背景圖
-            loadBackground(); // 讀取背景            
+            loadBackground("town"); // 讀取背景            
         };
 
         // 顯示文本
@@ -121,21 +119,20 @@
 
         // 偷竊
         function stealItem(itemId) {       
-            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-            const playerTotalDex = parseInt(localStorage.getItem("playerTotalDex"));
+            // 取得主角的敏捷
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            const player = teamMembers.find(m => m.id === "player");
 
             // NPC的感知
             let npcWis = 20;
 
-            // 計算偷竊成功率
-            let stealChance = playerTotalDex / (playerTotalDex + npcWis);
-            let randomValue = Math.random(); // 產生 0~1 的隨機小數
-            // 檢查成功率
-            console.log(`主角敏捷: ${playerTotalDex}, NPC感知: ${npcWis}`);
-            console.log(`計算的偷竊成功率: ${(stealChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+            // 以主角敏捷和NPC感知擲骰
+            let result = roll(player.dex.total, npcWis);
+            console.log(`主角敏捷: ${player.dex.total}, NPC感知: ${npcWis}`);
+            console.log(`偷竊成功率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
-            // 顯示偷竊結果
-            if (randomValue <= stealChance) {
+            // 偷竊結果
+            if (result.success === true) {
                 // 偷竊成功時
                 let item = itemDatabase.find(i => i.id === itemId);
                 playerItems.push(itemId);  // 把物品加入玩家背包

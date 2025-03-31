@@ -55,17 +55,11 @@
             loadPartyData(); // 讀取隊伍資料
             loadEvent(); // 讀取進度
             npcPreferences(); // NPC偏好設定
-
-            localStorage.setItem("backgroundStyle", "url('../images/underground.jpg')"); // 儲存背景圖
-            loadBackground(); // 讀取背景
+            loadBackground("underground"); // 讀取背景
         };
 
         // 顯示文本
         const texts = {
-            good: "精力充沛",
-            dead: "體力透支，無法繼續冒險",
-            bad: "還能勉強再撐一下",
-            okay: "目前還有體力",
             manor: "這是一座位於地下深處的莊園，沒有陽光，只有植物和真菌散發的微光。",
             dorm: "每個血奴有一間簡樸的個人房，會定時發放營養均衡的食物，戶外有寬敞的空間可以運動。",
             farm: "這裡種植了大量的血葡萄，遠遠看過去一片鮮紅。一群哥布林農奴正在田裡工作。",

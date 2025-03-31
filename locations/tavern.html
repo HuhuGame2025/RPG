@@ -22,7 +22,7 @@
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
         <div class="header">    
-            <button class="exit-button" onclick="goTo('../town')">〈 離開</button>
+            <button class="exit-button" onclick="goTo('town')">〈 離開</button>
             <h1>酒館</h1>
         </div>
 
@@ -64,9 +64,7 @@
             loadPartyData();
             checkOrder(); // 檢查是否有點餐
             npcPreferences(); // NPC偏好設定
-
-            localStorage.setItem("backgroundStyle", "url('../images/tavern.jpg')"); // 儲存背景圖
-            loadBackground(); // 讀取背景
+            loadBackground("tavern"); // 讀取背景
         };
 
 
@@ -471,7 +469,7 @@
                     while (totalHeal > 0) {
                         // 找出未補滿的隊員
                         let unhealedMembers = teamMembers.filter(member => member.HP < member.MaxHP);
-                        if (unhealed.length === 0) break; // 如果都補滿了，結束迴圈
+                        if (unhealedMembers.length === 0) break; // 如果都補滿了，結束迴圈
 
                         // 計算平均治療量（只對未補滿的隊員）
                         let averageHeal = Math.floor(totalHeal / unhealedMembers.length);  // 四捨五入
@@ -571,7 +569,7 @@
             }
 
             // 如果酒館沒有人，也沒有同伴，就不能玩
-            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             if (tavernCompanions.length === 0 && teamMembers === 1) {
                 document.getElementById("text").textContent = texts.drinkingNoOne;
                 window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
@@ -596,9 +594,8 @@
             }
     
             // 加入主角
-            const playerName = localStorage.getItem("playerName");
-            const playerCon = parseInt(localStorage.getItem("playerCon"));
-            drinkingMember = [{ name: playerName, con: playerCon }];
+            let player = teamMembers.find(m => m.id === "player");
+            drinkingMember = [{ name: player.name, con: player.con.total }];
     
             // 加入同伴
             teamMembers.forEach(companion => {
@@ -650,15 +647,18 @@
 
                 // 進行體質檢定
                 drinkingMember.forEach(person => {
-                    let roll = Math.floor(Math.random() * 20) + 1;
                     let status;
 
                      // 根據上一回合結果判斷這回合狀態
                     let previousStatus = previousResults.find(result => result.name === person.name)?.status || "沒醉";
-                
+                    
+                    // 擲骰
+                    result = roll(person.con);
+                    console.log(`喝酒成功率: ${(result.chance*100).toFixed(2)}%`);
+
+                    // 如果已經微醉，再次失敗就會醉倒
                     if (previousStatus === "微醉") { 
-                        // 如果已經微醉，再次失敗就會醉倒
-                        if (roll <= person.con) {
+                        if (result.success === true) {
                             status = "微醉";
                         } else {
                             status = "醉倒";
@@ -671,7 +671,7 @@
 
                     } else {  
                         // 初始狀態
-                        if (roll <= person.con) {
+                        if (result.success === true) {
                             status = "沒醉";
                         } else {
                             status = "微醉";
@@ -680,7 +680,7 @@
 
                     // 每個角色的描述
                     let description;
-                    if (person.name === playerName) { 
+                    if (person.name === player.name) { 
                         description = drinkingStatus["player"][status]; // 主角
                     } else {
                         description = drinkingStatus[person.name][status]; // 同伴
@@ -712,11 +712,11 @@
                 });
 
                 // 判斷勝負
-                let player = results.find(p => p.name === playerName);
-                let others = results.filter(p => p.name !== playerName);
+                let you = results.find(p => p.name === player.name);
+                let others = results.filter(p => p.name !== player.name);
                 let winner;
     
-                if (player.status === "醉倒") {
+                if (you.status === "醉倒") {
                     // 如果主角醉倒
                     localStorage.setItem("drinkingEnd", true);  // 拚酒結束，直到過夜後重置
                     

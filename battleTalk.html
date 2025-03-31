@@ -37,7 +37,7 @@
                     text: "你想怎麼樣？",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "我們不要互相傷害（魅力）", condition: "!isTrue('hasPersuaded')", action: "persuade()" },
                         { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
@@ -56,7 +56,7 @@
                         npc: "npc",
                         text: "你想逮捕我嗎？可惡，真是倒楣……",
                         choices: [
-                            { text: "（繼續）", next: "", action: "enemyJoin()" },
+                            { text: "（繼續）", next: "", action: "enemyJoin('俘虜')" },
                         ]
                     },
                 "威嚇失敗": {
@@ -71,7 +71,7 @@
                     text: "唉，其實我也不擅長打架……我大概不適合當壞人吧。",
                     choices: [
                         { text: "再見", next: "", action: "returnMap()" },
-                        { text: "想加入我的隊伍嗎？", next: "", action: "invite()" },
+                        { text: "想加入我的隊伍嗎？", condition: "!isTrue('hasInvited')", action: "invite()" },
                     ]
                 },
                     "邀請成功": {
@@ -123,7 +123,7 @@
                     text: "什麼？要認輸了嗎？",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "我們不要互相傷害（魅力）", condition: "!isTrue('hasPersuaded')", action: "persuade()" },
                         { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
@@ -142,7 +142,7 @@
                         npc: "npc",
                         text: "好的！好的！只要不殺我，你要我做什麼我都做！主人！",
                         choices: [
-                            { text: "繼續", next: "", action: "enemyJoin()" },
+                            { text: "（繼續）", next: "", action: "enemyJoin('俘虜')" },
                         ]
                     },
                 "威嚇失敗": {
@@ -157,14 +157,14 @@
                     text: "唔呃……老實說我也不想死啊，那就當作我們沒見過吧！",
                     choices: [
                         { text: "再見", next: "", action: "returnMap()" },
-                        { text: "想加入我的隊伍嗎？", next: "", action: "invite()" },
+                        { text: "想加入我的隊伍嗎？", condition: "!isTrue('hasInvited')", action: "invite()" },
                     ]
                 },
                     "邀請成功": {
                         npc: "npc",
                         text: "你確定你想養哥布林當寵物嗎？哈哈，你的癖好真奇怪！也好啦，跟著你總比跟著獸人或巨魔好多了。",
                         choices: [
-                            { text: "我們走吧", next: "", action: "enemyJoin()" },
+                            { text: "我們走吧", next: "", action: "enemyJoin('隨從')" },
                         ]
                     },
                     "邀請失敗": {
@@ -209,7 +209,7 @@
                     text: "我和人類沒什麼好說的！",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "我們不要互相傷害（魅力）", condition: "!isTrue('hasPersuaded')", action: "persuade()" },
                         { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
@@ -243,14 +243,14 @@
                     text: "哼，我也不想被說只會欺負弱小，趁我後悔前快消失吧！",
                     choices: [
                         { text: "再見", next: "", action: "returnMap()" },
-                        { text: "想加入我的隊伍嗎？", next: "", action: "invite()" },
+                        { text: "想加入我的隊伍嗎？", condition: "!isTrue('hasInvited')", action: "invite()" },
                     ]
                 },
                     "邀請成功": {
                         npc: "npc",
                         text: "你和其他人類不同，我認可你，現在開始你就是我的手下了。",
                         choices: [
-                            { text: "我們走吧", next: "", action: "enemyJoin()" },
+                            { text: "我們走吧", next: "", action: "enemyJoin('隨從')" },
                         ]
                     },
                     "邀請失敗": {
@@ -295,7 +295,7 @@
                     text: "嗷嗷嗷嗚——",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "我們不要互相傷害（魅力）", condition: "!isTrue('hasPersuaded')", action: "persuade()" },
                         { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
@@ -314,7 +314,7 @@
                         npc: "npc",
                         text: "我……聽你的……",
                         choices: [
-                            { text: "繼續", next: "", action: "enemyJoin()" },
+                            { text: "（繼續）", next: "", action: "enemyJoin('俘虜')" },
                         ]
                     },
                 "威嚇失敗": {
@@ -329,14 +329,14 @@
                     text: "我……不喜歡……受傷……",
                     choices: [
                         { text: "再見", next: "", action: "returnMap()" },
-                        { text: "想加入我的隊伍嗎？", next: "", action: "invite()" },
+                        { text: "想加入我的隊伍嗎？", condition: "!isTrue('hasInvited')", action: "invite()" },
                     ]
                 },
                     "邀請成功": {
                         npc: "npc",
                         text: "嗯……你聞起來……很好……",
                         choices: [
-                            { text: "我們走吧", next: "", action: "enemyJoin()" },
+                            { text: "我們走吧", next: "", action: "enemyJoin('隨從')" },
                         ]
                     },
                     "邀請失敗": {
@@ -381,7 +381,7 @@
                     text: "你想談談？",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "我們不要互相傷害（魅力）", condition: "!isTrue('hasPersuaded')", action: "persuade()" },
                         { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
@@ -415,14 +415,14 @@
                     text: "要放棄像你這麼迷人的獵物，真是令我心痛，但我很想看看你會成長到什麼地步，期待下次再見了。",
                     choices: [
                         { text: "再見", next: "", action: "returnMap()" },
-                        { text: "想加入我的隊伍嗎？", next: "", action: "invite()" },
+                        { text: "想加入我的隊伍嗎？", condition: "!isTrue('hasInvited')", action: "invite()" },
                     ]
                 },
                     "邀請成功": {
                         npc: "npc",
                         text: "喔？應該不用我提醒，吸血鬼有什麼樣的個人需求吧？那麼，我就視為你自願成為我的血奴了。",
                         choices: [
-                            { text: "我們走吧", next: "", action: "enemyJoin()" },
+                            { text: "我們走吧", next: "", action: "enemyJoin('隨從')" },
                         ]
                     },
                     "邀請失敗": {
@@ -467,7 +467,7 @@
                     text: "有屁快放！",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "我們不要互相傷害（魅力）", condition: "!isTrue('hasPersuaded')", action: "persuade()" },
                         { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
@@ -546,7 +546,7 @@
                     text: "欸？你想說什麼？",
                     choices: [
                         { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
-                        { text: "我們不要互相傷害（魅力）", next: "", action: "persuade()" },
+                        { text: "我們不要互相傷害（魅力）", condition: "!isTrue('hasPersuaded')", action: "persuade()" },
                         { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
                         { text: "繼續戰鬥", next: "", action: "fight()" },
                     ]
@@ -565,7 +565,7 @@
                         npc: "npc",
                         text: "咦？你要帶我去哪裡？",
                         choices: [
-                            { text: "繼續", next: "", action: "enemyJoin()" },
+                            { text: "（繼續）", next: "", action: "enemyJoin('俘虜')" },
                         ]
                     },
                 "威嚇失敗": {
@@ -580,14 +580,14 @@
                     text: "嗯嗯，我也不喜歡打架。那我們就和平的道別吧，祝你有段美好的旅程！",
                     choices: [
                         { text: "再見", next: "", action: "returnMap()" },
-                        { text: "想加入我的隊伍嗎？", next: "", action: "invite()" },
+                        { text: "想加入我的隊伍嗎？", condition: "!isTrue('hasInvited')", action: "invite()" },
                     ]
                 },
                     "邀請成功": {
                         npc: "npc",
                         text: "哇，你說真的嗎？我一直很想去冒險耶！帶我一起去吧！",
                         choices: [
-                            { text: "我們走吧", next: "", action: "enemyJoin()" },
+                            { text: "我們走吧", next: "", action: "enemyJoin('隨從')" },
                         ]
                     },
                     "邀請失敗": {
@@ -719,27 +719,11 @@
             let enemyName, enemyAdj;
 
             const npcId = localStorage.getItem("npcId"); // 讀取交談對象
+            let enemy = enemies.find(e => e.id === npcId); // 找到敵人資料
 
-            // 檢查是否有指定對象
-            if (npcId) {
-                // 如果有指定對象，根據 npcId 取得對應的敵人索引
-                let targetIndex = parseInt(npcId.replace("enemy", "")) - 1;
-
-                // 根據敵人索引取得敵人名字
-                if (enemies[targetIndex]) {
-                    enemyName = enemies[targetIndex].name;
-                    enemyAdj = enemies[targetIndex].adj;
-                }
-
-            } else {
-                // 如果沒有指定，取第一個敵人的名字
-                enemyName = enemies.length > 0 ? enemies[0].name : "";
-                enemyAdj = enemies.length > 0 ? enemies[0].adj : "";
-            } 
-
-            const npcName = enemyAdj + enemyName;
+            const npcName = enemy.adj + enemy.name;
             localStorage.setItem("npcName", npcName);
-
+            
             // 判斷對話的情況
             const enemySurrender = localStorage.getItem("enemySurrender");
             if (enemySurrender === "true") {
@@ -749,7 +733,7 @@
                 // 一般交談
                 showDialogue("start");
             }
-            console.log("npcId: ", npcId, "npcName: ", npcName);
+            //console.log("npcId: ", npcId, "npcName: ", npcName);
         }
 
         // 繼續戰鬥
@@ -758,10 +742,48 @@
 
             localStorage.removeItem("npcId"); // 清除交談對象
             localStorage.removeItem("enemySurrender"); // 清除敵人投降
-            localStorage.removeItem("persuadeResult"); // 清除說服結果
-            localStorage.removeItem("inviteResult"); // 清除邀請結果
+            turnSwitch("hasPersuaded", false); // 清除說服結果
+            turnSwitch("hasInvited", false); // 清除邀請結果
 
             window.location.href = 'battle.html'; // 跳轉到戰鬥頁面
+        }
+
+        // 威嚇
+        function intimidate() {
+            // 讀取成員資料
+            let presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
+
+            // 找到 str 最高的成員
+            let maxStrMembers = [];
+            let maxStr = -Infinity; // 設定初始值為負無限
+            presentMembers.forEach(member => {
+                if (member.str.total > maxStr) { // 如果找到更高的 str，重置陣列，將該角色加入陣列
+                    maxStr = member.str.total; //更新最高 str
+                    maxStrMembers = [member];
+                }
+            });
+            
+            // 讀取所有敵人資料
+            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+
+            // 敵人總 HP
+            let totalEnemyHP = 0;
+            enemies.forEach(enemy => {
+                if (enemy.HP) {
+                    for (let i = 0; i < enemies.length; i++) {
+                        totalEnemyHP += enemy.HP;
+                    }
+                }
+            });
+
+            // 敵人是否投降（不用擲骰）
+            let enemyType = enemies.length > 0 ? enemies[0].type : ""; // 取第一個敵人的類型
+            if (enemies.length === 1 && enemyType.includes("智慧") && maxStr > totalEnemyHP) {
+                // 如果只剩一個智慧敵人，且隊伍中最高力量 > 敵人 HP 時，威嚇成功
+                showDialogue('威嚇成功'); // 敵人投降
+            } else {
+                showDialogue('威嚇失敗'); // 敵人拒絕投降
+            }
         }
 
         // 饒恕
@@ -838,66 +860,18 @@
             }
         }
 
-        // 威嚇
-        function intimidate() {
-            // 讀取成員資料
-            let presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
-
-            // 找到 str 最高的成員
-            let maxStrMembers = [];
-            let maxStr = -Infinity; // 設定初始值為負無限
-            presentMembers.forEach(member => {
-                if (member.totalStr > maxStr) { // 如果找到更高的 str，重置陣列，將該角色加入陣列
-                    maxStr = member.totalStr; //更新最高 str
-                    maxStrMembers = [member];
-                }
-            });
-            
-            // 讀取所有敵人資料
-            let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-
-            // 敵人總 HP
-            let totalEnemyHP = 0;
-            enemies.forEach(enemy => {
-                if (enemy.HP) {
-                    for (let i = 0; i < enemies.length; i++) {
-                        totalEnemyHP += enemy.HP;
-                    }
-                }
-            });
-
-            // 敵人是否投降
-            let enemyType = enemies.length > 0 ? enemies[0].type : ""; // 取第一個敵人的類型
-            if (enemies.length === 1 && enemyType.includes("智慧") && maxStr > totalEnemyHP) {
-                // 如果只剩一個智慧敵人，且隊伍中最高力量 > 敵人 HP 時，威嚇成功
-                showDialogue('威嚇成功'); // 敵人投降
-            } else {
-                showDialogue('威嚇失敗'); // 敵人拒絕投降
-            }
-        }
-
         // 說服
         function persuade() {
-            // 檢查是否已經骰過，以免刷新頁面時重骰
-            const persuadeResult = localStorage.getItem("persuadeResult");
-            if (persuadeResult === "success") {
-                showDialogue('說服成功');
-                return;
-            } else if (persuadeResult === "fail") {
-                showDialogue('說服失敗');
-                return;
-            } 
-
             // 讀取主角的魅力
-            const playerTotalCha = parseInt(localStorage.getItem("playerTotalCha"));
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            const member = teamMembers.find(m => m.id === "player");
 
             // 讀取所有敵人資料
             const enemyCount = JSON.parse(localStorage.getItem("enemyCount")); // 初始敵人數量
             const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-            const enemyWis = enemies.length > 0 ? enemies[0].wis : ""; // 取第一個敵人的感知
+            const enemyWis = enemies.length > 0 ? enemies[0].wis.total : ""; // 取第一個敵人的感知
             const hurtEnemies = enemies.filter(e => e.HP < e.MaxHP); // 找出被攻擊過的敵人
-            console.log(hurtEnemies);
-
+            
             // 檢查是否攻擊過敵人
             if (enemyCount > enemies.length) {
                 // 如果殺了敵人的同伴
@@ -909,70 +883,44 @@
                 return;
             }
 
-            // 計算說服成功率
-            let persuadeChance = playerTotalCha / (playerTotalCha + enemyWis);
+            // 以主角魅力和對方感知擲骰
+            let result = roll(member.cha.total, enemyWis);
+            console.log(`主角魅力: ${member.cha.total}, 敵人感知: ${enemyWis}`);
+            console.log(`說服成功率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+ 
+            turnSwitch("hasPersuaded"); // 標記為已說服，跳轉頁面時再清除，以免刷新頁面時重骰
 
-            let randomValue = Math.random(); // 產生 0~1 的隨機小數
-            // 檢查成功率
-            console.log(`主角魅力: ${playerTotalCha}, 敵人感知: ${enemyWis}`);
-            console.log(`計算的說服成功率: ${(persuadeChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
-
-            // 顯示說服結果
-            if (randomValue <= persuadeChance) {
+            // 說服結果
+            if (result.success === true) {
                 // 說服成功
                 showDialogue('說服成功');
-                localStorage.setItem("persuadeResult", "success"); // 記錄結果，跳轉頁面時再清除，以免刷新頁面時重骰
             } else {
                 // 說服失敗
                 showDialogue('說服失敗');
-                localStorage.setItem("persuadeResult", "fail"); // 記錄結果，跳轉頁面時再清除，以免刷新頁面時重骰
             }
         }
 
         // 邀請
         function invite() {
-            // 檢查是否已經骰過，以免刷新頁面時重骰
-            let inviteResult = localStorage.getItem("inviteResult");
-            if (inviteResult === "success") {
-                showDialogue('邀請成功');
-                return;
-            } else if (inviteResult === "fail") {
-                showDialogue('邀請失敗');
-                return;
-            } 
-
             // 讀取主角的魅力
-            const playerTotalCha = parseInt(localStorage.getItem("playerTotalCha"));
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            const member = teamMembers.find(m => m.id === "player");
 
             // 讀取所有敵人資料
             const enemyCount = JSON.parse(localStorage.getItem("enemyCount"));
             const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-            const enemyWis = enemies.length > 0 ? enemies[0].wis : ""; // 取第一個敵人的感知
+            const enemyWis = enemies.length > 0 ? enemies[0].wis.total : ""; // 取第一個敵人的感知
 
-            // 計算邀請成功率（比說服困難）
-            let inviteChance = playerTotalCha / (playerTotalCha + enemyWis * 2);
+            // 以主角魅力和對方感知擲骰
+            let result = roll(member.cha.total, enemyWis);
+            console.log(`主角魅力: ${member.cha.total}, 敵人感知: ${enemyWis}`);
+            console.log(`邀請成功率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
-            let randomValue = Math.random(); // 產生 0~1 的隨機小數
-            // 檢查成功率
-            console.log(`主角魅力: ${playerTotalCha}, 敵人感知: ${enemyWis}`);
-            console.log(`計算的邀請成功率: ${(inviteChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+            turnSwitch("hasInvited"); // 標記為已邀請，跳轉頁面時再清除，以免刷新頁面時重骰
 
-            // 顯示邀請結果
-            if (randomValue <= inviteChance) {
-                // 邀請成功
-                localStorage.setItem("inviteResult", "success"); // 記錄結果，跳轉頁面時再清除，以免刷新頁面時重骰
-            } else {
-                // 邀請失敗
-                showDialogue('邀請失敗');
-                localStorage.setItem("inviteResult", "fail"); // 記錄結果，跳轉頁面時再清除，以免刷新頁面時重骰
-                return;
-            }
-
-            // 如果邀請成功，檢查隊伍是否已滿
-            inviteResult = localStorage.getItem("inviteResult");
-            if (inviteResult === "success") {
-                // 隱藏對話
-                document.getElementById("dialogue").style.display = "none";
+            // 邀請結果
+            if (result.success === true) {
+                // 邀請成功，檢查隊伍是否已滿
 
                 // 讀取隊伍資料
                 let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
@@ -1017,11 +965,19 @@
 
                     menu.appendChild(cancelButton);
                     document.body.appendChild(menu);
+
+                    // 隱藏對話
+                    document.getElementById("dialogue").style.display = "none";
             
                 } else {
                     // 隊伍未滿，直接加入
                     showDialogue('邀請成功'); // 顯示邀請成功的對話
                 }
+
+            } else {
+                // 邀請失敗
+                showDialogue('邀請失敗');
+                return;
             }
         }
 
@@ -1056,22 +1012,12 @@
         }
 
         // 敵人加入隊伍
-        function enemyJoin() {
-            let type;
-        
+        function enemyJoin(type) {
             // 讀取所有敵人的資料
             let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
 
             // 找到第一個敵人的資料（敵人只剩一個）
             let enemy = enemies.length > 0 ? enemies[0] : null;
-
-            // 檢查是邀請或捕捉
-            const inviteResult = localStorage.getItem("inviteResult");
-            if (inviteResult) {
-                type = "隨從";
-            } else {
-                type = "俘虜";
-            } 
 
             //添加為同伴
             addCompanion(enemy);
@@ -1099,8 +1045,8 @@
             localStorage.removeItem("npcId"); // 清除交談對象
             localStorage.removeItem("situation"); // 清除情況
             localStorage.removeItem("enemySurrender"); // 清除敵人投降
-            localStorage.removeItem("persuadeResult"); // 清除說服結果
-            localStorage.removeItem("inviteResult"); // 清除邀請結果
+            turnSwitch("hasPersuaded", false); // 清除說服結果
+            turnSwitch("hasInvited", false); // 清除邀請結果
             localStorage.removeItem("encounter"); // 清除指定遭遇
 
             // 清空隊員的狀態

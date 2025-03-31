@@ -1,4 +1,8 @@
 模擬市民的情緒系統
+getEmotion("player", "fullHP");
+getEmotion("player", "battleWin");
+
+負面狀態須過體質檢定
 
 採集
 拍賣系統

@@ -48,6 +48,14 @@
         
         // 對話資料庫
         let dialogueData = {
+            "共同": {
+                "昏迷": {
+                    text: "對方奄奄一息，無法回話。",
+                    choices: [
+                        { text: "離開", next: "", action: "removeDialogue()" },
+                    ]
+                },
+            },
             "雷納德": {
                 "start": {
                     npc: "npc",
@@ -394,8 +402,8 @@
                     text: "我當然知道在哪，可是……<br><br>那裡起碼有二十個人在看守，裡面還像迷宮一樣，就連我都會迷路了。<br><br>更別說，如果他們看到我帶你過去，我就必死無疑了！想去你自己去，我才不幹！",
                     choices: [
                         { text: "告訴我巢穴位置，你就可以離開了", next: "盜賊巢穴_解散", action: "dismiss()" },
-                        { text: "我命令你帶我去（力量）", next: "", action: "intimidate('盜賊巢穴')" },
-                        { text: "相信我，我們會成功的，想想那些戰利品（魅力）", next: "", action: "persuade('盜賊巢穴')" },
+                        { text: "我命令你帶我去（力量）", condition: "isTrue('hasIntimidated')", action: "intimidate('盜賊巢穴')" },
+                        { text: "相信我，我們會成功的，想想那些戰利品（魅力）", condition: "isTrue('hasPersuaded')", action: "persuade('盜賊巢穴')" },
                         { text: "晚點再說", next: "", action: "removeDialogue()" },
                     ]
                 },
@@ -408,9 +416,9 @@
                     },
                     "盜賊巢穴_威嚇失敗": {
                         npc: "npc",
-                        text: "我幹嘛聽你的？吃屎吧！",
+                        text: "我幹嘛聽你的？你靠自己找吧，我不幹了！",
                         choices: [
-                            { text: "（繼續）", next: "", action: "(showTeamMenu(), removeDialogue())" },
+                            { text: "（繼續）", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
                         ]
                     },
                     "盜賊巢穴_說服成功": {
@@ -424,7 +432,7 @@
                         npc: "npc",
                         text: "抱歉啦，我只能告訴你位置，找個不怕死的帶你進去吧。",
                         choices: [
-                            { text: "再見", next: "", action: "(showThievesPos(), showTeamMenu(), removeDialogue())" },
+                            { text: "再見", next: "", action: "(showThievesPos(), dismiss(), showTeamMenu(), removeDialogue())" },
                         ]
                     },
                     "盜賊巢穴_解散": {
@@ -747,7 +755,7 @@
             menu.innerHTML = "";  // 清空選單內容
 
             // 創建每個成員的資料
-            teamMembers.forEach((member, index) => {
+            teamMembers.forEach(member => {
                 const characterDiv = document.createElement("div");
 
                 characterDiv.innerHTML = `
@@ -758,9 +766,9 @@
                             <h4 class="hp" style="margin:5px 0;">${member.HP} / ${member.MaxHP}</h4>
                         </div>
                         <div class="column row-buttons">
-                            <button onclick="characterSheet('companion${index}')">🔎<br><span class="small">查看</span></button>
+                            <button onclick="characterSheet('${member.id}')">🔎<br><span class="small">查看</span></button>
                             ${member.id !== "player" ? `
-                                <button onclick="getDialogueNpc('companion${index}')">💬<br><span class="small">交談</span></button>
+                                <button onclick="getDialogueNpc('${member.id}')">💬<br><span class="small">交談</span></button>
                             `: "" }
                         </div>
                     </div>
@@ -788,6 +796,13 @@
             const memberName = member.name;
 
             localStorage.setItem("npcName", memberName);
+
+            // 檢查是否昏迷
+            if (member.HP === 0) {
+                localStorage.setItem("npcName", "共同");
+                showDialogue("昏迷");
+                return;
+            }
 
             // 檢查是否在戰鬥中
             const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
@@ -835,12 +850,6 @@
 
         // 威嚇
         function intimidate(key) {
-            // 檢查是否已經骰過，以免刷新頁面時重骰
-            const intimidateResult = localStorage.getItem("intimidateResult");
-            if (intimidateResult) {
-                return;
-            } 
-
             // 讀取成員資料
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
@@ -852,67 +861,54 @@
             let teamStr = 0; 
             teamMembers.forEach(member => {
                 if (member.id !== npcId) {
-                    teamStr += member.totalStr;
+                    teamStr += member.str.total;
                 }
             });
             
-            // 計算威嚇成功率
-            let intimidateChance = teamStr / (teamStr + npc.totalStr);
-
-            let randomValue = Math.random(); // 產生 0~1 的隨機小數
+            // 以隊伍中最高力量和對方力量擲骰
+            let result = roll(teamStr, npc.str.total);
             // 檢查成功率
-            console.log(`隊伍其他人的總力量: ${teamStr}, 對方力量: ${npc.totalStr}`);
-            console.log(`計算的威嚇成功率: ${(intimidateChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+            console.log(`隊伍其他人的總力量: ${teamStr}, 對方力量: ${npc.str.total}`);
+            console.log(`計算的威嚇成功率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+
+            turnSwitch("hasIntimidated"); // 標記為已威嚇，跳轉頁面時再清除，以免刷新頁面時重骰
 
             // 顯示威嚇結果
-            if (randomValue <= intimidateChance) {
+            if (result.success === true) {
                 // 威嚇成功
                 showDialogue(key + '_威嚇成功');
-                localStorage.setItem("intimidateResult", "success"); // 記錄結果，清除對話時再清除，以免刷新頁面時重骰
             } else {
                 // 威嚇失敗
-                dismiss();
                 showDialogue(key + '_威嚇失敗');
-                localStorage.setItem("intimidateResult", "fail"); // 記錄結果，清除對話時再清除，以免刷新頁面時重骰
             }
         }
 
         // 說服
         function persuade(key) {
-            // 檢查是否已經骰過，以免刷新頁面時重骰
-            const persuadeResult = localStorage.getItem("persuadeResult");
-            if (persuadeResult) {
-                return;
-            } 
-
-            // 讀取主角的魅力
-            const playerTotalCha = parseInt(localStorage.getItem("playerTotalCha"));
-
             // 讀取成員資料
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+
+            // 讀取主角資料
+            const player = teamMembers.find(m => m.id === "player");
 
             // 讀取交談對象
             const npcId = localStorage.getItem("npcId");
             let npc = teamMembers.find(m => m.id === npcId);
 
-            // 計算說服成功率
-            let persuadeChance = playerTotalCha / (playerTotalCha + npc.wis);
+            // 以主角魅力和對方感知擲骰
+            let result = roll(player.cha.total, npc.wis);
+            console.log(`主角魅力: ${player.cha.total}, 對方感知: ${npc.wis.total}`);
+            console.log(`計算的說服成功率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
-            let randomValue = Math.random(); // 產生 0~1 的隨機小數
-            // 檢查成功率
-            console.log(`主角魅力: ${playerTotalCha}, 對方感知: ${npc.wis}`);
-            console.log(`計算的說服成功率: ${(persuadeChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+            turnSwitch("hasPersuaded"); // 標記為已說服，跳轉頁面時再清除，以免刷新頁面時重骰
 
-            // 顯示說服結果
-            if (randomValue <= persuadeChance) {
+            // 說服結果
+            if (result.success === true) {
                 // 說服成功
                 showDialogue(key + '_說服成功');
-                localStorage.setItem("persuadeResult", "success"); // 記錄結果，清除對話時再清除，以免刷新頁面時重骰
             } else {
                 // 說服失敗
-                dismiss();
                 showDialogue(key + '_說服失敗');
-                localStorage.setItem("persuadeResult", "fail"); // 記錄結果，清除對話時再清除，以免刷新頁面時重骰
             }
         }
 
