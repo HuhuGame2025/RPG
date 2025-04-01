@@ -221,7 +221,7 @@
                     "打掃倉庫2": {
                         text: "你來到倉庫，這裡混雜著各種原料的味道，但你沒有覺得特別臭。<br><br>你將整間倉庫打掃了一遍，克萊蒙還是說有味道，於是你又打掃了一遍。<br><br>幾乎打掃了一整天後，克萊蒙才終於滿意，給了你一瓶血葡萄酒。",
                         choices: [
-                            { text: "收下", next: "", action: "(turnSwitch('在莊園工作'), goToBrewhouse(), exitEvent(), turnSwitch('釀造坊打掃倉庫'), getItem('lootSupply02'), removeDialogue())" },
+                            { text: "收下", next: "", action: "(turnSwitch('在莊園工作'), goToBrewhouse(), exitEvent(), turnSwitch('釀造坊打掃倉庫'), getItem('bloodWine'), removeDialogue())" },
                         ]
                     },
                     "偷綠血": {
@@ -248,7 +248,7 @@
                     "幽靈菇2": {
                         text: "你取出幽靈菇，一朵一朵切碎，放進陶缽磨成粉。<br><br>全部做完花了你一整天的時間，你的手痠到不行。<br><br>克萊蒙看了後點點頭，按照約定給了你一瓶血葡萄酒。",
                         choices: [
-                            { text: "收下", next: "", action: "(turnSwitch('在莊園工作'), goToBrewhouse(), exitEvent(), turnSwitch('釀造坊處理幽靈菇'), getItem('lootSupply02'), removeDialogue())" },
+                            { text: "收下", next: "", action: "(turnSwitch('在莊園工作'), goToBrewhouse(), exitEvent(), turnSwitch('釀造坊處理幽靈菇'), getItem('bloodWine'), removeDialogue())" },
                         ]
                     },
                     "偷幽靈菇": {
@@ -275,7 +275,7 @@
                         npc: "npc",
                         text: "啊，太棒了，我必須好好研究怎麼重現這樣的血味。<br><br>要是領主看上你，把你調走了，我一定會想念這個味道的……<br><br>對了，這是答應給你的血葡萄酒，有空再過來喔。",
                         choices: [
-                            { text: "謝謝", next: "", action: "(turnSwitch('在莊園工作'), goToBrewhouse(), exitEvent(), getItem('lootSupply02'), removeDialogue())" },
+                            { text: "謝謝", next: "", action: "(turnSwitch('在莊園工作'), goToBrewhouse(), exitEvent(), getItem('bloodWine'), removeDialogue())" },
                         ]
                     },
             },
@@ -300,7 +300,7 @@
                     text: "沃特遞給你高腳杯和一根針，然後轉過身去，給你一點空間。",
                     choices: [
                         { text: "刺破手指", next: "倒血", action: "addPlayerHP(-5)" },
-                        { text: "倒入血葡萄酒", next: "倒酒", condition: "isItem('lootSupply02')", action: "loseItem('lootSupply02')" },
+                        { text: "倒入血葡萄酒", next: "倒酒", condition: "isItem('bloodWine')", action: "loseItem('bloodWine')" },
                     ]
                 },
                 "倒血": {

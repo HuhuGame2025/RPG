@@ -245,7 +245,7 @@
                     npc: "npc",
                     text: "嘿，不要攻擊！我雖然是個哥布林，但別把我當成我那些野蠻的親戚，我只是想跟你做生意。",
                     choices: [
-                        { text: "讓我看看你的貨", next: "交易", action: "showShop(null, ['specialItem11', 'specialItem12']);" },
+                        { text: "讓我看看你的貨", next: "交易", action: "showShop(null, ['weaponPack', 'armorPack']);" },
                         { text: "你是從哪裡找到這些的？", next: "來源" },
                         { text: "和我說說你的事", next: "了解" },
                         { text: "再見", next: "", action: "removeDialogue()" },
@@ -382,7 +382,7 @@
                 "寶庫": {
                     text: "你來到洞穴深處的寶庫，盜賊們四處掠奪來的戰利品全都堆放在這裡。<br><br>有寶石、武器、補給品，以及 $320 的金幣。",
                     choices: [
-                        { text: "搜刮戰利品", next: "搜刮", action: "(getItem('specialItem13'), getItem('weapon01', 4), getItem('supply01', 2), getItem('supply02', 2), getItem('supply03', 2), getItem('$320'))" },
+                        { text: "搜刮戰利品", next: "搜刮", action: "(getItem('devilGem01'), getItem('sword01', 4), getItem('healPotion01', 2), getItem('supply02', 2), getItem('supply03', 2), getItem('$320'))" },
                     ]
                 },
                 "搜刮": {
@@ -505,7 +505,7 @@
                         text: "塔裡擺放著幾副站立的盔甲，旁邊堆放著一些生鏽的武器，有一道通往塔頂的樓梯。",
                         choices: [
                             { text: "調查盔甲", next: "調查盔甲" },
-                            { text: "搜刮武器", next: "搜刮武器", condition: "!isTrue('古堡搜索武器')", action: "(getItem('lootWeapon03', 2), turnSwitch('古堡搜索武器'))" },
+                            { text: "搜刮武器", next: "搜刮武器", condition: "!isTrue('古堡搜索武器')", action: "(getItem('sword01_old', 2), turnSwitch('古堡搜索武器'))" },
                             { text: "上樓", next: "骷髏襲擊" },
                             { text: "離開高塔", next: "start" },
                         ]
@@ -513,7 +513,7 @@
                         "右側一樓_無盔甲": {
                             text: "塔裡散落著枯骨，旁邊堆放著一些生鏽的武器，有一道通往塔頂的樓梯。",
                             choices: [
-                                { text: "搜刮武器", next: "搜刮武器", condition: "!isTrue('古堡搜索武器')", action: "(getItem('lootWeapon03', 2), turnSwitch('古堡搜索武器'))" },
+                                { text: "搜刮武器", next: "搜刮武器", condition: "!isTrue('古堡搜索武器')", action: "(getItem('sword01_old', 2), turnSwitch('古堡搜索武器'))" },
                                 { text: "上樓", next: "右側二樓", condition: "!isTrue('古堡掀布')" },
                                 { text: "上樓", next: "右側二樓_掀布", condition: "isTrue('古堡掀布') && !isTrue('古堡釋放小孩')" },
                                 { text: "上樓", next: "右側二樓_釋放", condition: "isTrue('古堡釋放小孩')" },
@@ -591,7 +591,7 @@
                         "搜刮馬卡斯": {
                             text: "你發現馬卡斯戴著一枚金戒指，看起來很有價值。",
                             choices: [
-                                { text: "拿走戒指", next: "拿走戒指", action: "(getItem('loot11'))" },
+                                { text: "拿走戒指", next: "拿走戒指", action: "(getItem('MarcusRing'))" },
                                 { text: "不拿走", next: "查看馬卡斯" },
                             ]
                         },
@@ -1249,6 +1249,14 @@
                 itemElement.addEventListener("click", () => {
                     hidedElement.textContent = (hidedElement.textContent === note) ? weather.description : note;
                 });
+            }
+
+            // 如果是大雷雨，添加情緒
+            if (weather.name === "大雷雨") {
+                const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+                teamMembers.forEach(member => {
+                    getEmotion(member.id, "soaked");
+                })
             }
         }
 

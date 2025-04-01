@@ -46,9 +46,9 @@
             const member = teamMembers.find(m => m.id === memberId);
             console.log("成員", member);
             
-            // 查找武器和護具的名稱
+            // 查找武器和盔甲的名稱
             const weaponName = (member.weapon && member.weapon.name) ? member.weapon.name : "（無武器）";
-            const armorName = (member.armor && member.armor.name) ? member.armor.name : "（無護具）";
+            const armorName = (member.armor && member.armor.name) ? member.armor.name : "（無盔甲）";
 
             // 計算屬性加值
             let addStr = member.str.total - member.str.basic;
@@ -91,14 +91,17 @@
                 <div class="item">
                     <span class="small">情緒</span>
                     <div class="column-container background">
-                        <span class="column" id="mood-level"></span>
+                        <div class="column">
+                            <span id="mood-level"></span>
+                            <span class="small note" id="mood-description"></span>
+                        </div>
                         <span class="column-small">${member.mood}</span>
                     </div>
                     <div id="emotion-list"></div>
                 </div>
                     
                 <div class="item">
-                    <span>屬性</span>
+                    <span class="small">屬性</span>
                     <div class="column-container background">
                         <span class="column center">🫀 體質</span>
                         <div class="column row-buttons">
@@ -187,14 +190,24 @@
             const member = teamMembers.find(m => m.id === memberId);
 
             // 顯示心情
-            if (member.mood >= 10){
+            if (member.mood >= 15) {
                 document.getElementById("mood-level").textContent = "❤️‍🔥 狂喜";
-            } else if (member.mood >= 5){
-                document.getElementById("mood-level").textContent = "🎶 愉快";
-            } else if (member.mood <= -5){
-                document.getElementById("mood-level").textContent = "💢 沮喪";
-            } else if (member.mood <= -10){
-                document.getElementById("mood-level").textContent = "💥 崩潰";
+                document.getElementById("mood-description").textContent = "敏捷 + 2";
+            } else if (member.mood >= 10) {
+                document.getElementById("mood-level").textContent = "🎶 高興";
+                document.getElementById("mood-description").textContent = "敏捷 + 1";
+            } else if (member.mood >= 5) {
+                document.getElementById("mood-level").textContent = "👍 輕鬆";
+                document.getElementById("mood-description").textContent = "感知 + 1";
+            } else if (member.mood <= -5) {
+                document.getElementById("mood-level").textContent = "👎 不悅";
+                document.getElementById("mood-description").textContent = "感知 - 1";
+            } else if (member.mood <= -10) {
+                document.getElementById("mood-level").textContent = "💦 焦慮";
+                document.getElementById("mood-description").textContent = "敏捷 - 1";
+            } else if (member.mood <= -15) {
+                document.getElementById("mood-level").textContent = "💀 崩潰";
+                document.getElementById("mood-description").textContent = "敏捷 - 2";
             } else {
                 document.getElementById("mood-level").textContent = "👌 平靜";
             }
@@ -356,8 +369,9 @@
             const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             const member = teamMembers.find(m => m.id === memberId);
 
-            if (member[itemType]) {
-                let item = itemDatabase.find(i => i.id === member[itemType].id);
+            if (member[itemType] && member[itemType].id) {
+                //let item = itemDatabase.find(i => i.id === member[itemType].id);
+                let item = findItemData(member[itemType].id); // 從資料庫查找物品
 
                 // 顯示裝備中的物品描述
                 let note = document.getElementById("note");            
@@ -388,7 +402,8 @@
             itemList.innerHTML = "";
 
             Object.keys(count).forEach(itemId => {
-                let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
+                //let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
+                let item = findItemData(itemId); // 從資料庫查找物品
 
                 // 顯示這個類型的裝備，隱藏其他人的專屬裝備
                 if (item && item.type === itemType && (!item.owner || item.owner === memberName)) {
@@ -408,6 +423,7 @@
                                 ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
                                 ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
                                 ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
+                                ${item.dex && !item.needStr ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
                                 ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
                                 ${item.heal ? `恢復 ${item.heal} HP` : ""}
                                 ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
@@ -443,7 +459,7 @@
                 unequipButtonDiv.innerHTML = `
                     <div class="menu">
                         <button onclick="(equip(memberId, 'noArmor'), showCharacterSheet())">
-                            脫下護具
+                            脫下盔甲
                         </button>
                     </div>
                 `;

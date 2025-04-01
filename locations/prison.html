@@ -364,7 +364,7 @@
                     npc: "齊布",
                     text: "你想要什麼？",
                     choices: [
-                        { text: "讓我看看你的貨", next: "交易", action: "showShop(null, ['lootWeapon01', 'supply01', 'key01']);" },
+                        { text: "讓我看看你的貨", next: "交易", action: "showShop(null, ['dagger01', 'healPotion01', 'key01']);" },
                         { text: "你是誰？", next: "關於是誰" },
                         //{ text: "你在這裡做什麼？", next: "關於做什麼" },
                         { text: "沒事", next: "下水道安全" },
@@ -491,12 +491,12 @@
             if (type === "搜索") {
                 if (randomValue <= 0.3) {
                     searchResult = 1;
-                    getItem("loot10", 1);
+                    getItem("ironＷire", 1);
                     showDialogue("發現鐵絲");
 
                 } else if (randomValue <= 0.6) {
                     searchResult = 2;
-                    getItem("lootWeapon13", 1);
+                    getItem("stone", 1);
                     showDialogue("發現石頭");
 
                 } else if (randomValue <= 0.8) {
@@ -567,9 +567,9 @@
             if (caught === "true") {
                 // 被發現，沒收物品
                 if (searchResult === 1) {
-                    loseItem("loot10", 1);
+                    loseItem("ironＷire", 1);
                 } else if (searchResult === 2) {
-                    loseItem("lootWeapon13", 1);
+                    loseItem("stone", 1);
                 } else if (searchResult === 3) {
                     loseItem("$" + findMoney);
                 } else if (searchResult === 4) {
@@ -672,7 +672,7 @@
             let item;
 
             // 如果有鐵絲
-            item = playerItems.find(i => i === "loot10")
+            item = playerItems.find(i => i === "ironＷire")
             if (item) {
                 // 顯示開鎖按鈕
                 document.getElementById("item-list").insertAdjacentHTML("beforeend", `
@@ -731,7 +731,7 @@
 
             //失敗
             } else if (result === "fail") { 
-                loseItem("loot10", 1); // 弄壞鐵絲
+                loseItem("ironＷire", 1); // 弄壞鐵絲
                 if (cell === 1) { 
                     // 主角的牢房
                     showDialogue("開鎖失敗");

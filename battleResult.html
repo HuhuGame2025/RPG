@@ -154,6 +154,7 @@
             localStorage.removeItem("lootResult"); // 清除戰利品訊息
             localStorage.removeItem("battleResult");
             localStorage.removeItem("respawn");
+            turnSwitch("enemySurrender", false); // 清除敵人投降
             localStorage.removeItem("encounter"); // 清除指定遭遇
 
             // 清空隊員的狀態
@@ -169,7 +170,7 @@
             // 如果戰敗或被搶劫
             if (battleResult === 5 || battleResult === 6) {
                 if (respawn === 2) { // 被送回城鎮，則跳轉到旅館
-                    destination = 'town/inn.html';
+                    destination = 'locations/inn.html';
                 } else if (respawn === 3) { // 被逮捕
                     arrested();
                     return;

@@ -399,14 +399,14 @@
                 // 送貨到晨曦鎮（自動提交，因為不會顯示在收件地的任務列表中）
                 if (mission.id === "task01" && playerPos.id === "town01") {
                     // 計算包裹數量
-                    const packageCount = playerItems.filter(i => i === "specialItem01").length;
+                    const packageCount = playerItems.filter(i => i === "package01").length;
                     if (packageCount > 0) {
                         // 送達，增加金錢，乘上包裹數量
                         price = mission.price * packageCount;
                         getItem("$" + price);
 
                         // 從物品中移除已送達的包裹
-                        newPlayerItems = playerItems.filter(i => i !== "specialItem01");
+                        newPlayerItems = playerItems.filter(i => i !== "package01");
                         localStorage.setItem("playerItems", JSON.stringify(newPlayerItems));
 
                         showDialogue("提交：送貨成功", price);
@@ -414,14 +414,14 @@
                     }
 
                     // 計算損壞的包裹數量
-                    const damagedCount = playerItems.filter(i => i === "specialItem02").length;
+                    const damagedCount = playerItems.filter(i => i === "package01_damaged").length;
                     if (damagedCount > 0) {
                         // 包裹損壞，扣除雙倍金錢，乘上損壞包裹數量
                         price = mission.price * 2 * damagedCount;
                         getItem("$" + price);
 
                         // 從物品中移除損壞的包裹
-                        newPlayerItems = playerItems.filter(i => i !== "specialItem02");
+                        newPlayerItems = playerItems.filter(i => i !== "package01_damaged");
                         localStorage.setItem("playerItems", JSON.stringify(newPlayerItems));
                         
                         showDialogue("提交：送貨失敗", price);
@@ -433,28 +433,28 @@
                 // 送貨到鐵石鎮（自動提交，因為不會顯示在收件地的任務列表中）
                 } else if (mission.id === "task02" && playerPos.id === "town02") {
                     // 計算包裹數量
-                    const packageCount = playerItems.filter(i => i === "specialItem03").length;
+                    const packageCount = playerItems.filter(i => i === "package02").length;
                     if (packageCount > 0) {
                         // 送達，增加金錢，乘上包裹數量
                         price = mission.price * packageCount;
                         playerMoney += price;
 
                         // 從物品中移除已送達的包裹
-                        playerItems = playerItems.filter(i => i !== "specialItem03");
+                        playerItems = playerItems.filter(i => i !== "package02");
 
                         showDialogue("提交：送貨成功", price);
                         return;
                     }
 
                     // 計算損壞的包裹數量
-                    const damagedCount = playerItems.filter(i => i === "specialItem04").length;
+                    const damagedCount = playerItems.filter(i => i === "package02_damaged").length;
                     if (damagedCount > 0) {
                         // 包裹損壞，扣除雙倍金錢，乘上損壞包裹數量
                         price = mission.price * 2 * damagedCount;
                         playerMoney -= price;
 
                         // 從物品中移除損壞的包裹
-                        playerItems = playerItems.filter(i => i !== "specialItem04");
+                        playerItems = playerItems.filter(i => i !== "package02_damaged");
 
                         showDialogue("提交：送貨失敗", price);
                         return;
@@ -490,7 +490,7 @@
                 // 收集種子
                 } else if (mission.id === "task05") {
                     // 如果物品中有10個種子，就標記為完成
-                    let seedCount = playerItems.filter(i => i === "loot08").length;
+                    let seedCount = playerItems.filter(i => i === "manEaterSeed").length;
                     if (seedCount >= 10) {
                         mission.status = "success";
                     } else {
@@ -500,7 +500,7 @@
                 // 失竊的紅寶石
                 } else if (mission.id === "quest01") {
                     // 如果物品中有紅寶石，就標記為完成
-                    let ruby = playerItems.find(i => i === "specialItem13" || i === "specialItem14");
+                    let ruby = playerItems.find(i => i === "devilGem01" || i === "devilGem02");
                     if (ruby) {
                         mission.status = "success";
                     } else {
@@ -800,12 +800,12 @@
             // 收集種子
             } else if (mission.id === "task05") {
                 // 計算種子數量
-                const seedCount = playerItems.filter(i => i === "loot08").length;
+                const seedCount = playerItems.filter(i => i === "manEaterSeed").length;
                 price = mission.price * 0.1 * seedCount;
                 playerMoney += price; // 獲得報酬
                 localStorage.setItem("playerMoney", playerMoney.toString());
 
-                loseItem("loot08", seedCount); // 移除物品
+                loseItem("manEaterSeed", seedCount); // 移除物品
 
                 takenMissions = takenMissions.filter((m) => m.id !== mission.id); // 清除任務
                 localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
@@ -824,8 +824,8 @@
                 playerMoney += mission.price; // 獲得報酬
                 localStorage.setItem("playerMoney", playerMoney.toString());
 
-                loseItem("specialItem13"); // 移除物品
-                loseItem("specialItem14"); // 移除物品
+                loseItem("devilGem01"); // 移除物品
+                loseItem("devilGem02"); // 移除物品
                 
                 akenMissions = takenMissions.filter((m) => m.id !== mission.id); // 清除任務
                 localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
@@ -870,9 +870,9 @@
 
                     // 根據任務獲得包裹
                     if (missionId === "task01") {
-                        playerItems.push("specialItem01");
+                        playerItems.push("package01");
                     } else if (missionId === "task02"){
-                        playerItems.push("specialItem03");
+                        playerItems.push("package02");
                     }
 
                     localStorage.setItem("playerItems", JSON.stringify(playerItems));

@@ -523,6 +523,8 @@
             wis: { basic: parseInt(localStorage.getItem("playerWis")) },
             cha: { basic: parseInt(localStorage.getItem("playerCha")) },
             arm: { basic: 0 },
+            weapon: {},
+            armor: {},
             MaxHP: parseInt(localStorage.getItem("playerMaxHP")),
             HP: parseInt(localStorage.getItem("playerMaxHP")),
             status: [], // 初始狀態
@@ -532,24 +534,11 @@
         };
 
         // 加總屬性
-        playerData.str.total = Object.entries(playerData.str)
-            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-        playerData.dex.total = Object.entries(playerData.dex)
-            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-        playerData.con.total = Object.entries(playerData.con)
-            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-        playerData.wis.total = Object.entries(playerData.wis)
-            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-        playerData.cha.total = Object.entries(playerData.cha)
-            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-        playerData.arm.total = Object.entries(playerData.arm)
-            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        ["str", "dex", "con", "wis", "cha", "arm"].forEach(attr => {
+            playerData[attr].total = Object.entries(playerData[attr])
+                .filter(([key]) => key !== "total") // 過濾掉 "total"
+                .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        });
 
         // 檢查隊伍內是否已有主角
         let playerIndex = teamMembers.findIndex(member => member.id === "player");
@@ -564,6 +553,14 @@
 
         // 儲存隊伍成員
         localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+
+        // 穿布衣
+        equip("player", "clothes01"); 
+
+        // 添加情緒
+        getEmotion("player", "fullHP"); 
+
+
         console.log("隊伍更新:", teamMembers);
     }
 
@@ -610,6 +607,9 @@
             equip(companionId, companion.armorId);
         }
         console.log("同伴加入", teamMembers);
+
+        // 添加滿血情緒
+        getEmotion(companionId, "fullHP"); 
     }
 
     // 同伴離開隊伍（輸入 id 或 name 都可以）
@@ -660,11 +660,15 @@
         // 讀取隊伍資訊
         const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
-        // 將 HP 設為最大值
         teamMembers.forEach(member => {
-            member.HP = member.MaxHP;
+            member.HP = member.MaxHP; // 將 HP 設為最大值
         });
+        
         localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+
+        teamMembers.forEach(member => {
+            getEmotion(member.id, "fullHP"); // 添加情緒
+        });
     }
 
     // 顯示隊伍健康程度
@@ -828,134 +832,136 @@
 
     // 物品資料庫
     const itemDatabase = [
+        // 商店定價
+            // 穿刺、遠程武器價格 = (str-3) * 10
+            // 鈍擊武器價格 = (str-3) * 10 + 5
+            // 揮砍武器架格 = (str-5) * 10 + 5
+            // 盔甲價格 = arm * 10
+            // 服裝價格 = cha * 15
+
         // 武器
             // 商店貨
-            { id: "weapon01", type: "weapon", category: "穿刺", name: "🗡️ 匕首", str: 5, dex: 0, description: "適合隨身攜帶的短劍。", price: 10 },
-            { id: "weapon02", type: "weapon", category: "鈍擊", name: "🔨 硬頭錘", str: 8, dex: 0, description: "單手使用的鈍器。", price: 25 },
-            { id: "weapon03", type: "weapon", category: "揮砍", name: "🗡️ 單手劍", str: 10, dex: 0, description: "戰士的標準配備。", price: 45 },
-            { id: "weapon04", type: "weapon", category: "揮砍", name: "🗡️ 巨劍", str: 12, dex: -1, needStr: 13, description: "雙手持握的大型劍。", price: 70 },
-            { id: "weapon05", type: "weapon", category: "揮砍", name: "🗡️ 戰斧", str: 15, dex: -2, needStr: 16, description: "殺傷力驚人的重型武器。", price: 100 },
-            { id: "weapon06", type: "weapon", category: "遠程", name: "🏹 短弓", str: 10, dex: 0, description: "能瞄準空中的敵人。", price: 60 },
-            { id: "weapon07", type: "weapon", category: "鈍擊", name: "🛡️ 盾牌", str: 5, arm: 5, dex: -1, description: "能保護自身也能當鈍器使用。", price: 45 },
+            { type: "weapon", category: "穿刺", id: "dagger01", name: "🗡️ 匕首", str: 4, dex: 0, description: "適合隨身攜帶的短劍。", price: 10, shop: "blacksmith" },
+            { type: "weapon", category: "穿刺", id: "spear01", name: "✒️ 長矛", str: 8, dex: -1, needStr: 10, description: "用來刺擊的長柄武器。", price: 50, shop: "blacksmith" },
+            { type: "weapon", category: "鈍擊", id: "hammer01", name: "🔨 釘頭錘", str: 6, dex: 0, description: "單手捶打用的鈍器。", price: 35, shop: "blacksmith" },
+            { type: "weapon", category: "鈍擊", id: "hammer02", name: "🔨 戰錘", str: 10, dex: -2, needStr: 14, description: "給予沉重打擊的長柄武器。", price: 75, shop: "blacksmith" },
+            { type: "weapon", category: "揮砍", id: "sword01", name: "🗡️ 單手劍", str: 8, dex: 0, description: "戰士的標準配備。", price: 35, shop: "blacksmith" },
+            { type: "weapon", category: "揮砍", id: "sword02", name: "🗡️ 巨劍", str: 12, dex: -1, needStr: 12, description: "雙手持握的大型劍。", price: 75, shop: "blacksmith" },
+            { type: "weapon", category: "揮砍", id: "axe01", name: "🪓 戰斧", str: 14, dex: -2, needStr: 14, description: "殺傷力驚人的長柄武器。", price: 95, shop: "blacksmith" },
+            { type: "weapon", category: "遠程", id: "bow01", name: "🏹 短弓", str: 6, dex: 0, description: "能瞄準地面與空中的敵人。", price: 30, shop: "blacksmith" },
+            //{ type: "weapon", category: "穿刺", id: "arrow01", name: "➶ 箭矢", str: 1, dex: 0, description: "射擊用的箭矢，緊急時可以拿來防身。", price: 1, shop: "blacksmith" },
+            { type: "weapon", category: "鈍擊", id: "sheild01", name: "🛡️ 木盾", str: 4, arm: 2, description: "輕型盾牌，能保護自身也能當鈍器使用。", price: 35, shop: "blacksmith" },
             
             // 戰利品
-            { id: "lootWeapon01", type: "weapon", category: "穿刺", name: "🗡️ 老舊的匕首", str: 3, dex: 0, description: "適合隨身攜帶的小刀。", price: 7 },
-            { id: "lootWeapon02", type: "weapon", category: "鈍擊", name: "🔨 老舊的硬頭錘", str: 5, dex: 0, description: "單手使用的鈍器。", price: 17 },
-            { id: "lootWeapon03", type: "weapon", category: "揮砍", name: "🗡️ 老舊的單手劍", str: 7, dex: 0, description: "戰士的標準配備。", price: 30 },
-            { id: "lootWeapon04", type: "weapon", category: "揮砍", name: "🗡️ 老舊的巨劍", str: 8, dex: -1, needStr: 13, description: "雙手持握的大型劍。", price: 46 },
-            { id: "lootWeapon05", type: "weapon", category: "揮砍", name: "🗡️ 老舊的戰斧", str: 10, dex: -2, needStr: 16, description: "殺傷力驚人的重型武器。", price: 66 },
-            { id: "lootWeapon06", type: "weapon", category: "遠程", name: "🏹 老舊的短弓", str: 7, dex: 0, description: "能瞄準空中的敵人。", price: 40 },
-            { id: "lootWeapon07", type: "weapon", category: "鈍擊", name: "🛡️ 老舊的盾牌", str: 3, arm: 3, dex: -1, description: "能保護自身也能當鈍器使用。", price: 30 },
-
-            { id: "lootWeapon11", type: "weapon", category: "鈍擊", name: "🗡️ 小棍棒", str: 1, dex: 0, description: "只是一根普通的樹枝。", price: 0 },
-            { id: "lootWeapon12", type: "weapon", category: "鈍擊", name: "🗡️ 巨大的狼牙棒", str: 20, dex: -6, needStr: 20, description: "將樹幹和獸骨綁起來。", price: 10 },
-            { id: "lootWeapon13", type: "weapon", category: "鈍擊", name: "🗡️ 尖銳的石頭", str: 1, dex: 0, description: "可以藏在衣服裡。", price: 0 },
+            { type: "weapon", category: "鈍擊", id: "stick01", name: "🔨 小棍棒", str: 1, dex: 0, description: "只是一根普通的樹枝。", price: 0 },
+            { type: "weapon", category: "鈍擊", id: "stick02", name: "🔨 巨大的狼牙棒", str: 20, dex: -6, needStr: 20, description: "將樹幹和獸骨綁起來。", price: 10 },
+            { type: "weapon", category: "鈍擊", id: "stone", name: "🪨 尖銳的石頭", str: 1, dex: 0, description: "可以藏在衣服裡。", price: 0 },
 
             // NPC專屬
-            { id: "npcWeapon01", type: "weapon", category: "揮砍", name: "🗡️ 雷納德的巨劍", str: 12, dex: -1, needStr: 13, description: "雙手持握的大型劍。", owner: "雷納德" },
-            { id: "npcWeapon02", type: "weapon", category: "揮砍", name: "🗡️ 塔爾穆克的戰斧", str: 15, dex: -2, needStr: 16, description: "殺傷力驚人的重型武器。", owner: "塔爾穆克" },
-            { id: "npcWeapon03", type: "weapon", category: "穿刺", name: "🗡️ 賽恩的匕首", str: 5, dex: 0, description: "適合隨身攜帶的短劍。", owner: "賽恩" },
-            { id: "npcWeapon04", type: "weapon", category: "揮砍", name: "🗡️ 艾德蒙的劍", str: 10, dex: 0, description: "戰士的標準配備。", owner: "艾德蒙" },
-            { id: "npcWeapon05", type: "weapon", category: "遠程", name: "🏹 諾伊爾的短弓", str: 10, dex: 0, description: "能瞄準空中的敵人。", owner: "諾伊爾" },
+            { type: "weapon", category: "揮砍", id: "npcWeapon01", name: "🗡️ 雷納德的巨劍", str: 13, dex: -1, needStr: 13, description: "雙手持握的大型長劍。", owner: "雷納德" },
+            { type: "weapon", category: "揮砍", id: "npcWeapon02", name: "🪓 塔爾穆克的戰斧", str: 15, dex: -2, needStr: 15, description: "殺傷力驚人的長柄斧。", owner: "塔爾穆克" },
+            { type: "weapon", category: "穿刺", id: "npcWeapon03", name: "🗡️ 賽恩的匕首", str: 5, dex: 0, description: "適合隨身攜帶的短劍。", owner: "賽恩" },
+            { type: "weapon", category: "揮砍", id: "npcWeapon04", name: "🗡️ 艾德蒙的劍", str: 10, dex: 0, description: "戰士的標準配備。", owner: "艾德蒙" },
+            { type: "weapon", category: "遠程", id: "npcWeapon05", name: "🏹 諾伊爾的短弓", str: 10, dex: 0, description: "能瞄準地面與空中的敵人。", owner: "諾伊爾" },
 
-        // 護具
+        // 盔甲
             // 商店貨
-            { id: "armor01", type: "armor", name: "🛡️ 皮甲", arm: 3, dex: 0, description: "活動性佳的輕型盔甲。", price: 10 },
-            { id: "armor02", type: "armor", name: "🛡️ 鱗甲", arm: 5, dex: 0, description: "以皮革和鐵片製成的鎧甲。", price: 25 },
-            { id: "armor03", type: "armor", name: "🛡️ 鐵製胸甲", arm: 8, dex: 0, description: "包覆軀幹的堅固胸甲。", price: 45 },
-            { id: "armor04", type: "armor", name: "🛡️ 鎖子甲", arm: 10, dex: -1, needStr: 11, description: "以鐵環相扣製成的鎧甲。", price: 70 },
-            { id: "armor05", type: "armor", name: "🛡️ 全身板甲", arm: 12, dex: -2, needStr: 13, description: "完整保護全身的重型盔甲。", price: 100 },
+            { type: "armor", id: "armor01", name: "🛡️ 皮甲", arm: 2, dex: 0, description: "活動性佳的輕型盔甲。", price: 20, shop: "blacksmith" },
+            { type: "armor", id: "armor02", name: "🛡️ 鱗甲", arm: 4, dex: 0, description: "以皮革和鐵片製成的鎧甲。", price: 40, shop: "blacksmith" },
+            { type: "armor", id: "armor03", name: "🛡️ 鐵製胸甲", arm: 6, dex: 0, description: "包覆軀幹的堅固胸甲。", price: 60, shop: "blacksmith" },
+            { type: "armor", id: "armor04", name: "🛡️ 鎖子甲", arm: 8, dex: -1, needStr: 12, description: "以鐵環相扣製成的鎧甲。", price: 80, shop: "blacksmith" },
+            { type: "armor", id: "armor05", name: "🛡️ 全身板甲", arm: 10, dex: -2, needStr: 14, description: "完整保護全身的重型盔甲。", price: 100, shop: "blacksmith" },
     
-            // 戰利品
-            { id: "lootArmor01", type: "armor", name: "🛡️ 老舊的皮甲", arm: 2, dex: 0, description: "活動性佳的輕型盔甲。", price: 7 },
-            { id: "lootArmor02", type: "armor", name: "🛡️ 老舊的鱗甲", arm: 3, dex: 0, description: "以皮革和鐵片製成的鎧甲。", price: 17 },
-            { id: "lootArmor03", type: "armor", name: "🛡️ 老舊的鐵製胸甲", arm: 5, dex: -1, description: "包覆軀幹的堅固胸甲。", price: 30 },
-            { id: "lootArmor04", type: "armor", name: "🛡️ 老舊的鎖子甲", arm: 7, dex: -1, needStr: 11, description: "以鐵環相扣製成的鎧甲。", price: 46 },
-            { id: "lootArmor05", type: "armor", name: "🛡️ 老舊的全身板甲", arm: 8, dex: -2, needStr: 13, description: "完整保護全身的重型盔甲。", price: 66 },
-
-            { id: "lootArmor11", type: "armor", name: "🛡️ 獸皮背心", arm: 0, dex: 0, description: "只能勉強遮蔽身體。", price: 1 },
-            { id: "lootArmor12", type: "armor", name: "🛡️ 巨大的腰布", arm: 1, dex: 0, description: "可以披在身上當斗篷。", price: 0 },
-
             // NPC專屬
-            { id: "npcArmor01", type: "armor", name: "🛡️ 雷納德的胸甲", arm: 8, dex: 0, description: "包覆軀幹的堅固胸甲。", owner: "雷納德" },
-            { id: "npcArmor02", type: "armor", name: "🛡️ 塔爾穆克的胸甲", arm: 8, dex: 0, description: "包覆軀幹的堅固胸甲。", owner: "塔爾穆克" },
-            { id: "npcArmor03", type: "armor", name: "🛡️ 賽恩的皮甲", arm: 3, dex: 0, description: "活動性佳的輕型盔甲。", owner: "賽恩" },
-            { id: "npcArmor04", type: "armor", name: "🛡️ 艾德蒙的鱗甲", arm: 5, dex: 0, description: "以皮革和鐵片製成的鎧甲。", owner: "艾德蒙" },
-            { id: "npcArmor05", type: "armor", name: "🛡️ 諾伊爾的皮甲", arm: 3, dex: 0, description: "活動性佳的輕型盔甲。", owner: "諾伊爾" },
+            { type: "armor", id: "npcArmor01", name: "🛡️ 雷納德的胸甲", arm: 6, dex: 0, description: "包覆軀幹的堅固胸甲。", owner: "雷納德" },
+            { type: "armor", id: "npcArmor02", name: "🛡️ 塔爾穆克的胸甲", arm: 6, dex: 0, description: "包覆軀幹的堅固胸甲。", owner: "塔爾穆克" },
+            { type: "armor", id: "npcArmor03", name: "🛡️ 賽恩的皮甲", arm: 2, dex: 0, description: "活動性佳的輕型盔甲。", owner: "賽恩" },
+            { type: "armor", id: "npcArmor04", name: "🛡️ 艾德蒙的鱗甲", arm: 4, dex: 0, description: "以皮革和鐵片製成的鎧甲。", owner: "艾德蒙" },
+            { type: "armor", id: "npcArmor05", name: "🛡️ 諾伊爾的皮甲", arm: 2, dex: 0, description: "活動性佳的輕型盔甲。", owner: "諾伊爾" },
 
-        // 服裝（也算護具，只是在服飾店販售）
+        // 服裝（也算盔甲，只是在服飾店販售）
             // 商店貨
-            { id: "clothes01", type: "armor", name: "🧥 別緻休閒服", cha: 3, dex: 0, 
-              description: "低調奢華的襯衫背心。選用細緻的布料，提供極佳的舒適度。多條皮帶巧妙點綴，勾勒出身材線條，讓人既自在又不失魅力。",
-              price: 45 },
+                { type: "armor", id: "fineClothes01", name: "🧥 別緻休閒服", cha: 2, dex: 0, 
+                  description: "低調奢華的襯衫背心。選用細緻的布料，提供極佳的舒適度。多條皮帶巧妙點綴，勾勒出身材線條，讓人既自在又不失魅力。",
+                  price: 30, shop: "clothes" },
 
-            { id: "clothes02", type: "armor", name: "🧥 傳說勇者套裝", cha: 3, arm: 3, dex: 0, 
-              description: "以堅固的皮革縫製，兼具美觀與實用性。帥氣的披風隨風飄揚，宛如傳說中的勇者。無論走在街上或身處戰場，都能讓你在人群中脫穎而出。",
-              price: 55 },
+                { type: "armor", id: "fineClothes02", name: "🧥 傳說勇者套裝", cha: 3, arm: 2, dex: 0, 
+                  description: "以堅固的皮革縫製，兼具美觀與實用性。帥氣的披風隨風飄揚，宛如傳說中的勇者。無論走在街上或身處戰場，都能讓你在人群中脫穎而出。",
+                  price: 65, shop: "clothes" },
 
-            { id: "clothes04", type: "armor", name: "🧥 優雅貴族正裝", cha: 5, dex: -1, 
-              description: "奢華天鵝絨外套搭配蕾絲內襯，剪裁合身，襯托出尊爵不凡的氣質，使你舉手投足間散發領袖魅力，你的發言將會具有令人無法抗拒的說服力。但緊身設計稍嫌束縛。",
-              price: 70 },
+                { type: "armor", id: "fineClothes03", name: "🧥 優雅貴族正裝", cha: 6, dex: -1, 
+                  description: "奢華天鵝絨外套搭配蕾絲內襯，剪裁合身，襯托出尊爵不凡的氣質，使你舉手投足間散發領袖魅力，你的發言將會具有令人無法抗拒的說服力。但緊身設計稍嫌束縛。",
+                  price: 90, shop: "clothes" },
 
-            { id: "clothes05", type: "armor", name: "🧥 皇家儀式禮服", cha: 8, dex: -2, 
-              description: "由上等絲綢與金線刺繡製成，象徵尊貴與權勢，無論在哪個場合都能成為眾人矚目的焦點。穿上後必須保持儀態端莊，無法作出大幅度的動作。",
-              price: 100 },
-            //{ id: "clothes01", type: "armor", name: "🧥 別緻休閒服", cha: 5, dex: 0, description: "低調奢華的襯衫背心，以多條皮帶裝飾，凸顯身材曲線", price: 50 },
-            //{ id: "clothes02", type: "armor", name: "🧥 冒險家套裝", cha: 5, arm: 5, dex: 0, description: "美觀兼具實用性，帥氣的披風在身後飄揚，還原人們心目中的勇者形象", price: 100 },
-            //{ id: "clothes03", type: "armor", name: "🧥 優雅正裝", cha: 10, dex: -1, description: "能襯托出高貴身分的正式服裝", price: 100 },
-            //{ id: "clothes04", type: "armor", name: "🧥 貴族晚禮服", cha: 15, dex: -2, description: "極為華麗，能成為目光焦點，但穿起來十分緊繃", price: 150 },
+                { type: "armor", id: "fineClothes04", name: "🧥 皇家儀式禮服", cha: 8, dex: -2, 
+                  description: "由上等絲綢與金線刺繡製成，以璀璨珠寶點綴，象徵尊貴與權勢，無論在哪個場合都能成為萬眾矚目的焦點。穿上後必須保持儀態端莊，無法隨意活動。",
+                  price: 120, shop: "clothes" },
             
             // 戰利品
-            { id: "lootclothes01", type: "armor", name: "🧥 布衣", description: "以廉價布料製成的衣服，從平民到奴隸都會穿。", price: 2 },
-            //{ id: "lootclothes02", type: "armor", name: "🧥 囚服", description: "囚犯穿的衣服。", price: 1 },
+            { type: "armor", id: "clothes01", name: "🧥 布衣", description: "以廉價布料製成的衣服，從一般平民到奴隸都會穿。", price: 1 },
+            { type: "armor", id: "clothes02", name: "🧥 工作服", description: "有很多口袋的吊帶褲與襯衫。", price: 2 },
+            { type: "armor", id: "clothes03", name: "🧥 旅行服", description: "耐磨、耐髒，適合長途旅行穿著。", price: 2 },
+
+            { type: "armor", id: "lootClothes01", name: "🧥 獸皮背心", arm: 0, dex: 0, description: "粗糙縫合的獸皮，只能勉強遮蔽身體。", price: 0 },
+            { type: "armor", id: "lootClothes02", name: "🧥 巨大的腰布", cha: -1, dex: 0, description: "如果不排斥臭味，可以披在身上當斗篷。", price: 0 },
+            { type: "armor", id: "lootClothes03", name: "🧥 破爛衣服", cha: 0, dex: 0, description: "已經破到像是一串碎布了。", price: 0 },
+
 
         // 消耗品
-            { id: "supply01", type: "supply", name: "🫙 治療藥水", description:"立即恢復生命值。", heal: 10, price: 5, usable: "true", consumable: "true"},
-            { id: "supply02", type: "supply", name: "🫙 中級治療藥水", description:"立即恢復生命值。", heal: 20, price: 10, usable: "true", consumable: "true" },
-            { id: "supply03", type: "supply", name: "🫙 高級治療藥水", description:"立即恢復生命值。", heal: 30, price: 15, usable: "true", consumable: "true" },
+            { type: "supply", id: "healPotion01", heal: 10, price: 5, name: "🫙 治療藥水", description:"立即恢復生命值。", usable: true, consumable: true, shop: "grocery" },
+            { type: "supply", id: "healPotion02", heal: 20, price: 10, name: "🫙 中級治療藥水", description:"立即恢復生命值。", usable: true, consumable: true, shop: "grocery" },
+            { type: "supply", id: "healPotion03", heal: 30, price: 15, name: "🫙 高級治療藥水", description:"立即恢復生命值。", usable: true, consumable: true, shop: "grocery" },
+            { type: "supply", id: "bandage", price: 1, name: "💰 繃帶", description:"能止住一處流血的傷口。", usable: true, consumable: true, shop: "grocery" },
 
-            { id: "lootSupply01", type: "supply", name: "🫙 蟲血", heal: 1, description: "富含營養，只是難以下嚥，常被當成打賭輸了的懲罰。", price: 0, usable: "true", consumable: "true" },
-            { id: "lootSupply02", type: "supply", name: "🍾 血葡萄酒", heal: 5, description: "以生長在地底的血葡萄釀成的酒，味道像人血，是吸血鬼喜愛的飲品。", price: 15, usable: "true", consumable: "true" },
-
-        // 戰利品
-            { id: "loot01", type: "loot", name: "💰 龍鱗", description: "龍的鱗片。", price: 60 },
-            { id: "loot02", type: "loot", name: "💰 斷尾", description: "巨蜥的尾巴，可以販賣。", price: 8 },
-            { id: "loot03", type: "loot", name: "💰 仙粉", description: "仙子的魔法粉末，可以販賣。", price: 5 },
-            { id: "loot04", type: "loot", name: "💰 狼皮", description: "野狼的毛皮，可以販賣。", price: 12 },
-            { id: "loot05", type: "loot", name: "💰 狐狸皮", description: "狐狸的毛皮，可以販賣。", price: 6 },
-            { id: "loot06", type: "loot", name: "💰 蜘蛛絲", description: "巨型蜘蛛的絲線，可以販賣。", price: 18 },
-            { id: "loot07", type: "loot", name: "💰 木材", description: "樹妖的木材，可以販賣。", price: 10 },
-            { id: "loot08", type: "loot", name: "🫘 食人花種子", description: "蘊藏著蠢蠢欲動的生命，商人不願意買，但有人在公會高價收購。", price: 0 },
-            { id: "loot09", type: "loot", name: "💰 堅硬羽毛", description: "獅鷲的羽毛，可以販賣。", price: 30 },
-            { id: "loot10", type: "loot", name: "💰 鐵絲", description: "可以用來撬鎖。", price: 0 },
-            { id: "loot11", type: "loot", name: "💰 馬卡斯的戒指", description: "從馬卡斯手上取下的金戒指。", price: 200 },
-            { id: "loot12", type: "loot", name: "💰 植物莖", description: "切下來的藤蔓，可以販賣。", price: 5 },
-            { id: "loot13", type: "loot", name: "💰 毒蘑菇", description: "不可食用的蘑菇，可以販賣。", price: 3 },
-            { id: "loot14", type: "loot", name: "💰 獠牙", description: "野豬的獠牙，可以販賣。", price: 10 },
-
-        // 任務物品
-            { id: "specialItem01", type: "specialItem", name: "📦 包裹", description: "要送到晨曦鎮的包裹。", price: 20 },
-            { id: "specialItem02", type: "specialItem", name: "📦 破損包裹", description: "要送到晨曦鎮的包裹，被之前遇到的敵人破壞了。", price: 0 },
-            { id: "specialItem03", type: "specialItem", name: "📦 包裹", description: "要送到鐵石鎮的包裹。", price: 20 },
-            { id: "specialItem04", type: "specialItem", name: "📦 破損包裹", description: "要送到鐵石鎮的包裹，被之前遇到的敵人破壞了。", price: 0 },
-
-            { id: "specialItem11", type: "specialItem", name: "📦 包好的武器", description: "向哥布林商人買來的，不知道裡面裝著什麼。", price: 0, usable: "true", consumable: "true" },
-            { id: "specialItem12", type: "specialItem", name: "📦 包好的護具", description: "向哥布林商人買來的，不知道裡面裝著什麼。", price: 0, usable: "true", consumable: "true" },
-            { id: "specialItem13", type: "specialItem", name: "♦️ 紅寶石", description: "當你盯著這顆紅寶石時，一個聲音在你腦中響起，要你把它拿近一點。", price: 666, investigable: "true" },
-            { id: "specialItem14", type: "specialItem", name: "♦️ 紅寶石", description: "封印著惡魔的紅寶石。", price: 666, investigable: "true", usable: "true" },
-            { id: "specialItem15", type: "specialItem", name: "📦 沾到綠血的玻璃", description: "這塊玻璃碎片沾了哥布林的血，讓吸血鬼覺得臭氣熏天。", price: 0 },
-            { id: "specialItem16", type: "specialItem", name: "📦 幽靈菇", description: "吃下後不知道會變成怎麼樣的毒菇。", price: 0 },
-
-            { id: "key01", type: "specialItem", name: "🗝️ 牢房鑰匙", description: "可以打開監獄裡任何一間牢房。", price: 50 },
-            { id: "key02", type: "specialItem", name: "🗝️ 鐵鑰匙", description: "堅固的鐵製鑰匙。", price: 0 },
+            { type: "supply", id: "bloodWine", heal: 5, price: 15, name: "🍾 血葡萄酒", description: "以生長在地底的血葡萄釀成的酒，味道像人血，是吸血鬼喜愛的飲品。", usable: true, consumable: true },
 
         // 料理
-            { id: "meal01", type: "meal", name: "🍺 啤酒", description: "最受旅人與戰士歡迎的經典佳釀。", heal: 10, price: 1},  
-            { id: "meal02", type: "meal", name: "🥧 莓果派", description: "內餡包滿了新鮮野莓的甜派，酸甜可口。", heal: 10, price: 1},  
-            { id: "meal03", type: "meal", name: "🥘 奶油蘑菇湯", description: "濃郁奶油加入蘑菇、洋蔥與數種鮮蔬熬煮，溫暖順口，最適合寒冷夜晚享用。", heal: 20, price: 2},  
-            { id: "meal04", type: "meal", name: "🍲 麵包配燉肉湯", description: "將肉塊與馬鈴薯、紅蘿蔔燉煮數小時，肉質入口即化，搭配現烤麵包更是絕配。", heal: 20, price: 2},  
-            { id: "meal05", type: "meal", name: "🍖 嫩煎羊肋排", description: "將羊肋排以秘製醬汁醃製後，煎至表面焦脆，內部鮮嫩多汁，最適合配上一杯啤酒。", heal: 30, price: 3},  
-            { id: "meal06", type: "meal", name: "🍗 香草烤野雞", description: "豪邁地將整隻野雞裹上迷迭香與辛香料，慢火炭烤至外皮金黃香酥，肉汁橫流，香氣四溢。", heal: 30, price: 3}  
+            { type: "meal", id: "meal01", heal: 10, price: 1, name: "🍺 啤酒", description: "最受旅人與戰士歡迎的經典佳釀。", shop: "tavern" },  
+            { type: "meal", id: "meal02", heal: 10, price: 1, name: "🥧 莓果派", description: "內餡包滿了新鮮野莓的甜派，酸甜可口。", shop: "tavern" },  
+            { type: "meal", id: "meal03", heal: 20, price: 2, name: "🥘 奶油蘑菇湯", description: "濃郁奶油加入蘑菇、洋蔥與數種鮮蔬熬煮，溫暖順口，最適合寒冷夜晚享用。", shop: "tavern" },  
+            { type: "meal", id: "meal04", heal: 20, price: 2, name: "🍲 麵包配燉肉湯", description: "將肉塊與馬鈴薯、紅蘿蔔燉煮數小時，肉質入口即化，搭配現烤麵包更是絕配。", shop: "tavern" },  
+            { type: "meal", id: "meal05", heal: 30, price: 3, name: "🍖 嫩煎羊肋排", description: "將羊肋排以秘製醬汁醃製後，煎至表面焦脆，內部鮮嫩多汁，最適合配上一杯啤酒。", shop: "tavern" },  
+            { type: "meal", id: "meal06", heal: 30, price: 3, name: "🍗 香草烤野雞", description: "豪邁地將整隻野雞裹上迷迭香與辛香料，慢火炭烤至外皮金黃香酥，肉汁橫流，香氣四溢。", shop: "tavern" },
+
+        // 戰利品
+            { type: "loot", id: "wormLoot", heal: 1, price: 0, name: "💰 蠕蟲", description: "富含營養，但味道噁心，吃了會一整天不舒服。", usable: true, consumable: true },
+            { type: "loot", id: "slimeLoot", name: "💰 黏液", description: "史萊姆的黏液。", price: 1 },
+            { type: "loot", id: "fur", name: "💰 毛皮", description: "動物的毛皮。", price: 3 },
+            { type: "loot", id: "meat", name: "💰 生肉", description: "動物的肉塊。", price: 3 },
+            { type: "loot", id: "lizardLoot", name: "💰 斷尾", description: "巨蜥的尾巴。", price: 2 },
+            { type: "loot", id: "tusk", name: "💰 獠牙", description: "野豬的獠牙。", price: 4 },
+            { type: "loot", id: "spiderLoot", name: "💰 蜘蛛肉", description: "味道像蟹肉。", price: 5 },
+            { type: "loot", id: "silk", name: "💰 蜘蛛絲", description: "巨型蜘蛛的絲線。", price: 5 },
+            { type: "loot", id: "fairyDust", name: "💰 仙塵", description: "仙子的魔法粉末，通常會邊飛邊灑落。", price: 1 },
+            { type: "loot", id: "batLoot", name: "💰 蝙蝠翅膀", description: "蝙蝠的翅膀。", price: 1 },
+            { type: "loot", id: "gargoyleLoot", name: "💰 石塊", description: "石像鬼的碎塊。", price: 4 },
+            { type: "loot", id: "eagleLoot", name: "💰 堅硬羽毛", description: "巨鷹的羽毛。", price: 10 },
+            { type: "loot", id: "dragonLoot", name: "💰 龍鱗", description: "龍的鱗片。", price: 30 },
+            { type: "loot", id: "vineLoot", name: "💰 植物莖", description: "切下來的藤蔓。", price: 3 },
+            { type: "loot", id: "mushroomLoot", name: "💰 毒蘑菇", description: "不可食用的蘑菇。", price: 2 },
+            { type: "loot", id: "manEaterSeed", name: "🫘 食人花種子", description: "蘊藏著蠢蠢欲動的生命，商人不願意買，但有人在公會高價收購。", price: 0 },
+            { type: "loot", id: "wood", name: "💰 木材", description: "樹妖的木材。", price: 10 },
+
+            { type: "loot", id: "cloth", name: "💰 布料", description: "拆解衣物得到的碎布。", price: 0 },
+            { type: "loot", id: "ironＷire", name: "📎 鐵絲", description: "可以用來撬鎖。", price: 0 },
+            { type: "loot", id: "MarcusRing", name: "💍 馬卡斯的戒指", description: "從馬卡斯手上取下的金戒指，看起來很名貴。", price: 200 },
+
+        // 任務物品
+            { type: "specialItem", id: "package01", name: "📦 包裹", description: "要送到晨曦鎮的包裹。", price: 20 },
+            { type: "specialItem", id: "package01_damaged", name: "📦 破損包裹", description: "要送到晨曦鎮的包裹，被之前遇到的敵人破壞了。", price: 0 },
+            { type: "specialItem", id: "package02", name: "📦 包裹", description: "要送到鐵石鎮的包裹。", price: 20 },
+            { type: "specialItem", id: "package02_damaged", name: "📦 破損包裹", description: "要送到鐵石鎮的包裹，被之前遇到的敵人破壞了。", price: 0 },
+            { type: "specialItem", id: "weaponPack", name: "📦 包好的武器", description: "向哥布林商人買來的，不知道裡面裝著什麼。", price: 0, usable: true, consumable: true },
+            { type: "specialItem", id: "armorPack", name: "📦 包好的盔甲", description: "向哥布林商人買來的，不知道裡面裝著什麼。", price: 0, usable: true, consumable: true },
+            { type: "specialItem", id: "devilGem01", name: "♦️ 紅寶石", description: "當你盯著這顆紅寶石時，一個聲音在你腦中響起，要你把它拿近一點。", price: 666, investigable: true },
+            { type: "specialItem", id: "devilGem02", name: "♦️ 紅寶石", description: "封印著惡魔的紅寶石。", price: 666, investigable: true, usable: true },
+
+            { type: "specialItem", id: "specialItem15", name: "💰 沾到綠血的玻璃", description: "這塊玻璃碎片沾了哥布林的血，讓吸血鬼覺得臭氣熏天。", price: 0 },
+            { type: "specialItem", id: "specialItem16", name: "💰 幽靈菇", description: "吃下後不知道會變成怎麼樣的毒菇。", price: 0 },
+
+            { type: "specialItem", id: "key01", name: "🗝️ 牢房鑰匙", description: "可以打開監獄裡任何一間牢房。", price: 50 },
+            { type: "specialItem", id: "key02", name: "🗝️ 鐵鑰匙", description: "堅固的鐵製鑰匙。", price: 0 },
+
     ];
 
     // 獲得物品或金錢
@@ -1012,7 +1018,7 @@
 
     // 穿上或脫下裝備
         // 脫下武器 equip("player", "noWeapon")
-        // 脫下護具 equip("player", "noArmor")
+        // 脫下盔甲 equip("player", "noArmor")
     function equip(memberId, itemId) {
         // 讀取所有成員的資料
         const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
@@ -1030,13 +1036,14 @@
             member.weapon = null; // 清空武器
             itemType = "weapon";
         } else if (itemId === "noArmor") {
-            if (member.armor) playerItems.push(member.armor.id); // 將原本的護具放回主角物品
-            member.armor = null; // 清空護具
+            if (member.armor) playerItems.push(member.armor.id); // 將原本的盔甲放回主角物品
+            member.armor = null; // 清空盔甲
             itemType = "armor";
 
         // 如果穿上裝備
         } else {
-            let item = itemDatabase.find(i => i.id === itemId); // 找到這件裝備的資料
+            //let item = itemDatabase.find(i => i.id === itemId); // 找到這件裝備的資料
+            let item = findItemData(itemId); // 從資料庫查找物品
             itemType = item.type;
             if (member[itemType]) playerItems.push(member[itemType].id); // 將原本的裝備放回主角物品
             member[itemType] = item; // 更換裝備
@@ -1056,32 +1063,19 @@
         member.cha[itemType] = item.cha || 0;
         member.arm[itemType] = item.arm || 0;
 
-        // 檢查力量是否足夠，不夠才承受敏捷減值
-        if (member.str.basic < item.needStr) {
-            member.dex[itemType] = item.dex || 0;
-        } else {
+        // 檢查力量是否足夠，足夠就不須承受敏捷減值
+        if (member.str.basic >= item.needStr) {
             member.dex[itemType] = 0;
+        } else {
+            member.dex[itemType] = item.dex || 0;
         }
 
         // 加總屬性
-        member.str.total = Object.entries(member.str)
-            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-        member.dex.total = Object.entries(member.dex)
-            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-        member.con.total = Object.entries(member.con)
-            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-        member.wis.total = Object.entries(member.wis)
-            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-        member.cha.total = Object.entries(member.cha)
-            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-        member.arm.total = Object.entries(member.arm)
-            .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-            .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        ["str", "dex", "con", "wis", "cha", "arm"].forEach(attr => {
+            member[attr].total = Object.entries(member[attr])
+                .filter(([key]) => key !== "total") // 過濾掉 "total"
+                .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        });
 
         // 更新 localStorage
         localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
@@ -1122,21 +1116,13 @@
     // 顯示商品列表
         // 單個商品 showShop(null, 'weapon01');        
         // 多個商品 showShop(null, ['weapon01', 'armor03', 'supply05']);
-    function showShop(itemType, itemIds) {
+    function showShop(shopType, itemIds) {
         let itemData = [];
 
         // 依商店篩選物品，並顯示商店說明
-        if (itemType === "equipment") { // 鐵匠鋪
-            itemData = itemDatabase.filter(i => i.id.startsWith("weapon") || i.id.startsWith("armor")); 
-            document.getElementById("text").textContent = texts.equipments;
-        } else if (itemType === "supply") { // 雜貨店
-            itemData = itemDatabase.filter(i => i.id.startsWith(itemType));
-            document.getElementById("text").textContent = texts.supplies;
-        } else if (itemType === "clothes") { // 服飾店
-            itemData = itemDatabase.filter(i => i.id.startsWith(itemType));
-            document.getElementById("text").textContent = texts.clothes;
-        } else if (itemType === "meal") { // 酒館
-            itemData = itemDatabase.filter(i => i.id.startsWith(itemType));
+        if (shopType) {
+            itemData = itemDatabase.filter(i => i.shop === shopType); 
+            document.getElementById("text").textContent = texts[shopType];
         } else { // 沒有商店，只顯示指定商品
             if (!Array.isArray(itemIds)) {
                 itemIds = [itemIds]; // 如果只輸入單一字串，轉成陣列
@@ -1179,7 +1165,7 @@
                     <span class="column">${item.name}</span>
                     <span class="column-small">$${buyPrice}</span>
                     <button onclick="buyItem('${item.id}')">
-                        <span class="small">${itemType !== "meal" ? `購買` : `點餐`}</span>
+                        <span class="small">${shopType !== "tavern" ? `購買` : `點餐`}</span>
                     </button>
                 </div>
                 <div class="hided" style="display: none;">
@@ -1189,12 +1175,13 @@
                             ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
                             ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
                             ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
-                            ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
+                            ${item.dex && !item.needStr ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
                             ${item.heal ? `恢復 ${item.heal} HP` : ""}
+                            ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
                             ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
                         </p>
                         <!-- 如果是商店，顯示偷竊按鈕 -->
-                        ${itemType && itemType !== "meal" ? `<button onclick="stealItem('${item.id}')" style="margin: auto;">
+                        ${shopType && shopType !== "tavern" ? `<button onclick="stealItem('${item.id}')" style="margin: auto;">
                             <span class="small warn">偷竊</span>
                         </button>` : ""}
                     </div>
@@ -1321,6 +1308,24 @@
         //}
     }
 
+    // 找到物品資料（並判斷破舊版）
+    function findItemData(itemId) {
+        // 忽略 _old 從資料庫中查找原版物品
+        let originalId = itemId.replace("_old", "");
+        let item = itemDatabase.find(i => i.id === originalId);
+
+        // 如果是破舊版，進行數值調整
+        if (itemId.includes("_old")) {
+            item = { ...item }; // 建立物品的複製品，避免修改原資料
+            item.id = itemId;
+            item.str = Math.round(item.str * 2 / 3);
+            item.price = Math.round(item.price * 2 / 3);
+            item.name += " (破舊)";
+        }
+
+        return item;
+    }
+
 // 狀態與情緒
 
     // 狀態資料庫
@@ -1341,7 +1346,8 @@
         { type: "bad", mood: -1, id: "lowHP", name: "非常疲憊" },
         { type: "bad", mood: -1, id: "knockedDown", name: "在戰鬥中被擊倒" },
         { type: "bad", mood: -1, id: "captured", name: "被俘虜", indefinite: true },
-        { type: "bad", mood: -1, id: "soaked", name: "淋成落湯雞", note: "大雷雨出門" },
+        { type: "bad", mood: -1, id: "soaked", name: "淋成落湯雞", note: "大雷雨時出門", indefinite: true },
+        { type: "bad", mood: -1, id: "eatWorm", name: "不舒服", note: "吃下了蠕蟲" },
 
         // 主角專用
         { type: "good", mood: 1, id: "rich", name: "發財了", note: "擁有 $1000", indefinite: true },
@@ -1350,6 +1356,7 @@
         { type: "good", mood: 1, id: "hasComp1", name: "擁有一名夥伴", indefinite: true },
         { type: "good", mood: 2, id: "hasComp2", name: "擁有兩名夥伴", indefinite: true },
         { type: "good", mood: 3, id: "hasComp3", name: "擁有三名夥伴", indefinite: true },
+        { type: "good", mood: 1, id: "eatTogether", name: "和夥伴聚餐" },
 
         { type: "bad", mood: -1, id: "poor", name: "沒有錢", note: "財產少於 $ 50", indefinite: true },
         { type: "bad", mood: -1, id: "robbed", name: "被搶劫" },
@@ -1378,6 +1385,7 @@
 
         // 艾德蒙
         { type: "good", mood: 1, id: "gambleWin", name: "賭博贏錢" },
+        { type: "good", mood: 1, id: "charmed", name: "賞心悅目", note: "你的魅力大於 15" },
         { type: "bad", mood: -1, id: "gambleLose", name: "賭博輸錢" },
 
         // 諾伊爾
@@ -1388,9 +1396,11 @@
         { type: "good", mood: 1, id: "robEnemy", name: "強盜作風", note: "搶劫敵人" },
 
         // 哥布林
-        { type: "bad", mood: -1, id: "hateOrc", name: "那個獸人會不會揍我", note: "隊伍裡有塔爾穆克或獸人" },
+        { type: "good", mood: 1, id: "runaway", name: "逃掉了" },
+        { type: "bad", mood: -1, id: "hateOrc", name: "會不會被揍", note: "隊伍裡有塔爾穆克或獸人" },
 
         // 吸血鬼
+        { type: "good", mood: 1, id: "suckBlood", name: "飲血" },
         { type: "bad", mood: -1, id: "stoppedBySain", name: "他以為他是誰", note: "昨晚吸血被賽恩阻止" },
         { type: "bad", mood: -1, id: "hateSun", name: "晴天" },
 
@@ -1403,7 +1413,13 @@
         let member = teamMembers.find(m => m.id === memberId);
 
         // 找到情緒的資料
-        let newEmotion = emotionData.find(e => e.id === emotionId);
+        const newEmotion = emotionData.find(e => e.id === emotionId);
+
+        // 如果是無限期情緒，不會重複獲得
+        const hasEmotion = member.emotion.find(e => e.id === emotionId);
+        if (newEmotion.indefinite && hasEmotion) {
+            return;
+        }
 
         // 添加情緒
         member.emotion.push(newEmotion);
@@ -1411,9 +1427,62 @@
         // 計算心情值
         member.mood += newEmotion.mood;
 
-        // 添加心情的影響
+        // 更新心情並儲存
+        updateMood(member, teamMembers);
+    }
 
-        // 儲存
+    // 失去情緒
+    function loseEmotion(memberId, emotionId) {
+        // 取得該成員的資料
+        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+        let member = teamMembers.find(m => m.id === memberId);
+
+        // 找到情緒的資料
+        const lostEmotion = emotionData.find(e => e.id === emotionId);
+
+        // 檢查有沒有這個情緒
+        const hasEmotion = member.emotion.find(e => e.id === emotionId);
+        if (hasEmotion) {
+            // 過濾掉情緒
+            member.emotion = member.emotion.filter(e => e.id !== emotionId);
+
+            // 計算心情值
+            member.mood -= lostEmotion.mood;
+
+            // 更新心情並儲存
+            updateMood(member, teamMembers);
+        }
+    }
+
+    // 更新心情並儲存
+    function updateMood(member, teamMembers) {
+        // 重置心情的影響
+        member.wis.mood = 0;
+        member.dex.mood = 0;
+
+        // 添加心情的影響
+        if (member.mood >= 15) {
+            member.dex.mood = 2; // 敏捷上升 2
+        } else if (member.mood >= 10) {
+            member.dex.mood = 1; // 敏捷上升 1
+        } else if (member.mood >= 5) {
+            member.wis.mood = 1; // 感知上升 1
+        } else if (member.mood <= -5) {
+            member.wis.mood = -1; // 感知下降 1
+        } else if (member.mood <= -10) {
+            member.dex.mood = -1; // 敏捷下降 1
+        } else if (member.mood <= -15) {
+            member.dex.mood = -2; // 敏捷下降 2
+        }
+
+        // 加總屬性
+        ["str", "dex", "con", "wis", "cha", "arm"].forEach(attr => {
+            member[attr].total = Object.entries(member[attr])
+                .filter(([key]) => key !== "total") // 過濾掉 "total"
+                .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+        });
+
+        // 儲存更新後的隊伍資料
         localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
     }
     
@@ -1496,6 +1565,9 @@
             // 只留下無限期的情緒
             member.emotion = member.emotion.filter(e => e.indefinite === true);
 
+            // 移除大雷雨情緒
+            member.emotion = member.emotion.filter(e => e.id !== "soaked");
+
             // 重新統計心情值
             member.mood = 0;
             member.emotion.forEach(e =>{
@@ -1513,6 +1585,10 @@
         localStorage.removeItem("drinkingResults");
         localStorage.removeItem("drinkingEnd");
 
+        // 重置雷納德
+        turnSwitch("雷納德路過", false);
+
+
         // 抽天氣
         const weathers = [ 
             { icon: "☀️", name: "晴天", description: "有陽光，不死生物不會出沒。" },
@@ -1522,6 +1598,7 @@
             { icon: "🌧️", name: "小雨", description: "植物少量增長，不死生物會出沒。" },
             { icon: "⛈️", name: "大雷雨", description: "智慧生物不會出門，植物大量增長，不死生物會出沒。" },
             { icon: "🌫️", name: "濃霧", description: "容易潛行，不死生物會出沒。" },
+            { icon: "🔥", name: "極端炎熱", description: "龍可能會出現，不死生物不會出沒。" },
         ];
         let randomIndex = Math.floor(Math.random() * weathers.length);
         let selectedWeather = weathers[randomIndex];

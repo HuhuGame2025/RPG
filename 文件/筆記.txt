@@ -1,8 +1,15 @@
 模擬市民的情緒系統
-getEmotion("player", "fullHP");
-getEmotion("player", "battleWin");
+getEmotion\([^)]*\);
+
+getEmotion(member.id, "soaked");
+
+NPC和敵人會對裸體做出反應
+斧頭破甲
+揮砍高爆擊
+遠程爆頭
 
 負面狀態須過體質檢定
+感知
 
 採集
 拍賣系統

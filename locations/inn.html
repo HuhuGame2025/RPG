@@ -350,7 +350,7 @@
             });
 
             // 檢查食人花種子是否長出來
-            const seedCount = playerItems.filter(i => i === "loot08").length;
+            const seedCount = playerItems.filter(i => i === "manEaterSeed").length;
             if (seedCount > 0) {
                 let grownCount = 0; // 長出的種子數量
                 let maxGrowth = Math.min(seedCount, 4); // 最多長出 4 顆
@@ -358,7 +358,7 @@
                 // 過濾掉長出來的種子
                 playerItems = playerItems.filter(item => {
                     // 如果是種子，並且還沒長滿 4 個，就有 10% 機率長出來
-                    if (item === "loot08" && grownCount < maxGrowth && Math.random() < 0.1) {
+                    if (item === "manEaterSeed" && grownCount < maxGrowth && Math.random() < 0.1) {
                         grownCount++; // 記錄長出來的數量
                         return false; // 移除這顆種子
                     }

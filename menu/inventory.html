@@ -177,8 +177,8 @@
             itemList.innerHTML = "";
 
             Object.keys(count).forEach(itemId => {
-                let item = itemData.find(i => i.id === itemId); // 從資料庫查找物品
-                
+                //let item = itemData.find(i => i.id === itemId); // 從資料庫查找物品
+                let item = findItemData(itemId); // 從資料庫查找物品
                 if (item) {
                     let itemDiv = document.createElement("div");
                     itemDiv.classList.add("item", "background");
@@ -197,6 +197,7 @@
                                     ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}` : item.str)}<br>` : ""}
                                     ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}` : item.cha)}<br>` : ""}
                                     ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}` : item.arm)}<br>` : ""}
+                                    ${item.dex && !item.needStr ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
                                     ${item.heal ? `恢復 ${item.heal} HP` : ""}
                                     ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
                                     ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
@@ -244,7 +245,7 @@
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
             // 如果是紅寶石
-            if (itemId === "specialItem14") { 
+            if (itemId === "devilGem02") { 
                 const soulCount = parseInt(localStorage.getItem("soulCount"));
                 const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
                 
@@ -285,16 +286,16 @@
                 `;
 
                 button.onclick = function () {
+                    // 如果是消耗品，移除一個物品
                     if (item.consumable) {
-                        // 如果是消耗品，移除一個物品
                         let itemIndex = playerItems.indexOf(itemId);
                         if (itemIndex !== -1) {
                             playerItems.splice(itemIndex, 1);
                         }
                     }
 
-                    // 執行物品效果
-                    if (item.heal) { // 有治療效果
+                    // 如果有治療效果
+                    if (item.heal) { 
                         // 檢查角色是否已死亡
                         if (member.HP === 0) {
                             member.HP = Math.min(member.HP + item.heal, member.MaxHP);
@@ -312,9 +313,29 @@
                         }
                     }
 
+                    // 如果是繃帶
+                    if (item.id === "bandage") {
+                        // 刪除找到的第一筆流血狀態
+                        const index = member.status.findIndex(status => status.name === "流血");
+                        if (index !== -1) {
+                            member.status.splice(index, 1);
+                        }
+                    }
+
+
                     // 儲存
                     localStorage.setItem("playerItems", JSON.stringify(playerItems));
                     localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+
+                    // 如果滿血，添加滿血情緒
+                    if (member.HP === member.MaxHP) {
+                        getEmotion(member.id, "fullHP");
+                    }
+                    
+                    // 如果是蠕蟲
+                    if (item.id === "wormLoot") {
+                        getEmotion(member.id, "eatWorm");
+                    }
 
                     document.body.removeChild(menu);  // 清除選單
 
@@ -357,12 +378,12 @@
             document.getElementById("main").style.display = "none";
 
             // 執行查看的動作
-            if (itemId === "specialItem13") { // 最初的紅寶石
-                loseItem("specialItem13"); // 移除最初的紅寶石
-                getItem("specialItem14"); // 獲得可用的紅寶石
+            if (itemId === "devilGem01") { // 最初的紅寶石
+                loseItem("devilGem01"); // 移除最初的紅寶石
+                getItem("devilGem02"); // 獲得可用的紅寶石
                 localStorage.setItem("soulCount", 0); // 開始計算獻祭的靈魂
                 localStorage.setItem("npcName", "紅寶石中的惡魔");
-            } else if (itemId === "specialItem14") { // 可用的紅寶石
+            } else if (itemId === "devilGem02") { // 可用的紅寶石
                 localStorage.setItem("npcName", "紅寶石中的惡魔");
             }
             showDialogue("start");
@@ -466,6 +487,9 @@
                     // 儲存
                     localStorage.setItem("soulCount", soulCount);
                     localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+
+                    // 添加滿血情緒
+                    getEmotion(member.id, "fullHP");
 
                     document.body.removeChild(menu);  // 清除選單
 

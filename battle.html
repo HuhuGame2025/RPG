@@ -685,25 +685,23 @@
                 let randomIndex = Math.floor(Math.random() * presentMembers.length);
                 let hurtMember = teamMembers.find(m => m.id === presentMembers[randomIndex].id);
 
-                // 計算敵人命中率
-                let hitChance;
+                // 以雙方敏捷擲骰
+                let result = roll(enemyDex, hurtMember.dex.total);
+
+                // 檢查是否有例外
                 let isProne = Object.values(hurtMember.status).some(s => s.name === "倒地");
+                let situation = parseInt(localStorage.getItem("situation"));
 
                 if (situation === 4 || isProne) { 
-                    // 如果目標倒地，命中率100%
-                    hitChance = 1;
-                } else {
-                    // 預設情況，以雙方敏捷計算命中率
-                    hitChance = enemyDex / (enemyDex + hurtMember.dex.total);
+                    // 如果目標倒地，自動成功
+                    result = { success: true, chance: 1 };
                 }
 
-                let randomValue = Math.random(); // 產生 0~1 的隨機小數
-                // 檢查命中率
                 console.log(`攻擊者: ${enemy.name}, 敏捷: ${enemyDex}, 目標: ${hurtMember.name}, 目標敏捷: ${hurtMember.dex.total}`);
-                console.log(`計算的敵人命中率: ${(hitChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+                console.log(`計算的敵人命中率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
                 // 攻擊結果
-                if (randomValue < hitChance) {
+                if (result.success === true) {
                     // 敵人攻擊成功，對角色造成傷害
                     let damage = Math.max(enemyStr - hurtMember.arm.total, 0); // 傷害 = 攻擊者的力量 - 目標的護甲
                     hurtMember.HP = Math.max(hurtMember.HP - damage, 0); // HP減少，不會低於0
@@ -868,10 +866,26 @@
                 }
             });
 
+            // 根據角色 HP 更新情緒
+            teamMembers.forEach(member => {
+                if (member.HP === member.MaxHP) {
+                    getEmotion(member.id, "fullHP");
+                } else {
+                    loseEmotion(member.id, "fullHP");
+                }
+            });
+
             // 檢查是否有角色死亡
-            let deadMembers = presentMembers.filter(member => member.HP <= 0).map(member => member.name).join("、");
-            if (deadMembers) {
-                document.getElementById("team-action").textContent = texts.die(deadMembers); // 顯示死亡訊息（可顯示多人）
+            let deadMembers = presentMembers.filter(member => member.HP <= 0);
+            if (deadMembers.length) {
+                // 顯示死亡訊息（可顯示多人）
+                let deadMemberNames = deadMembers.map(member => member.name).join("、");
+                document.getElementById("team-action").textContent = texts.die(deadMemberNames); // 顯示死亡訊息
+
+                // 遍歷死亡角色，添加情緒
+                deadMembers.forEach(member => {
+                    getEmotion(member.id, "knockedDown");
+                });
             }
 
             // 檢查角色是否非死即逃
@@ -926,6 +940,11 @@
                     localStorage.setItem("currentKey", encounter.successKey);
                 }
 
+                // 添加戰勝的情緒
+                presentMembers.forEach(member => {
+                    getEmotion(member.id, "battleWin");
+                })
+
                 endBattle();
             }
 
@@ -976,28 +995,21 @@
                 const prisoners = presentMembers.filter(member => member.type === "俘虜");
                 const nonPrisoners = presentMembers.filter(member => member.type !== "俘虜");
    
-                // 找到 dex 最高的非俘虜成員
-                let maxDexMembers = [];
-                let maxDex = -Infinity; // 設定初始值為負無限
+                // 加總敏捷
+                let teamDex = 0;
                 nonPrisoners.forEach(member => {
-                    if (member.dex.total > maxDex) { // 如果找到更高的 dex，重置陣列，將該角色加入陣列
-                        maxDex = member.dex.total; //更新最高 dex
-                        maxDexMembers = [member];
-                    }
+                    teamDex += member.dex.total;
                 });
 
-                // 檢查俘虜是否逃跑
+                // 檢查每個俘虜
                 prisoners.forEach(member => {
-                    // 計算逃跑成功率
-                    let runChance = member.dex.total / (member.dex.total + maxDex);
-                    
-                    let randomValue = Math.random(); // 產生 0~1 的隨機小數
-                    // 檢查成功率
-                    console.log(`俘虜敏捷: ${member.dex.total}, 隊伍最高敏捷: ${maxDex}`);
-                    console.log(`計算的逃跑機率: ${(runChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
+                    // 以雙方敏捷擲骰
+                    let result = roll(member.dex.total, teamDex);
+                    console.log(`俘虜敏捷: ${member.dex.total}, 隊伍總敏捷: ${teamDex}`);
+                    console.log(`俘虜逃跑機率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
                     // 結果
-                    if (randomValue <= runChance) {
+                    if (result.success === true) {
                         // 俘虜逃跑
                         removepresentMembers(member.id); // 移出上場成員
                         removeCompanion(member.id); // 移出隊伍
@@ -1055,44 +1067,27 @@
                     }
                 });
 
-                // 敵人總 HP
-                let totalEnemyHP = 0;
-                enemies.forEach(enemy => {
-                    if (enemy.HP) {
-                        for (let i = 0; i < enemies.length; i++) {
-                            totalEnemyHP += enemy.HP;
-                        }
-                    }
-                });
-
                 // 敵人是否投降
-                if (enemies.length === 1 && enemyType.includes("智慧")) {
-                    if (maxStr > totalEnemyHP) {
-                        // 如果只剩一個智慧敵人，且隊伍中最高力量 > 敵人 HP 時，敵人有機會投降
+                if (enemies.length === 1 && enemyType.includes("智慧") && maxStr > enemies[0].HP && !isTrue("enemySurrender")) {
+                    // 如果只剩一個智慧敵人，且隊伍中最高力量 > 敵人 HP 時，且還沒投降過
+                        
+                    // 以雙方力量擲骰
+                    let result = roll(maxStr, enemies[0].str.total);
+                    console.log(`隊伍最高力量: ${maxStr}, 敵人力量: ${enemies[0].str.total}`);
+                    console.log(`投降機率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
-                        // 計算投降機率
-                        let surrenderChance = maxStr / (maxStr + totalEnemyHP);
-                    
-                        let randomValue = Math.random(); // 產生 0~1 的隨機小數
-                        // 檢查成功率
-                        console.log(`隊伍最高力量: ${maxStr}, 敵人總HP: ${totalEnemyHP}`);
-                        console.log(`計算的投降機率: ${(surrenderChance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
-
-                        // 結果
-                        if (randomValue <= surrenderChance) {
-                            localStorage.setItem("enemySurrender", "true");
-                            localStorage.setItem("npcId", "enemy1"); // 將 enemy1 儲存為交談對象
-                            window.location.href = 'battleTalk.html'; // 敵人投降，跳轉到交談頁面
-                            return;
-                        }
+                    // 結果
+                    if (result.success === true) {
+                        turnSwitch("enemySurrender");
+                        localStorage.setItem("npcId", enemies[0].id); // 儲存為交談對象
+                        window.location.href = 'battleTalk.html'; // 敵人投降，跳轉到交談頁面
+                        return;
                     }
                 }
 
             // 如果敵人毫無防備，下回合恢復正常回合
             let situation = parseInt(localStorage.getItem("situation"));
             if (situation === 4) {
-                //situation = 2; 
-                //localStorage.setItem("situation", situation); 
                 localStorage.removeItem("situation"); // 清除遇敵方式
             }
 
@@ -1138,10 +1133,11 @@
                 isMember = teamMembers.some(m => m.name === "雷納德");
                 const inEvent = localStorage.getItem("inEvent");
 
-                if (!isMember && teamMembers.length < 4 && teamMembers.length > 0 && !inEvent) {
-                    // 如果雷納德不在隊伍中，隊伍有空位，且不是在事件中，雷納德有機率加入
+                if (!isMember && teamMembers.length < 4 && teamMembers.length > 0 && !inEvent && !isTrue("雷納德路過")) {
+                    // 如果雷納德不在隊伍中，隊伍有空位，且不是在事件中，且今天還沒遇過雷納德，雷納德有機率加入
                     let randomValue = Math.random();
                     if (randomValue <= 0.05) { // 5% 機率加入
+                        turnSwitch("雷納德路過");
                         localStorage.setItem("npcName", "雷納德");
                         showDialogue("雷納德幫忙");
                     }
@@ -1177,9 +1173,17 @@
                 }
                 // 戰利品（一般戰利品 + 武器 + 護甲）
                 for (let i = 0; i < enemyCount; i++) {
-                    if (enemy.loot) totalLoot.push(enemy.loot);
-                    if (enemy.weaponId) totalLoot.push(enemy.weaponId);
-                    if (enemy.armorId) totalLoot.push(enemy.armorId);
+                    // 戰利品
+                    if (enemy.loot) {
+                        if (Array.isArray(enemy.loot)) {
+                            totalLoot = totalLoot.concat(enemy.loot); // 如果 enemy.loot 是陣列，將其所有物品加入 totalLoot
+                        } else {
+                            totalLoot.push(enemy.loot); // 如果只有一個物品，直接加入
+                        }
+                    }
+                    // 武器和護甲
+                    if (enemy.weapon.id) totalLoot.push(enemy.weapon.id);
+                    if (enemy.armor.id) totalLoot.push(enemy.armor.id);
                 }
             });
 
@@ -1202,7 +1206,8 @@
 
             // 獲得的戰利品
             let lootText = Object.keys(lootCount).map(loot => {
-                let item = itemDatabase.find(i => i.id === loot);
+                //let item = itemDatabase.find(i => i.id === loot);
+                let item = findItemData(loot); // 從資料庫查找物品
                 return item ? `獲得 ${item.name} × ${lootCount[loot]}` : "";
             }).filter(text => text !== "").join("<br>");
 
@@ -1267,24 +1272,24 @@
             }
 
             // 檢查有沒有包裹，隨機損壞一件
-            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-            let packages = playerItems.filter(item => item === "specialItem01" || item === "specialItem03");
+                let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+                let packages = playerItems.filter(item => item === "package01" || item === "package02");
 
-            if (packages.length > 0) {
-                // 隨機選擇一件包裹
-                let randomPackage = packages[Math.floor(Math.random() * packages.length)];
+                if (packages.length > 0) {
+                    // 隨機選擇一件包裹
+                    let randomPackage = packages[Math.floor(Math.random() * packages.length)];
 
-                // 根據這個包裹的id替換為損壞包裹
-                playerItems = playerItems.map(item => {
-                    if (item === randomPackage) {
-                        return randomPackage === "specialItem01" ? "specialItem02" : "specialItem04"; // 替換為損壞版本
-                    }
-                    return item; // 保留其他包裹不變
-                });
+                    // 根據這個包裹的id替換為損壞包裹
+                    playerItems = playerItems.map(item => {
+                        if (item === randomPackage) {
+                            return randomPackage === "package01" ? "package01_damaged" : "package02_damaged"; // 替換為損壞版本
+                        }
+                        return item; // 保留其他包裹不變
+                    });
 
-                // 更新 localStorage
-                localStorage.setItem("playerItems", JSON.stringify(playerItems));
-            }
+                    // 更新 localStorage
+                    localStorage.setItem("playerItems", JSON.stringify(playerItems));
+                }
 
             // 如果有指定戰敗後的對話
             if (encounter && encounter.failKey) {

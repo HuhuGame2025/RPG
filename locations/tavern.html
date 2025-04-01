@@ -364,7 +364,7 @@
             }
 
             // 顯示料理列表
-            showShop("meal");
+            showShop("tavern");
             
             // 顯示送出菜單按鈕
             document.getElementById("button-container").innerHTML = `
@@ -491,6 +491,13 @@
 
                     // 儲存
                     localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+
+                    // 如果滿血，添加滿血情緒
+                    teamMembers.forEach(member => {
+                        if (member.HP === member.MaxHP) {
+                            getEmotion(member.id, "fullHP");
+                        }
+                    });
 
                     // 顯示用餐訊息
                     if (teamMembers.length > 1) {
