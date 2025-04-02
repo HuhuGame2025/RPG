@@ -3,13 +3,16 @@ getEmotion\([^)]*\);
 
 getEmotion(member.id, "soaked");
 
+增加牛、羊，生產皮革、羊毛、奶
+增加雞，生產蛋
+石化蜥蜴、雞蛇、毒蛇或毒菇怪、人馬、哈比、凱爾派、狗頭人
+
 NPC和敵人會對裸體做出反應
 斧頭破甲
 揮砍高爆擊
 遠程爆頭
 
 負面狀態須過體質檢定
-感知
 
 採集
 拍賣系統
@@ -150,3 +153,4 @@ getItem("specialItem16", 10);
 
 // 顯示在log
 console.log(teamMembers);
+

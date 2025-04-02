@@ -22,6 +22,8 @@
     </div>
 
     <div class="main-content">
+        <br>
+
         <!-- 任務列表 -->
         <div id="list"></div>
         <br>
@@ -48,13 +50,15 @@
             let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
 
             takenMissions.forEach(mission => {
-                let missionDiv = document.createElement("div");
-                missionDiv.classList.add("mission");
+                let itemDiv = document.createElement("div");
+                itemDiv.classList.add("item");
 
-                missionDiv.innerHTML = `
-                    <hr>
-                    <div class="item">
-                        <h3>📜 ${mission.name}</h3>
+                itemDiv.innerHTML = `
+                    <div style="cursor: pointer;">
+                        <h4>📜 ${mission.name}</h4>
+                    </div>
+
+                    <div class="hided" style="display: none;">
                         ${mission.description}
                         <p>報酬： $${mission.price}</p>
                         <div class="menu">
@@ -62,7 +66,16 @@
                         </div>
                     </div>
                 `;
-                list.appendChild(missionDiv);
+
+                // 點擊任務時，顯示或隱藏詳細資訊
+                let itemElement = itemDiv;
+                let hidedElement = itemDiv.querySelector(".hided");
+
+                itemElement.addEventListener("click", () => {
+                    hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
+                });
+
+                list.appendChild(itemDiv);
             });
         }
 

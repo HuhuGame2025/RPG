@@ -23,7 +23,7 @@
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
         <div class="header">    
-            <button class="exit-button" onclick="goTo('town')">〈 離開</button>
+            <button class="exit-button" onclick="goTo('locations/town')">〈 離開</button>
             <h1>公會</h1>
         </div>
 
@@ -43,7 +43,7 @@
 
         <!-- 任務列表 -->
         <div id="list"></div>
-        <br>
+        <br><br>
 
         <!-- Top按紐 -->
         <button class="top-button" onclick="goTop()"></button>
@@ -562,17 +562,17 @@
                 let buttonAction = "";
 
                 // 根據任務狀態顯示對應的按鈕
-                if (mission.status === "success" || mission.status === "fail") {
-                    buttonText = "提交結果";
-                    buttonAction = `reportMission('${mission.id}')`;
-                } else if (isTaken) {
-                    buttonText = "進行中";
-                    buttonAction = "";
-                } else {
-                    buttonText = "承接";
-                    buttonAction = `takeMission('${mission.id}')`;
-                }
-                //console.log(`任務 ${mission.id} | 狀態: ${mission.status}`);
+                    if (mission.status === "success" || mission.status === "fail") {
+                        buttonText = "提交結果";
+                        buttonAction = `reportMission('${mission.id}')`;
+                    } else if (isTaken) {
+                        buttonText = "進行中";
+                        buttonAction = "";
+                    } else {
+                        buttonText = "承接";
+                        buttonAction = `takeMission('${mission.id}')`;
+                    }
+                    //console.log(`任務 ${mission.id} | 狀態: ${mission.status}`);
 
                 let extraInfo = "";
 
@@ -598,7 +598,7 @@
 
                 missionDiv.innerHTML = `
                     <hr>
-                    <div class="item">
+                    <div>
                         <h3>📜 ${mission.name}</h3>
                         ${mission.description}
                         ${extraInfo}

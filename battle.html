@@ -15,7 +15,7 @@
     <div class="button-bar" id="buttonBar">
         <a href="menu/character.html">🎭<span>角色</span></a>
         <a href="menu/quest.html">📜<span>任務</span></a>
-        <a href="menu/inventory.html">💰<span>物品</span></a>
+        <a>🚫<span class="warn">物品</span></a>
         <a href="menu/option.html">⚙️<span>選項</span></a>
     </div>
 
@@ -28,7 +28,6 @@
         <div id="battle-content">
             <!-- 敵人列表 -->
             <div id="enemy-list"></div>
-            <hr>
 
             <!-- 提示 -->
             <p class="note" id="note"></p>
@@ -38,7 +37,7 @@
             <div id="member-list"></div>
 
             <!-- 隊伍按鈕 -->
-            <p id="team-action" class="battle-text"></p>
+            <p id="team-action"></p>
             <div class="menu">
                 <div class="menu team-btn">
                     <button onclick="selectAttacker('team')">⚔️聯手攻擊</span></button>
@@ -58,11 +57,11 @@
 
         // 顯示文本
         const texts = {
-            noTarget: "請先選擇一個敵人為目標",
-            noAttacker: "請選擇由誰發動攻擊",
+            noTarget: "請選擇一個敵人為目標",
+            noAttacker: "請選擇我方的行動",
             fightWin: (damage) => `擊中敵人(${damage})！`,
             fightWinWithStatus: (damage, status) => `擊中敵人(${damage})，使他${status}了！`,
-            fightLose: "打算攻擊，但被躲開了",
+            fightLose: (name) => `打算攻擊${name}，但被躲開了`,
             fightFlyingEnemy: "無法觸及空中的敵人",
             killEnemy: (damage) => `打敗了敵人(${damage})！`,
             die: (deadMembers) => `${deadMembers}倒下了！`,
@@ -85,7 +84,7 @@
             demonAttacked: "燃燒了起來",
             bleeding: "流血了",
             prone: "倒地了",
-            unactable: "正在起身",
+            unactable: "從地上起身",
             //trap: "觸發陷阱！",
             //enemyComing: "敵人正在趕來的路上，最好快點離開",
         };
@@ -178,28 +177,30 @@
                 const statusIcon = member.status.map(s => s.icon).join("");
 
                 characterDiv.innerHTML = `
-                    <div id="${member.id}" class="background">
-                        <div class="column-container item">
-                            <div class="column-name">
-                                <h4>${member.name}</h4>
-                                <h4 class="hp"><span id="${member.id}-HP">${member.HP}</span> / ${member.MaxHP}</h4>
-                                ${statusIcon ? `
-                                    <span class="status-icon">${statusIcon}</span>
-                                ` : "" }
-                            </div>
+                    <div id="${member.id}" class="item background">
+                        <div class="column-container">
                             <div class="column">
-                                <span id="${member.id}-action" class="battle-text"></span>
-                                ${isActable ? `
-                                    <div class="row-buttons ${member.id}-btn">
-                                        <button onclick="selectAttacker('${member.id}')">⚔️<br><span class="small">攻擊</span></button>
-                                        <button onclick="escape('${member.id}')">🏃<br><span class="small">逃跑</span></button>
-                                        ${isPlayer ? `
-                                            <button onclick="talk()">💬<br><span class="small">交談</span></button>
-                                        ` : "" }
-                                    </div>
-                                ` : "" }
+                                <h4>${member.name}</h4>
+                            </div>
+                            <div class="column center">
+                                <h4 class="hp"><span id="${member.id}-HP">${member.HP}</span> / ${member.MaxHP}</h4>
                             </div>
                         </div>
+
+                        ${statusIcon ? `<span class="status-icon">${statusIcon}</span><br>` : "" }
+
+                        <p id="${member.id}-action" class="battle-text"></]>
+
+                        ${isActable ? `
+                            <div class="row-buttons ${member.id}-btn">
+                                ${isPlayer ? `
+                                    <button onclick="talk()">💬<br><span class="small">交談</span></button>
+                                ` : "" }
+                                <button onclick="selectAttacker('${member.id}')">⚔️<br><span class="small">攻擊</span></button>
+                                <button onclick="useItem('${member.id}')">💰<br><span class="small">物品</span></button>
+                                <button onclick="escape('${member.id}')">🏃<br><span class="small">逃跑</span></button>
+                            </div>
+                        ` : "" }
                     </div>
                 `;
                 menu.appendChild(characterDiv);
@@ -257,19 +258,19 @@
 
                 characterDiv.innerHTML = `
                     <div id="${enemy.id}">
-                        <button id="${enemy.id}-btn" onclick="selectTarget('${enemy.id}', this)">
+                        <button id="${enemy.id}-btn" class="item background" onclick="selectTarget('${enemy.id}', this)">
                             <div class="column-container">
-                                <div class="column-name">
-                                    <h4>${enemy.adj}${enemy.name}</span></h4>
-                                    <h4 class="hp"><span id="${enemy.id}-HP">${enemy.HP}</span> / ${enemy.MaxHP}</h4>
-                                    ${statusIcon ? `
-                                        <span class="status-icon">${statusIcon}</span>
-                                    ` : "" }
-                                </div>
                                 <div class="column">
-                                    <span id="${enemy.id}-action" class="battle-text"></span>
+                                    <h4>${enemy.adj}${enemy.name}</span></h4>
+                                </div>
+                                <div class="column center">
+                                    <h4 class="hp"><span id="${enemy.id}-HP">${enemy.HP}</span> / ${enemy.MaxHP}</h4>
                                 </div>
                             </div>
+
+                            ${statusIcon ? `<span class="status-icon">${statusIcon}</span><br>` : "" }
+
+                            <p id="${enemy.id}-action" class="battle-text"></p>
                         </button>
                     </div>
                 `;
@@ -296,9 +297,11 @@
 
         // 選擇攻擊者（角色或同伴）
         function selectAttacker(attackerId) {
+            // 將選擇的角色設為攻擊者
+            selectedAttacker = attackerId;
+            
             // 如果已選擇目標，就進入戰鬥
             if (selectedTarget) {
-                selectedAttacker = attackerId;
                 checkAndExecuteFight();
             // 如果還沒選擇目標，就顯示提示
             } else {
@@ -316,11 +319,16 @@
             // 為當前選中的按鈕加上 selected class
             button.classList.add("selected");
 
-            // 顯示「選擇攻擊者」的提示
-            document.getElementById("note").textContent = texts.noAttacker;
-
             // 將選擇的敵人設為目標
             selectedTarget = targetId;
+
+            // 如果已選擇攻擊者，就進入戰鬥
+            if (selectedAttacker) {
+                checkAndExecuteFight();
+            // 如果還沒選擇攻擊者，就顯示提示
+            } else {
+                document.getElementById("note").textContent = texts.noAttacker;
+            }
         }
 
         // 檢查是否已選擇攻擊者和目標，然後執行攻擊
@@ -340,6 +348,7 @@
             // 獲取敵人資料
             let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
             let targetEnemy = enemies.find(e => e.id === target);
+            let enemyName = targetEnemy.adj + targetEnemy.name;
             let isFly = Object.values(targetEnemy.status).some(s => s.name === "飛行");
 
             // 讀取可行動成員的資料
@@ -459,10 +468,10 @@
                     // 預設情況
                     if (attackerId === "team") {
                         // 顯示聯手攻擊失敗訊息（在隊伍的欄位）
-                        document.getElementById("team-action").textContent = texts.teamFightLose;
+                        document.getElementById("team-action").textContent = texts.teamFightLose(enemyName);
                     } else {
                         // 顯示單獨攻擊失敗訊息（在攻擊者的欄位）
-                        localStorage.setItem(`${attackerId}-action-text`, texts.fightLose);
+                        localStorage.setItem(`${attackerId}-action-text`, texts.fightLose(enemyName));
                     }
                 }
             }
@@ -611,6 +620,12 @@
             }
 
             endAction();
+        }
+
+        // 使用物品
+        function useItem(userId) {
+            removeactableMembers(userId); // 移出可行動成員
+            window.location.href = 'menu/inventory.html'; // 跳轉到物品頁面
         }
 
         // 交談

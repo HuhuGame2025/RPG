@@ -759,16 +759,18 @@
                 const characterDiv = document.createElement("div");
 
                 characterDiv.innerHTML = `
-                    <div class="item center background column-container">
+                    <div class="item center">
                         <div class="column center">
-                            <span class="note">${member.type}</span>
-                            <h3>${member.name}</h3>
-                            <h4 class="hp" style="margin:5px 0;">${member.HP} / ${member.MaxHP}</h4>
+                            <span class="note small">⇢ ${member.type} ⬸</span>
+                            <div class="bottomborder">
+                                <h3>${member.name}</h3>
+                                <h4 class="hp" style="margin:5px 0;">${member.HP} / ${member.MaxHP}</h4>
+                            </div>
                         </div>
                         <div class="column row-buttons">
-                            <button onclick="characterSheet('${member.id}')">🔎<br><span class="small">查看</span></button>
+                            <button onclick="characterSheet('${member.id}')">🔎<span class="small">查看</span></button>
                             ${member.id !== "player" ? `
-                                <button onclick="getDialogueNpc('${member.id}')">💬<br><span class="small">交談</span></button>
+                                <button onclick="getDialogueNpc('${member.id}')">💬<span class="small">交談</span></button>
                             `: "" }
                         </div>
                     </div>

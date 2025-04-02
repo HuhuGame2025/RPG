@@ -9,11 +9,29 @@
         body {
         }
 
+        /* 方向按鈕 */
+        .controls {
+            display: flex;
+            text-align: center;
+            margin: 20px;
+        }
+        .controls button {
+            background: none;
+            border: 1px solid #aaa;
+            width: auto;
+        }
+        .controls button:hover {
+            border: 1px solid #fff;
+            background: #666;
+            color: #fff;
+        }
+
+
         /* 地圖 */
         #map {
             margin-left: auto;
             margin-right: auto;
-            background-color: rgba(61, 97, 64, 0.7); /* 綠色 */
+            background-color: rgba(61, 97, 64, 0.5); /* 綠色 */
             border-collapse: collapse;
         }
 
@@ -44,7 +62,7 @@
         .forest-tree2 {
             top: 8px;
             left: -8px;
-            font-size: 30px;
+            font-size: 36px;
         }
 
         /* 沙漠 */
@@ -96,14 +114,6 @@
             border-radius: 50%;
         }
                        
-        /* 方向按鈕 */
-        .controls {
-            text-align: center;
-            margin: 20px;
-        }
-        .controls button {
-            width: 80px;
-        }
         
     </style>
 </head>
@@ -119,11 +129,24 @@
 
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
-        <!-- 天氣 -->
-        <p class="" id="weather">
-            <span id="weather-name"></span>
-            <span id="weather-description" class="note small"></span>
-        </p>
+        <br>
+        <div class="column-container bottomborder">
+            <!-- 天氣 -->
+            <p class="column top" id="weather">
+                <span id="weather-name"></span>
+                <span id="weather-description" class="note small"></span>
+            </p>
+
+            <!-- 潛行開關 -->
+            <p class="right top">
+                <label>
+                    <input type="checkbox" id="stealthToggle" onchange="stealth(this.checked)">
+                    潛行
+                    <span id="stealth-chance" class="note small"></span>
+                </label>
+            </p>
+        </div>
+
 
         <!-- 情況敘述 -->
         <p id="situation"></p>
@@ -134,27 +157,19 @@
         </div>
 
         <!-- 方向按鈕 -->
-        <div class="controls row-buttons">
-            <div class="column">
+        <div class="controls">
+            <div class="column" style="text-align: right;">
                 <button onclick="move(-1, 0)">◀</button>
             </div>
-            <div class="column">
+            <div class="column center">
                 <button onclick="move(0, -1)">▲</button><br>
                 <button onclick="move(0, 1)">▼</button>
             </div>
-            <div class="column">
+            <div class="column" style="text-align: left;">
                 <button onclick="move(1, 0)">▶</button>
             </div>
         </div>
 
-        <!-- 潛行開關 -->
-        <p class="center">
-            <label>
-                <input type="checkbox" id="stealthToggle" onchange="stealth(this.checked)">
-                潛行
-                <span id="stealth-chance" class="note small"></span>
-            </label>
-        </p>
 
         <!-- 地圖 -->
         <table id="map"></table>
@@ -215,10 +230,10 @@
         // 顯示文本
         const texts = {
             town: (townName) => `你抵達了${townName}的大門，門前有守衛站崗，令人感到安全。`,
-            followed: "後方傳來腳步聲，某人或某種生物正在慢慢靠近……",
-            chance: (count, name) => `在遠處發現了 ${count} 個${name}，對方似乎還沒注意到你。`,
-            guards: "一支巡邏隊正好經過這裡，跟著他們走就能安全地回到最近的城鎮。",
-            victim: (count, name) => `你聽見呼救的聲音，有 ${count} 個${name}正在攻擊平民。`,
+            followed: (name) => `${name}察覺到一絲動靜，某人或某種生物正在悄悄靠近……`,
+            chance: (name, count, enemy) => `${name}發現遠處有 ${count} 個${enemy}，對方似乎毫無防備。`,
+            guards: "一支巡邏隊正好經過，跟著他們走就能安全地回到最近的城鎮。",
+            victim: (count, enemy) => `附近傳來呼救的聲音，有 ${count} 個${enemy}正在攻擊平民。`,
             helpVictim: "獲救的平民感激你出手相助，你的名聲上升了 1 。",
             merchant: "一個哥布林背著大得誇張的背包，面帶微笑地向你招手，看起來沒有攻擊的意圖。",
             thieves: "前方有一個很深的洞穴。",
@@ -1178,9 +1193,15 @@
 
             // 發現無防備的敵人
             } else if (situation === 4) {
+                // 讀取敵人
                 const enemyCount = parseInt(localStorage.getItem("enemyCount"));
                 const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-                document.getElementById("situation").textContent = texts.chance(enemyCount, enemies[0].name);
+
+                //讀取發現的成員
+                const awaredMembers = JSON.parse(localStorage.getItem("awaredMembers")) || [];
+                const memberName = awaredMembers.join("、");
+
+                document.getElementById("situation").textContent = texts.chance(memberName, enemyCount, enemies[0].name);
 
                 // 按鈕
                 document.getElementById("button-container").innerHTML = `
@@ -1192,7 +1213,11 @@
 
             // 被跟蹤
             } else if (situation === 5) {
-                document.getElementById("situation").textContent = texts.followed;
+                // 讀取發現的成員
+                const awaredMembers = JSON.parse(localStorage.getItem("awaredMembers")) || [];
+                const memberName = awaredMembers.join("、");
+
+                document.getElementById("situation").textContent = texts.followed(memberName);
             
             // 巡邏隊
             } else if (situation === 6) {

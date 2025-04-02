@@ -455,10 +455,10 @@
     // 傭兵資料庫
     const mercenaries = [
         { name: "雷納德", type: "傭兵", description: "老練的冒險者，飽經風霜的臉龐洋溢著溫暖的微笑。", cost: 0, con: 15, str: 15, dex: 12, wis: 14, cha: 12, weaponId: "npcWeapon01", armorId: "npcArmor01" },
-        { name: "塔爾穆克", type: "傭兵", description: "身材魁武的獸人狂戰士，背著一把巨大的戰斧，眼神充滿怒火。", cost: 150, con: 18, str: 18, dex: 9, wis: 10, cha: 7, weaponId: "npcWeapon02", armorId: "npcArmor02" },
-        { name: "賽恩", type: "傭兵", description: "蒙面的刺客，整張臉隱藏在面罩下，沉默寡言，散發著一絲危險氣息。", cost: 120, con: 12, str: 14, dex: 18, wis:14, cha: 10, weaponId: "npcWeapon03", armorId: "npcArmor03" },
-        { name: "艾德蒙", type: "傭兵", description: "看起來像個小混混，不太正經，喜歡自吹自擂，給人感覺不怎麼可靠。", cost: 100, con: 12, str: 12, dex: 10, wis: 8, cha: 8, weaponId: "npcWeapon04", armorId: "npcArmor04" },
-        { name: "諾伊爾", type: "傭兵", description: "初出茅廬的高等精靈少年，一臉純真，但比起協助你，他看起來更需要協助。", cost: 90, con: 9, str: 9, dex: 14, wis: 16, cha: 18, weaponId: "npcWeapon05", armorId: "npcArmor05" }
+        { name: "塔爾穆克", type: "傭兵", description: "身材魁武的獸人狂戰士，背著一把巨大的戰斧，眼神充滿怒火。", cost: 150, con: 18, str: 18, dex: 10, wis: 10, cha: 7, weaponId: "npcWeapon02", armorId: "npcArmor02" },
+        { name: "賽恩", type: "傭兵", description: "蒙面的刺客，整張臉隱藏在面罩下，沉默寡言，散發著一絲危險氣息。", cost: 120, con: 13, str: 13, dex: 18, wis: 14, cha: 10, weaponId: "npcWeapon03", armorId: "npcArmor03" },
+        { name: "艾德蒙", type: "傭兵", description: "看起來像個小混混，不太正經，喜歡自吹自擂，給人感覺不怎麼可靠。", cost: 100, con: 12, str: 12, dex: 12, wis: 8, cha: 8, weaponId: "npcWeapon04", armorId: "npcArmor04" },
+        { name: "諾伊爾", type: "傭兵", description: "初出茅廬的高等精靈少年，一臉純真，但比起協助你，他看起來更需要協助。", cost: 90, con: 9, str: 9, dex: 16, wis: 16, cha: 18, weaponId: "npcWeapon05", armorId: "npcArmor05" }
     ];
 
     // 讀取隊伍資料
@@ -775,7 +775,7 @@
         changePlayerType(type);
 
         // 主角穿上布衣
-        equip("player", "lootclothes01");
+        equip("player", "clothes01");
     }
 
     // 被逮捕
@@ -810,13 +810,8 @@
         localStorage.setItem("inEvent", event); // 儲存事件
         localStorage.setItem("npcName", event); // 用對話系統執行事件
 
-        // 跳轉到監獄頁面（根據當前頁面判斷路徑）
-        const pageName = window.location.pathname.split("/").pop();
-        if (pageName === "map.html" || pageName === "battle.html") {
-            window.location.href = "locations/prison.html";
-        } else {
-            window.location.href = "prison.html";
-        }
+        // 跳轉到監獄頁面
+        goTo("locations/prison");
     }
 
     // 被釋放（還沒用到）
@@ -842,24 +837,24 @@
         // 武器
             // 商店貨
             { type: "weapon", category: "穿刺", id: "dagger01", name: "🗡️ 匕首", str: 4, dex: 0, description: "適合隨身攜帶的短劍。", price: 10, shop: "blacksmith" },
-            { type: "weapon", category: "穿刺", id: "spear01", name: "✒️ 長矛", str: 8, dex: -1, needStr: 10, description: "用來刺擊的長柄武器。", price: 50, shop: "blacksmith" },
+            { type: "weapon", category: "穿刺", id: "spear01", name: "✒️ 長矛", str: 8, dex: 0, needStr: 11, description: "用來刺擊的長柄武器。", price: 50, shop: "blacksmith" },
             { type: "weapon", category: "鈍擊", id: "hammer01", name: "🔨 釘頭錘", str: 6, dex: 0, description: "單手捶打用的鈍器。", price: 35, shop: "blacksmith" },
-            { type: "weapon", category: "鈍擊", id: "hammer02", name: "🔨 戰錘", str: 10, dex: -2, needStr: 14, description: "給予沉重打擊的長柄武器。", price: 75, shop: "blacksmith" },
+            { type: "weapon", category: "鈍擊", id: "hammer02", name: "🔨 戰錘", str: 10, dex: 0, needStr: 14, description: "給予沉重打擊的長柄武器。", price: 75, shop: "blacksmith" },
             { type: "weapon", category: "揮砍", id: "sword01", name: "🗡️ 單手劍", str: 8, dex: 0, description: "戰士的標準配備。", price: 35, shop: "blacksmith" },
-            { type: "weapon", category: "揮砍", id: "sword02", name: "🗡️ 巨劍", str: 12, dex: -1, needStr: 12, description: "雙手持握的大型劍。", price: 75, shop: "blacksmith" },
-            { type: "weapon", category: "揮砍", id: "axe01", name: "🪓 戰斧", str: 14, dex: -2, needStr: 14, description: "殺傷力驚人的長柄武器。", price: 95, shop: "blacksmith" },
+            { type: "weapon", category: "揮砍", id: "sword02", name: "🗡️ 巨劍", str: 12, dex: 0, needStr: 12, description: "雙手持握的大型劍。", price: 75, shop: "blacksmith" },
+            { type: "weapon", category: "揮砍", id: "axe01", name: "🪓 戰斧", str: 14, dex: 0, needStr: 14, description: "殺傷力驚人的長柄武器。", price: 95, shop: "blacksmith" },
             { type: "weapon", category: "遠程", id: "bow01", name: "🏹 短弓", str: 6, dex: 0, description: "能瞄準地面與空中的敵人。", price: 30, shop: "blacksmith" },
             //{ type: "weapon", category: "穿刺", id: "arrow01", name: "➶ 箭矢", str: 1, dex: 0, description: "射擊用的箭矢，緊急時可以拿來防身。", price: 1, shop: "blacksmith" },
-            { type: "weapon", category: "鈍擊", id: "sheild01", name: "🛡️ 木盾", str: 4, arm: 2, description: "輕型盾牌，能保護自身也能當鈍器使用。", price: 35, shop: "blacksmith" },
+            { type: "weapon", category: "鈍擊", id: "sheild01", name: "🛡️ 圓木盾", str: 4, arm: 2, description: "輕型盾牌，能保護自身也能當鈍器使用。", price: 35, shop: "blacksmith" },
             
             // 戰利品
             { type: "weapon", category: "鈍擊", id: "stick01", name: "🔨 小棍棒", str: 1, dex: 0, description: "只是一根普通的樹枝。", price: 0 },
-            { type: "weapon", category: "鈍擊", id: "stick02", name: "🔨 巨大的狼牙棒", str: 20, dex: -6, needStr: 20, description: "將樹幹和獸骨綁起來。", price: 10 },
+            { type: "weapon", category: "鈍擊", id: "stick02", name: "🔨 巨大的狼牙棒", str: 18, dex: 0, needStr: 20, description: "將樹幹和獸骨綁起來。", price: 10 },
             { type: "weapon", category: "鈍擊", id: "stone", name: "🪨 尖銳的石頭", str: 1, dex: 0, description: "可以藏在衣服裡。", price: 0 },
 
             // NPC專屬
-            { type: "weapon", category: "揮砍", id: "npcWeapon01", name: "🗡️ 雷納德的巨劍", str: 13, dex: -1, needStr: 13, description: "雙手持握的大型長劍。", owner: "雷納德" },
-            { type: "weapon", category: "揮砍", id: "npcWeapon02", name: "🪓 塔爾穆克的戰斧", str: 15, dex: -2, needStr: 15, description: "殺傷力驚人的長柄斧。", owner: "塔爾穆克" },
+            { type: "weapon", category: "揮砍", id: "npcWeapon01", name: "🗡️ 雷納德的巨劍", str: 13, dex: 0, needStr: 12, description: "雙手持握的大型長劍。", owner: "雷納德" },
+            { type: "weapon", category: "揮砍", id: "npcWeapon02", name: "🪓 塔爾穆克的戰斧", str: 15, dex: 0, needStr: 14, description: "殺傷力驚人的長柄斧。", owner: "塔爾穆克" },
             { type: "weapon", category: "穿刺", id: "npcWeapon03", name: "🗡️ 賽恩的匕首", str: 5, dex: 0, description: "適合隨身攜帶的短劍。", owner: "賽恩" },
             { type: "weapon", category: "揮砍", id: "npcWeapon04", name: "🗡️ 艾德蒙的劍", str: 10, dex: 0, description: "戰士的標準配備。", owner: "艾德蒙" },
             { type: "weapon", category: "遠程", id: "npcWeapon05", name: "🏹 諾伊爾的短弓", str: 10, dex: 0, description: "能瞄準地面與空中的敵人。", owner: "諾伊爾" },
@@ -869,8 +864,8 @@
             { type: "armor", id: "armor01", name: "🛡️ 皮甲", arm: 2, dex: 0, description: "活動性佳的輕型盔甲。", price: 20, shop: "blacksmith" },
             { type: "armor", id: "armor02", name: "🛡️ 鱗甲", arm: 4, dex: 0, description: "以皮革和鐵片製成的鎧甲。", price: 40, shop: "blacksmith" },
             { type: "armor", id: "armor03", name: "🛡️ 鐵製胸甲", arm: 6, dex: 0, description: "包覆軀幹的堅固胸甲。", price: 60, shop: "blacksmith" },
-            { type: "armor", id: "armor04", name: "🛡️ 鎖子甲", arm: 8, dex: -1, needStr: 12, description: "以鐵環相扣製成的鎧甲。", price: 80, shop: "blacksmith" },
-            { type: "armor", id: "armor05", name: "🛡️ 全身板甲", arm: 10, dex: -2, needStr: 14, description: "完整保護全身的重型盔甲。", price: 100, shop: "blacksmith" },
+            { type: "armor", id: "armor04", name: "🛡️ 鎖子甲", arm: 8, dex: 0, needStr: 12, description: "以鐵環相扣製成的鎧甲。", price: 80, shop: "blacksmith" },
+            { type: "armor", id: "armor05", name: "🛡️ 全身板甲", arm: 10, dex: 0, needStr: 14, description: "完整保護全身的重型盔甲。", price: 100, shop: "blacksmith" },
     
             // NPC專屬
             { type: "armor", id: "npcArmor01", name: "🛡️ 雷納德的胸甲", arm: 6, dex: 0, description: "包覆軀幹的堅固胸甲。", owner: "雷納德" },
@@ -906,7 +901,6 @@
             { type: "armor", id: "lootClothes02", name: "🧥 巨大的腰布", cha: -1, dex: 0, description: "如果不排斥臭味，可以披在身上當斗篷。", price: 0 },
             { type: "armor", id: "lootClothes03", name: "🧥 破爛衣服", cha: 0, dex: 0, description: "已經破到像是一串碎布了。", price: 0 },
 
-
         // 消耗品
             { type: "supply", id: "healPotion01", heal: 10, price: 5, name: "🫙 治療藥水", description:"立即恢復生命值。", usable: true, consumable: true, shop: "grocery" },
             { type: "supply", id: "healPotion02", heal: 20, price: 10, name: "🫙 中級治療藥水", description:"立即恢復生命值。", usable: true, consumable: true, shop: "grocery" },
@@ -926,21 +920,26 @@
         // 戰利品
             { type: "loot", id: "wormLoot", heal: 1, price: 0, name: "💰 蠕蟲", description: "富含營養，但味道噁心，吃了會一整天不舒服。", usable: true, consumable: true },
             { type: "loot", id: "slimeLoot", name: "💰 黏液", description: "史萊姆的黏液。", price: 1 },
-            { type: "loot", id: "fur", name: "💰 毛皮", description: "動物的毛皮。", price: 3 },
-            { type: "loot", id: "meat", name: "💰 生肉", description: "動物的肉塊。", price: 3 },
-            { type: "loot", id: "lizardLoot", name: "💰 斷尾", description: "巨蜥的尾巴。", price: 2 },
-            { type: "loot", id: "tusk", name: "💰 獠牙", description: "野豬的獠牙。", price: 4 },
-            { type: "loot", id: "spiderLoot", name: "💰 蜘蛛肉", description: "味道像蟹肉。", price: 5 },
-            { type: "loot", id: "silk", name: "💰 蜘蛛絲", description: "巨型蜘蛛的絲線。", price: 5 },
+            { type: "loot", id: "spiderLoot", name: "💰 蜘蛛肉", description: "摸了手會癢癢的，不能吃。", price: 5 },
             { type: "loot", id: "fairyDust", name: "💰 仙塵", description: "仙子的魔法粉末，通常會邊飛邊灑落。", price: 1 },
             { type: "loot", id: "batLoot", name: "💰 蝙蝠翅膀", description: "蝙蝠的翅膀。", price: 1 },
-            { type: "loot", id: "gargoyleLoot", name: "💰 石塊", description: "石像鬼的碎塊。", price: 4 },
-            { type: "loot", id: "eagleLoot", name: "💰 堅硬羽毛", description: "巨鷹的羽毛。", price: 10 },
-            { type: "loot", id: "dragonLoot", name: "💰 龍鱗", description: "龍的鱗片。", price: 30 },
             { type: "loot", id: "vineLoot", name: "💰 植物莖", description: "切下來的藤蔓。", price: 3 },
             { type: "loot", id: "mushroomLoot", name: "💰 毒蘑菇", description: "不可食用的蘑菇。", price: 2 },
             { type: "loot", id: "manEaterSeed", name: "🫘 食人花種子", description: "蘊藏著蠢蠢欲動的生命，商人不願意買，但有人在公會高價收購。", price: 0 },
-            { type: "loot", id: "wood", name: "💰 木材", description: "樹妖的木材。", price: 10 },
+
+            { type: "loot", id: "meat", name: "💰 生肉", description: "動物的肉塊。", price: 3 },
+            { type: "loot", id: "rottenMeat", name: "💰 腐肉", description: "已經腐爛的肉塊。", price: 0 },
+
+            { type: "loot", id: "fur", name: "💰 毛皮", description: "動物的毛皮。", price: 3 },
+            { type: "loot", id: "lizardLoot", name: "💰 尖刺鱗片", description: "棘刺蜥蜴的鱗片。", price: 2 },
+            { type: "loot", id: "tusk", name: "💰 獠牙", description: "野豬的獠牙。", price: 4 },
+            { type: "loot", id: "silk", name: "💰 蜘蛛絲", description: "巨型蜘蛛的絲線。", price: 5 },
+            { type: "loot", id: "gargoyleLoot", name: "💰 水晶眼珠", description: "石像鬼的眼珠。", price: 10 },
+            //{ type: "loot", id: "gargoyleLoot", name: "💰 石塊", description: "石像鬼死後化成了碎石。", price: 1 },
+            { type: "loot", id: "eagleLoot", name: "💰 堅硬羽毛", description: "巨鷹的羽毛。", price: 2 },
+            { type: "loot", id: "dragonLoot", name: "💰 龍鱗", description: "龍的鱗片。", price: 30 },
+            { type: "loot", id: "wood", name: "💰 木材", description: "可當作柴火。", price: 2 },
+            { type: "loot", id: "treantLoot", name: "💰 樹妖皮", description: "樹妖掉落的樹皮。", price: 6 },
 
             { type: "loot", id: "cloth", name: "💰 布料", description: "拆解衣物得到的碎布。", price: 0 },
             { type: "loot", id: "ironＷire", name: "📎 鐵絲", description: "可以用來撬鎖。", price: 0 },
@@ -1062,12 +1061,11 @@
         member.str[itemType] = item.str || 0;
         member.cha[itemType] = item.cha || 0;
         member.arm[itemType] = item.arm || 0;
+        member.dex[itemType] = item.dex || 0;
 
-        // 檢查力量是否足夠，足夠就不須承受敏捷減值
-        if (member.str.basic >= item.needStr) {
-            member.dex[itemType] = 0;
-        } else {
-            member.dex[itemType] = item.dex || 0;
+        // 檢查力量是否足夠，每少 1 力量就承受 -1 敏捷減值
+        if (member.str.basic < item.needStr) {
+            member.dex[itemType] -= item.needStr - member.str.basic;
         }
 
         // 加總屬性
@@ -1164,24 +1162,25 @@
                 <div class="column-container" style="cursor: pointer;">
                     <span class="column">${item.name}</span>
                     <span class="column-small">$${buyPrice}</span>
-                    <button onclick="buyItem('${item.id}')">
-                        <span class="small">${shopType !== "tavern" ? `購買` : `點餐`}</span>
-                    </button>
                 </div>
                 <div class="hided" style="display: none;">
                     <div class="column-container">
                         <p class="column small note">
-                            ${item.description ? `${item.description}<br>` : ""}
+                            ${item.description ? `${item.description}<br><br>` : ""}
                             ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
                             ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
                             ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
                             ${item.dex && !item.needStr ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
                             ${item.heal ? `恢復 ${item.heal} HP` : ""}
-                            ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
-                            ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
+                            ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%<br>` : ""}
+                            ${item.needStr ? `<br>裝備需求：力量 ${item.needStr} <br>（如果力量不足，會承受敏捷減值）` : ""}
                         </p>
-                        <!-- 如果是商店，顯示偷竊按鈕 -->
-                        ${shopType && shopType !== "tavern" ? `<button onclick="stealItem('${item.id}')" style="margin: auto;">
+                    </div>
+                    <div class="row-buttons">
+                        <button onclick="buyItem('${item.id}')" class="small-button">
+                            <span class="small">${shopType !== "tavern" ? `購買` : `點餐`}</span>
+                        </button>
+                        ${shopType && shopType !== "tavern" ? `<button onclick="stealItem('${item.id}')" class="small-button">
                             <span class="small warn">偷竊</span>
                         </button>` : ""}
                     </div>
@@ -1331,7 +1330,7 @@
     // 狀態資料庫
     const statusData = {
         "穿刺": { icon: "🩸", name: "流血", duration: 3, multiplier: 1 },
-        "鈍擊": { icon: "💫", name: "倒地", duration: 1, multiplier: 0.4 },
+        "鈍擊": { icon: "💫", name: "倒地", duration: 1, multiplier: 0.5 },
         "飛行": { icon: "🪽", name: "飛行", duration: 1 },
     };
 
@@ -1497,12 +1496,17 @@
         localStorage.setItem("playerPos", JSON.stringify(townPos));
 
         // 跳轉到城鎮頁面
-        window.location.href = 'locations/town.html';
+        goTo("locations/town.html");
     }
 
-    // 跳轉場景
+    // 跳轉場景，根據目前頁面調整路徑
     function goTo(location) {
-        window.location.href = location + '.html';
+        let folderName = window.location.pathname.split("/").slice(-2, -1)[0];
+        if (folderName === "RPG") {
+            window.location.href = location + '.html';
+        } else {
+            window.location.href = "../" + location + '.html';
+        }
     }
 
     // 指定戰鬥
@@ -1545,13 +1549,8 @@
         localStorage.setItem("encounter", JSON.stringify(encounter));
         console.log(encounter);
 
-        // 跳轉到遭遇頁面（根據目前頁面調整路徑）
-        let folderName = window.location.pathname.split("/").slice(-2, -1)[0];
-        if (folderName === "RPG") {
-            window.location.href = "encounter.html";
-        } else {
-            window.location.href = "../encounter.html";
-        }
+        // 跳轉到遭遇頁面
+        goTo("encounter");
     }
 
     // 新的一天
@@ -1597,10 +1596,49 @@
             { icon: "☁️", name: "陰天", description: "不死生物會出沒。" },
             { icon: "🌧️", name: "小雨", description: "植物少量增長，不死生物會出沒。" },
             { icon: "⛈️", name: "大雷雨", description: "智慧生物不會出門，植物大量增長，不死生物會出沒。" },
-            { icon: "🌫️", name: "濃霧", description: "容易潛行，不死生物會出沒。" },
+            { icon: "🌫️", name: "濃霧", description: "潛行容易成功，但難以發現伏擊的敵人，不死生物會出沒。" },
             { icon: "🔥", name: "極端炎熱", description: "龍可能會出現，不死生物不會出沒。" },
         ];
         let randomIndex = Math.floor(Math.random() * weathers.length);
         let selectedWeather = weathers[randomIndex];
         localStorage.setItem("weather", JSON.stringify(selectedWeather));
+    }
+
+// 程式相關
+
+    // 將資料庫存為 CSV 檔：
+    // const csvData = jsonToCSV(資料庫);
+    // downloadCSV(csvData, '資料庫.csv');
+
+    // 將 JSON 資料轉換為 CSV 字串
+    function jsonToCSV(jsonData) {
+      const keys = Object.keys(jsonData[0]);  // 獲取鍵名（標題行）
+      const csv = jsonData.map(row => {
+        return keys.map(key => {
+          // 如果是陣列型態（例如 "type" 或 "loot"），就將其轉為字符串
+          if (Array.isArray(row[key])) {
+            return `"${row[key].join(',')}"`;
+          }
+          return `"${row[key]}"`;
+        }).join(',');
+      });
+  
+      // 將標題行加到 CSV 開頭
+      return [keys.join(','), ...csv].join('\n');
+    }
+
+    // 下載 CSV 檔案
+    function downloadCSV(csvData, filename = "data.csv") {
+      const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', filename);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      }
     }

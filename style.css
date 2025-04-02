@@ -34,8 +34,10 @@ h4 {
     font-size: 1em;
 }
 
+
 a{
     text-decoration: none; /* 移除超連結底線 */
+    color: #ccc;
 }
 
 p {
@@ -108,7 +110,7 @@ hr {
 }
 
 
-/* 建築標題列 */
+/* 標題列 */
 .header {
     display: flex;
     align-items: center;
@@ -184,13 +186,15 @@ hr {
     display: flex;
     flex-wrap: wrap; /* 如果內容過長，允許換行 */
     gap: 10px; /* 設定欄之間的間距 */
-    margin: 5px 0;
+    margin: 0;
 }
 
 /* 品項 */
 .item {
-    padding: 5px;
+    padding: 10px 15px;
     margin: 20px 0px;
+    background: #111;
+    border-radius: 5px; 
 }
 
 /* 欄 */
@@ -209,7 +213,7 @@ hr {
 
 /* 小欄 */
 .column-small {
-    flex: 0 0 50px; /* 欄的寬度 */
+    flex: 0 0 60px; /* 欄的寬度 */
     margin: auto 0; /* 垂直置中 */
     text-align: center;
 }
@@ -235,10 +239,14 @@ hr {
 /* 按鈕列裡的按鈕 */
 .row-buttons button {
     flex: 1; /* 佔滿剩餘空間 */
-    margin: 5px;
-    padding-left: 5px;
-    padding-right: 5px;
+    margin: 5px 0;
+    padding: 5px;
     font-size: 1em;
+    background: rgba(0,0,0,0);
+    border-radius: 0;
+}
+.row-buttons button:not(:last-child) {
+    border-right: 1px solid #333; /* 分隔線 */
 }
 
 
@@ -251,8 +259,14 @@ hr {
 
 /* 深色背景 */
 .background {
-    background-color: #111;
+    background-color: rgba(0, 0, 0, 0.6);
     border-radius: 5px;
+}
+
+/* 下框線 */
+.bottomborder {
+    background: none;
+    border-bottom: 1px solid #333;
 }
 
 /* 初始隱藏 */
@@ -267,13 +281,18 @@ hr {
 
 /* 紅字 */
 .warn {
-    color: #C91818;
+    color: #9B1212;
 }
 
 
 /* 置中 */
 .center {
     text-align: center;
+}
+
+/* 置右 */
+.right {
+    text-align: right;
 }
 
 /* 靠上方 */
@@ -287,24 +306,23 @@ hr {
     padding: 5px;
 }
 
+/* 小按鈕*/
+.small-button {
+    padding: 5px 10px;
+    margin: auto;
+}
 
 
 /* 選擇敵人 */
 #enemy-list button {
-    background-color: #111;
     width: 100%;
     text-align: left;
-    padding: 5px 10px; /* 和.item一樣 */
-    margin: 10px 0px; /* 和.item一樣 */
 }
 
-#enemy-list button:hover {
-    background-color: #4D0000; /* 背景變紅 */
-    color: #fff;
-}
-
-#enemy-list .selected {
-    background-color: #4D0000; /* 背景變紅 */
+/* 背景變紅 */
+#enemy-list .selected, #enemy-list button:hover {
+    border: 1px solid rgba(255, 55, 55, 1); 
+    background-color: rgba(0,0,0,0.5);
     color: #fff;
 }
 
@@ -328,7 +346,7 @@ hr {
 /* 戰鬥訊息 */
 .battle-text {
     font-size: 0.9em;
-    color: #aaa;
+    color: #999;
 }
 
 

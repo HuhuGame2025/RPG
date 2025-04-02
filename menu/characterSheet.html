@@ -70,98 +70,108 @@
 
             let characterDiv = document.createElement("div");
             characterDiv.innerHTML = `
-                <div class="item">
-                    <div class="center">${member.type}</div>
-                    <div class="column-container background">
-                        <button class="column-small" onclick="lastMember('${member.id}')">◀︎</button>
+                <div class="">
+                    <div class="center note">⇢ ${member.type} ⬸</div> 
+                    <div class="item column-container">
+                        <button class="small-button" style="background: none;" onclick="lastMember('${member.id}')">◀︎</button>
                         <h3 class="column center">${member.name}</h3>
-                        <button class="column-small" onclick="nextMember('${member.id}')">▶︎</button>
+                        <button class="small-button" style="background: none;" onclick="nextMember('${member.id}')">▶︎</button>
                     </div>
                 </div>
 
-                <div class="item">
-                    <span class="small">生命值</span>
-                    <div class="column-container background">
-                        <span class="column center hp" id="HP-bar"></span>
+                <span class="small note">𒄬生命值</span>
+                <div class="item bottomborder">
+                    <div class="column-container">
+                        <span class="column" id="HP-description"></span>
                         <span class="column center">${member.HP} / ${member.MaxHP}</span>
-                        <span class="column center note" id="HP-description"></span>
+                        <span class="column center hp" id="HP-bar"></span>
                     </div>
                 </div>
 
-                <div class="item">
-                    <span class="small">情緒</span>
-                    <div class="column-container background">
+                <span class="small note">𒄬情緒</span>
+                <div class="item bottomborder">
+                    <div class="column-container">
                         <div class="column">
                             <span id="mood-level"></span>
                             <span class="small note" id="mood-description"></span>
                         </div>
-                        <span class="column-small">${member.mood}</span>
+                        <span class="column center">${member.mood}</span>
+                        <span class="column center note" id="emotion-btn">[詳細]</span>
                     </div>
                     <div id="emotion-list"></div>
                 </div>
-                    
+                <br>
+
+                <span class="small note">𒄬屬性</span>
                 <div class="item">
-                    <span class="small">屬性</span>
-                    <div class="column-container background">
+                    <div class="column-container bottomborder">
                         <span class="column center">🫀 體質</span>
                         <div class="column row-buttons">
                             <span class="column center">${member.con.basic}</span>
-                            <span class="column center"></span>
+                            <span class="column center note"></span>
                         </div>
-                        <span class="column center note" id="con-description"></span>
+                        <span class="column center note small" id="con-description"></span>
                     </div>
-                    <div class="column-container background">
+                    
+                    <div class="column-container bottomborder">
                         <span class="column center">⚔️ 力量</span>
                         <div class="column row-buttons">
                             <span class="column center">${member.str.total}</span>
-                            <span class="column center">(${addStr})</span>
+                            <span class="column center note">(${addStr})</span>
                         </div>
-                        <span class="column center note" id="str-description"></span>
+                        <span class="column center note small" id="str-description"></span>
                     </div>
-                    <div class="column-container background">
+                    
+                    <div class="column-container bottomborder">
                         <span class="column center">🏃 敏捷</span>
                         <div class="column row-buttons">
                             <span class="column center">${member.dex.total}</span>
-                            <span class="column center">(${addDex})</span>
+                            <span class="column center note">(${addDex})</span>
                         </div>
-                        <span class="column center note" id="dex-description"></span>
+                        <span class="column center note small" id="dex-description"></span>
                     </div>
-                    <div class="column-container background">
+                    
+                    <div class="column-container bottomborder">
                         <span class="column center">👁️ 感知</span>
                         <div class="column row-buttons">
                             <span class="column center">${member.wis.total}</span>
-                            <span class="column center">(${addWis})</span>
+                            <span class="column center note">(${addWis})</span>
                         </div>
-                        <span class="column center note" id="wis-description"></span>
+                        <span class="column center note small" id="wis-description"></span>
                     </div>
-                    <div class="column-container background">
+                    
+                    <div class="column-container bottomborder">
                         <span class="column center">✨ 魅力</span>
                         <div class="column row-buttons">
                             <span class="column center">${member.cha.total}</span>
-                            <span class="column center">(${addCha})</span>
+                            <span class="column center note">(${addCha})</span>
                         </div>
-                        <span class="column center note" id="cha-description"></span>
+                        <span class="column center note small" id="cha-description"></span>
                     </div>
-                    <div class="column-container background">
+
+                    <div class="column-container">
                         <span class="column center">🛡️ 護甲</span>
                         <div class="column row-buttons">
                             <span class="column center">${member.arm.total}</span>
-                            <span class="column center">(${addArm})</span>
+                            <span class="column center note">(${addArm})</span>
                         </div>
-                        <span class="column center note"></span>
+                        <span class="column center note small"></span>
                     </div>
                 </div>
+                <br>
 
-                <div class="item">
-                    <span class="small">裝備</span>
+                <span class="small note">𒄬裝備</span>
+                <div class="item background">
                     <div class="column-container">
                         <button class="column center" onclick="chooseEquipment(member.name, 'weapon')">${weaponName}</button>
                         <button class="column center" onclick="chooseEquipment(member.name, 'armor')">${armorName}</button>
                     </div>
                     <div id="note"></div>
+                    <div id="item-list"></div>
                 </div>
-                <div id="item-list"></div>
+                <br>
 
+                <span class="small note">𒄬特徵</span>
                 <div class="item">
                     <p>${member.description}</p>
                 </div>
@@ -211,22 +221,13 @@
             } else {
                 document.getElementById("mood-level").textContent = "👌 平靜";
             }
-
-            // 顯示展開按鈕
-            const note = `
-                <div style="text-align: right">
-                    <span class="note small">[詳細]</span>
-                </div>
-            `;
             
-            document.getElementById("emotion-list").innerHTML = note;
-
             // 點擊時，顯示或收起情緒列表
-            let itemElement = document.getElementById("emotion-list");
+            let itemElement = document.getElementById("emotion-btn");
             let hidedElement = document.getElementById("emotion-list");
 
             itemElement.addEventListener("click", () => {
-                if (hidedElement.innerHTML === note) {
+                if (!hidedElement.innerHTML) {
                     // 顯示情緒
                     const menu = document.getElementById("emotion-list");
                     menu.innerHTML = "";
@@ -245,8 +246,12 @@
 
                         menu.appendChild(emotionDiv);
                     })
+
+                    document.getElementById("emotion-btn").textContent = "[隱藏]";
+
                 } else {
-                    hidedElement.innerHTML = note;
+                    hidedElement.innerHTML = "";
+                    document.getElementById("emotion-btn").textContent = "[詳細]";
                 }
             });
         }
@@ -369,21 +374,23 @@
             const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             const member = teamMembers.find(m => m.id === memberId);
 
+            let note = document.getElementById("note");
+            note.innerHTML = "";
+
             if (member[itemType] && member[itemType].id) {
                 //let item = itemDatabase.find(i => i.id === member[itemType].id);
                 let item = findItemData(member[itemType].id); // 從資料庫查找物品
 
                 // 顯示裝備中的物品描述
-                let note = document.getElementById("note");            
                 note.innerHTML = `
                     <p class="column small note">
-                        ${item.description ? `${item.description}<br>` : ""}
+                        ${item.description ? `${item.description}<br><br>` : ""}
                         ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
                         ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
                         ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
-                        ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
+                        ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%<br>` : ""}
                         ${item.heal ? `恢復 ${item.heal} HP` : ""}
-                        ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
+                        ${item.needStr ? `<br>裝備需求：力量 ${item.needStr} <br>（如果力量不足，會承受敏捷減值）` : ""}
                     </p>
                 `;
             }
@@ -408,31 +415,31 @@
                 // 顯示這個類型的裝備，隱藏其他人的專屬裝備
                 if (item && item.type === itemType && (!item.owner || item.owner === memberName)) {
                     let itemDiv = document.createElement("div");
-                    itemDiv.classList.add("item", "background");
+                    itemDiv.classList.add("item");
 
                     itemDiv.innerHTML = `
                         <div class="column-container" style="cursor: pointer;">
                             <span class="column">${item.name} × ${count[itemId]}</span>
-                            <button style="margin:0 5px; padding: 5px 15px;" onclick="(equip(memberId, '${item.id}'), showCharacterSheet())">
+                            <button class="small-button" onclick="(equip(memberId, '${item.id}'), showCharacterSheet())">
                                 <span class="small">選擇</span>
                             </button>
                         </div>
                         <div class="hided" style="display: none;">
                             <p class="column small note">
-                                ${item.description ? `${item.description}<br>` : ""}
+                                ${item.description ? `${item.description}<br><br>` : ""}
                                 ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
                                 ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
                                 ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
                                 ${item.dex && !item.needStr ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
-                                ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
+                                ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%<br>` : ""}
                                 ${item.heal ? `恢復 ${item.heal} HP` : ""}
-                                ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
+                                ${item.needStr ? `<br>裝備需求：力量 ${item.needStr} <br>（如果力量不足，會承受敏捷減值）` : ""}
                             </p>
                         </div>
                     `;
 
                     // 點擊物品時，顯示或隱藏描述
-                    let itemElement = itemDiv.querySelector(".column-container");
+                    let itemElement = itemDiv;
                     let hidedElement = itemDiv.querySelector(".hided");
 
                     itemElement.addEventListener("click", () => {

@@ -22,7 +22,7 @@
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
         <div class="header">    
-            <button class="exit-button" onclick="goTo('town')">〈 離開</button>
+            <button class="exit-button" onclick="goTo('locations/town')">〈 離開</button>
             <h1>酒館</h1>
         </div>
 
@@ -291,7 +291,7 @@
                     
                 companionDiv.innerHTML = `
                     <hr>
-                    <div class="item">
+                    <div>
                         <h3>🪑 ${companion.name}</h3>
                         <p>${companion.description}</p>
                         <div class="menu">
@@ -706,13 +706,9 @@
                 results.forEach(person => {
                     let personDiv = document.createElement("div");
                     personDiv.innerHTML = `
-                        <div class="column-container item background">
-                            <div class="column-name">
-                                <h4>${person.name}</h4>
-                            </div>
-                            <div class="column">
-                                ${person.description}
-                            </div>
+                        <div class="item background">
+                            <h4>${person.name}</h4>
+                            <p class="battle-text">${person.description}</p>
                         </div>
                     `;
                     menu.appendChild(personDiv);

@@ -22,8 +22,7 @@
     </div>
 
     <div id="main" class="main-content">
-        <p>🪙 $<span id="playerMoney"></span></p>
-
+        <br>
         <div class="row-buttons">
             <button onclick="showItem()"><span class="small">全部</span></button>
             <button onclick="showItem('equipment')"><span class="small">🗡️</span></button>
@@ -31,7 +30,14 @@
             <button onclick="showItem('loot')"><span class="small">💰</span></button>
             <button onclick="showItem('specialItem')"><span class="small">📜</span></button>
         </div>
-        <hr>
+
+        <!-- 金幣 -->
+        <div class="item">
+            <div class="column-container">
+                <span class="column">🪙 金幣</span>
+                <div class="column-small">$<span id="playerMoney"></span></div>
+            </div>
+        </div>
 
         <!-- 物品列表 -->
         <div id="item-list"></div>
@@ -55,8 +61,6 @@
             
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
             console.log("物品", playerItems);
-            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
-            console.log("teamMembers", teamMembers);
         };
 
         // 對話資料庫
@@ -163,15 +167,6 @@
 
             let itemData = [];
 
-            // 依分類篩選物品
-            if (!itemType) { // 無指定，顯示全部
-                itemData = itemDatabase;
-            } else if (itemType === "equipment") { // 裝備
-                itemData = itemDatabase.filter(i => i.type === "weapon" || i.type === "armor"); 
-            } else { // 其他分類
-                itemData = itemDatabase.filter(i => i.type === itemType);
-            }
-
             // 顯示物品列表
             const itemList = document.getElementById("item-list");
             itemList.innerHTML = "";
@@ -179,60 +174,71 @@
             Object.keys(count).forEach(itemId => {
                 //let item = itemData.find(i => i.id === itemId); // 從資料庫查找物品
                 let item = findItemData(itemId); // 從資料庫查找物品
-                if (item) {
-                    let itemDiv = document.createElement("div");
-                    itemDiv.classList.add("item", "background");
 
-                    itemDiv.innerHTML = `
-                        <div class="column-container" style="cursor: pointer;">
-                            <span class="column">${item.name} × ${count[itemId]}</span>
-                            <span class="column-small">
-                                ${item.price ? `$${item.price}` : "-"}
-                            </span>
-                        </div>
-                        <div class="hided" style="display: none;">
-                            <div class="column-container">
-                                <p class="column small note">
-                                    ${item.description}<br>
-                                    ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}` : item.str)}<br>` : ""}
-                                    ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}` : item.cha)}<br>` : ""}
-                                    ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}` : item.arm)}<br>` : ""}
-                                    ${item.dex && !item.needStr ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
-                                    ${item.heal ? `恢復 ${item.heal} HP` : ""}
-                                    ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%` : ""}
-                                    ${item.needStr ? `（如果裝備者力量未達 ${item.needStr} 會承受敏捷 ${item.dex} 減值）` : ""}
-                                </p>
-                                ${item.type !== "specialItem" && !item.owner ? 
-                                    `<button onclick="discardItem('${item.id}')" style="margin: auto;">
-                                        <span class="small">🗑️</span>
-                                    </button>` : ""}
-                            </div>
-                            <div class="column-container">
-                                <div class="column column-container">
-                                    ${item.usable ? 
-                                        `<button class="column center" onclick="useItem('${item.id}')">
-                                            <span class="small">使用</span>
-                                        </button>` : ""}
-                                    ${item.investigable ? 
-                                        `<button class="column center" onclick="investigateItem('${item.id}')">
-                                            <span class="small">查看</span>
-                                        </button>` : ""}
-                                </div>
-
-                            </div>
-                        </div>
-                    `;
-
-                    // 點擊物品時，顯示或隱藏詳細資訊
-                    let itemElement = itemDiv.querySelector(".column-container");
-                    let hidedElement = itemDiv.querySelector(".hided");
-
-                    itemElement.addEventListener("click", () => {
-                        hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
-                    });
-
-                    itemList.appendChild(itemDiv);
+                if (!item) {
+                    return;
                 }
+
+                // 根據選擇的分類篩選物品
+                if (itemType === "equipment" && item.type === "weapon" || itemType === "equipment" && item.type === "armor") {
+                    // 選equipment顯示武器和盔甲
+                } else if (itemType && item.type !== itemType) {
+                    return;
+                }
+
+                // 顯示物品
+                let itemDiv = document.createElement("div");
+                itemDiv.classList.add("item");
+
+                itemDiv.innerHTML = `
+                    <div class="column-container" style="cursor: pointer;">
+                        <span class="column">${item.name} × ${count[itemId]}</span>
+                        <span class="column-small">
+                            ${item.price ? `$${item.price}` : "-"}
+                        </span>
+                    </div>
+
+                    <div class="hided" style="display: none;">
+                        <div class="column-container">
+                            <p class="column small note">
+                                ${item.description}<br><br>
+                                ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}` : item.str)}<br>` : ""}
+                                ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}` : item.cha)}<br>` : ""}
+                                ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}` : item.arm)}<br>` : ""}
+                                ${item.dex && !item.needStr ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
+                                ${item.heal ? `恢復 ${item.heal} HP` : ""}
+                                ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%<br>` : ""}
+                                ${item.needStr ? `<br>裝備需求：力量 ${item.needStr} <br>（如果力量不足，會承受敏捷減值）` : ""}
+                            </p>
+                        </div>
+
+                        <div class="row-buttons">
+                            ${item.usable ? 
+                                `<button class="column center" onclick="useItem('${item.id}')">
+                                    <span class="small">使用</span>
+                                </button>` : ""}
+                            ${item.investigable ? 
+                                `<button class="column center" onclick="investigateItem('${item.id}')">
+                                    <span class="small">查看</span>
+                                </button>` : ""}
+                            ${item.type !== "specialItem" && !item.owner ? 
+                                `<button class="column center" onclick="discardItem('${item.id}')">
+                                    <span class="small">🗑️ 丟棄</span>
+                                </button>` : ""}
+                        </div>
+                    </div>
+                `;
+
+                // 點擊物品時，顯示或隱藏詳細資訊
+                let itemElement = itemDiv;
+                let hidedElement = itemDiv.querySelector(".hided");
+
+                itemElement.addEventListener("click", () => {
+                    hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
+                });
+
+                itemList.appendChild(itemDiv);
+
             });
         }
 
@@ -400,8 +406,13 @@
             let discardAmount; // 丟棄的數量
 
             if (itemCount === 1) {
-                // 如果只有 1 個，就直接丟
-                discardAmount = 1;
+                // 如果只有 1 個，讓玩家確認
+                let input = confirm("確定要丟棄嗎？");
+
+                if (input) {
+                    discardAmount = 1;
+                }
+
             } else {
                 // 如果超過 1 個，讓玩家輸入數量
                 let input = prompt("要丟棄幾件？", "1");

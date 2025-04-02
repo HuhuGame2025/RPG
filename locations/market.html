@@ -23,7 +23,7 @@
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
         <div class="header">    
-            <button class="exit-button" onclick="goTo('town')">〈 離開</button>
+            <button class="exit-button" onclick="goTo('locations/town')">〈 離開</button>
             <h1>商店街</h1>
         </div>
 
@@ -31,15 +31,15 @@
         <p class="small">🪙 $<span id="playerMoney"></span></p>
 
         <!-- 選單 -->
-        <div class="menu">
-            <button onclick="showShop('blacksmith')">🔨 鐵匠鋪</button>
-            <button onclick="showShop('grocery')">🫙 雜貨店</button>
-            <button onclick="showShop('clothes')">🧥 服飾店</button>
-            <button onclick="loadPlayerItem()">💰 舊貨商</button>
+        <div class="location-menu">
+            <button onclick="showShop('blacksmith')">🔨<br>鐵匠鋪</button>
+            <button onclick="showShop('grocery')">🫙<br>雜貨店</button>
+            <button onclick="showShop('clothes')">🧥<br>服飾店</button>
+            <button onclick="loadPlayerItem()">💰<br>舊貨商</button>
         </div>
 
         <!-- 商品列表 -->
-        <p class="note">點擊物品可查看詳細資訊</p>
+        
         <div id="item-list"></div>
         <br>
 
@@ -118,7 +118,14 @@
         };
 
         // 偷竊
-        function stealItem(itemId) {       
+        function stealItem(itemId) {
+            // 讓玩家確認
+            let input = confirm("確定要偷走這個物品？");
+
+            if (!input) {
+                return;
+            }
+
             // 取得主角的敏捷
             const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             const player = teamMembers.find(m => m.id === "player");
@@ -191,11 +198,11 @@
                         <div class="column-container" style="cursor: pointer;">
                             <span class="column">${item.name} × ${count[itemId]}</span>
                             <span class="column-small">$${item.price}</span>
-                            <button onclick="sellItem('${item.id}')">
+                            <button class="small-button" onclick="sellItem('${item.id}')">
                                 <spam class="small">賣出</span>
                             </button>
                         </div>
-                        <span class="note" style="display: none;">${item.description}</span>
+                        <span class="small note" style="display: none;">${item.description}</span>
                     `;
 
                     // 點擊物品時，顯示或隱藏描述
@@ -223,8 +230,13 @@
             let sellAmount; // 賣出的數量
 
             if (itemCount === 1) {
-                // 如果只有 1 個，就直接賣
-                sellAmount = 1;
+                // 如果只有 1 個，讓玩家確認
+                let input = confirm("確定要賣出嗎？");
+
+                if (input) {
+                    sellAmount = 1;
+                }
+
             } else {
                 // 如果超過 1 個，讓玩家輸入數量
                 let input = prompt("要賣出幾件？", "1");
