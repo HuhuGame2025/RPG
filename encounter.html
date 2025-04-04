@@ -38,7 +38,7 @@
             // 將活著的成員設為上場成員、可行動成員
             let presentMembers = teamMembers.filter(member => member.HP > 0);
             localStorage.setItem("presentMembers", JSON.stringify(presentMembers));
-            localStorage.setItem("actableMembers", JSON.stringify(presentMembers));
+            localStorage.setItem("availableMember", JSON.stringify(presentMembers));
 
             // 清空逃跑隊伍
             localStorage.removeItem("escapeMember");
@@ -51,6 +51,9 @@
 
             // 清空紅字HP
             localStorage.removeItem("redHP");
+
+            // 清空目標敵人
+            localStorage.removeItem("selectedTarget");
 
             return presentMembers; // 回傳隊伍陣列
         }
@@ -204,47 +207,54 @@
 
         // 敵人資料庫
         const enemies = [
-            // 類人（有機會搶劫）,
-            { name: "盜賊", type: ["類人","智慧"], terrain: ["草原","森林","洞穴"], con: 10, str: 10, dex: 12, wis: 10, cha: 10, weaponId: "dagger01", armorId: "armor01", money: 15, loot: "clothes03", action: "專心數著搶來的錢", actionBattle: "亮出手中的匕首", description: "資質普通的人類盜賊，欺善怕惡，到處打劫旅行者。" },
-            { name: "哥布林", type: ["類人","智慧"], terrain: ["草原","森林"], con: 5, str: 6, dex: 14, wis: 12, cha: 5, weaponId: "stick01", armorId: "lootClothes01", money: 5, action: "坐在地上摳著小腳", actionBattle: "胡亂揮舞棍棒", description: "瘦小的哥布林，身高只有成人的一半，性格膽小，但奸詐狡猾。" },
-            { name: "獸人", type: ["類人","智慧"], terrain: ["草原","森林"], con: 16, str: 16, dex: 10, wis: 9, cha: 8, weaponId: "hammer02", armorId: "armor01_old", money: 10, loot: "clothes01", action: "在保養自己的武器", actionBattle: "舉起了沉重的戰錘", description: "身高 200 公分的獸人，是肌肉發達的戰鬥狂，仗著自身的武力傲視其他生物。" },
-            { name: "狼人", type: ["類人","智慧"], terrain: ["森林","洞穴"], con: 15, str: 22, dex: 13, wis: 7, cha: 6, armorId: "lootClothes03", action: "懶洋洋地趴在地上", actionBattle: "發出凶狠的咆哮聲", description: "充滿野性的原生狼人，能化身為人，但智力似乎和狼差不多。" },
-            { name: "食人妖", type: ["類人","智慧"], terrain: ["草原","森林","洞穴"], con: 30, str: 20, dex: 8, wis: 8, cha: 3, weaponId: "stick02", armorId: "lootClothes02", action: "在吃剩的骨頭旁邊打盹", actionBattle: "踏著笨重的步伐走來", description: "體型龐大的食人妖，約 3~4 公尺高，雖然遲鈍又笨重，但能輕易把人捏碎。" },
+            // 智慧（能交談，大雷雨不出門，有機會搶劫）,
+            // 類人（單位詞是「個」，有形容詞）,
+            { name: "盜賊", type: ["類人","智慧"], terrain: ["草原","森林","洞穴"], con: 10, str: 10, dex: 12, wis: 10, cha: 10, weaponId: "dagger01", armorId: "armor01", money: 20, loot: "clothes03", action: "專心數著搶來的錢", actionBattle: "亮出手中的匕首", description: "資質普通的人類盜賊，欺善怕惡，到處打劫旅行者。" },
+            { name: "哥布林", type: ["類人","智慧"], terrain: ["草原","森林"], con: 5, str: 6, dex: 14, wis: 12, cha: 5, weaponId: "stick01", money: 5, loot: "lootClothes01", action: "坐在地上摳著小腳", actionBattle: "胡亂揮舞棍棒", description: "瘦小的哥布林，身高只有成人的一半，個性懦弱，但奸詐狡猾。" },
+            { name: "獸人", type: ["類人","智慧"], terrain: ["草原","森林"], con: 16, str: 16, dex: 10, wis: 9, cha: 8, weaponId: "hammer01", armorId: "armor01_old", money: 15, loot: "clothes01", action: "在保養自己的武器", actionBattle: "舉起了沉重的戰錘", description: "身高 200 公分的獸人，是肌肉發達的戰鬥狂，仗著自身的武力傲視其他生物。" },
+            { name: "狼人", type: ["類人","智慧"], terrain: ["森林","洞穴"], con: 15, str: 22, dex: 13, wis: 7, cha: 6, money: 10, loot: "lootClothes03", action: "懶洋洋地趴在地上", actionBattle: "發出凶狠的咆哮聲", description: "充滿野性的原生狼人，常用四肢奔跑，能化身為人，但智力似乎和狼差不多。" },
+            { name: "食人妖", type: ["類人","智慧"], terrain: ["草原","森林","洞穴"], con: 30, str: 20, dex: 8, wis: 8, cha: 3, weaponId: "stick02", money: 12, loot: "lootClothes02", action: "在吃剩的骨頭旁邊打盹", actionBattle: "踏著笨重的步伐走來", description: "體型龐大的食人妖，約 3~4 公尺高，雖然遲鈍又笨重，但能輕易把人捏碎。" },
+            { name: "鼠人劍客", type: ["類人","智慧"], terrain: ["森林","洞穴"], con: 2, str: 4, dex: 15, wis: 10, cha: 10, weaponId: "sword03", money: 1, loot: "lootClothes04", action: "用小小的雙手洗臉", actionBattle: "拔出腰間的迷你刺劍", description: "不到 30 公分高的鼠人，十分敏感、膽小，沒有能說話的發聲器官，只會吱吱叫。" },
+            { name: "蛙人獵手", type: "類人", terrain: "湖泊", con: 10, str: 12, dex: 16, wis: 10, cha: 5, weaponId: "spear01", action: "在水草間尋找獵物", actionBattle: "舉著長矛跳上了船" },
             // 野獸,
             { name: "蠕蟲", type: "野獸", terrain: "森林", con: 1, str: 1, dex: 3, loot: "wormLoot", action: "在地上捲成一球", actionBattle: "蠕動著長長的身體" },
-            { name: "史萊姆", type: "野獸", terrain: "森林", con: 2, str: 5, dex: 5, loot: "slimeLoot", action: "看似一灘爛泥", actionBattle: "開始釋放腐蝕性黏液" },
+            { name: "史萊姆", type: "野獸", terrain: "森林", con: 2, str: 4, dex: 5, loot: "slimeLoot", action: "看似一灘爛泥", actionBattle: "開始釋放腐蝕性黏液" },
+            { name: "食人魚", type: "野獸", terrain: "湖泊", con: 2, str: 12, dex: 12, loot: "piranhaLoot", action: "一群魚在水裡悠游", actionBattle: "鋸齒狀的利牙咬了上來" },
             { name: "狐狸", type: "野獸", terrain: ["草原","森林"], con: 3, str: 8, dex: 16, loot: ["fur","meat"], action: "正在舔自己的毛", actionBattle: "警戒地圍著你跑來跑去" },
             { name: "稻草人", type: "野獸", terrain: "草原", con: 7, str: 10, dex: 8, loot: "clothes02", action: "佇立在田野間", actionBattle: "木桿從土裡跳了出來" },
-            { name: "棘刺蜥蜴", type: "野獸", terrain: "草原", con: 10, str: 12, dex: 12, loot: ["lizardLoot","meat"], action: "正悠閒地曬太陽", actionBattle: "身上的尖刺豎了起來" },
+            { name: "石化雞蛇", type: "野獸", terrain: "森林", con: 9, str: 9, dex: 14, addStatus: "石化", addChance: 0.2, loot: "cockatriceLoot", action: "在草叢中追著一隻蟲", actionBattle: "兩個頭都對著你吼叫" },
+            { name: "火蜥蜴", type: "野獸", terrain: "草原", con: 10, str: 12, dex: 12, addStatus: "燃燒", addChance: 0.2, loot: ["lizardLoot","meat"], action: "正悠閒地曬太陽", actionBattle: "全身的鱗片冒出了火" },
             { name: "野豬", type: "野獸", terrain: ["草原","森林"], con: 12, str: 15, dex: 11, loot: ["fur","meat","tusk"], action: "鼻子貼著地面聞", actionBattle: "前腳刨地準備衝撞" },
             { name: "野狼", type: "野獸", terrain: ["草原","森林"], con: 12, str: 18, dex: 15, loot: ["fur","meat"], action: "趴在地上用後腳抓癢", actionBattle: "虎視眈眈地盯著你" },
-            { name: "巨型蜘蛛", type: "野獸", terrain: "洞穴", con: 20, str: 20, dex: 13, loot: ["spiderLoot","silk"], action: "處於靜止狀態", actionBattle: "八條腿高速爬行過來" },
+            { name: "巨大的觸手", type: "野獸", terrain: "湖泊", con: 18, str: 22, dex: 12, addStatus: "倒地", addChance: 0.2, loot: "tentacleLoot", action: "在水中捕魚", actionBattle: "伸出水面向你抓來" },
+            { name: "巨型蜘蛛", type: "野獸", terrain: "洞穴", con: 20, str: 17, dex: 13, addStatus: "中毒", addChance: 0.3, loot: ["spiderLoot","silk"], action: "處於靜止狀態", actionBattle: "八條腿高速爬行過來" },
             // 飛行,
-            { name: "小仙子", type: ["飛行","智慧"], terrain: "森林", con: 1, str: 1, dex: 15, wis: 10, cha: 14, loot: "fairyDust", action: "在花叢中飛舞", actionBattle: "發出施展魔法的光芒", description: "只有手掌大小的仙子，長著透明的翅膀，十分調皮。" },
+            { name: "小仙子", type: ["飛行","類人","智慧"], terrain: "森林", con: 1, str: 1, dex: 15, wis: 10, cha: 14, loot: "fairyDust", action: "在花叢中飛舞", actionBattle: "發出施展魔法的光芒", description: "只有手掌大小的仙子，長著透明的翅膀，十分調皮。" },
             { name: "蝙蝠", type: "飛行", terrain: "洞穴", con: 2, str: 3, dex: 16, loot: "batLoot", action: "倒掛著休息", actionBattle: "漫天飛舞" },
             { name: "石像鬼", type: ["飛行","不死"], terrain: "森林", con: 15, str: 20, dex: 12, loot: ["gargoyleLoot","gargoyleLoot"], action: "蹲在陰影下沉思", actionBattle: "張開惡魔般的翅膀" },
             { name: "巨鷹", type: "飛行", terrain: "草原", con: 25, str: 27, dex: 15, loot: ["meat","eagleLoot","eagleLoot","eagleLoot","eagleLoot","eagleLoot","eagleLoot"], action: "悠閒地伸展羽翼", actionBattle: "伸出巨大的鷹爪" },
-            { name: "龍", type: ["飛行","龍"], terrain: "草原", con: 60, str: 60, dex: 14, loot: "dragonLoot", action: "似乎在沉眠中", actionBattle: "目光如炬地盯著你" },
+            { name: "龍", type: ["飛行","龍"], terrain: "草原", con: 60, str: 50, dex: 14, addStatus: "燃燒", addChance: 0.5, loot: "dragonLoot", action: "似乎在沉眠中", actionBattle: "目光如炬地盯著你" },
             // 植物（我方攻擊、逃跑自動成功）,
-            { name: "蘑菇怪", type: "植物", terrain: "森林", con: 2, str: 2, dex: 8, loot: "mushroomLoot", action: "呆呆坐在地上", actionBattle: "從土裡站了起來" },
-            { name: "觸手藤蔓", type: "植物", terrain: "森林", con: 6, str: 9, dex: 14, loot: "vineLoot", action: "看似普通的藤蔓", actionBattle: "像蛇一樣扭動起來" },
+            { name: "爬行藤蔓", type: "植物", terrain: "森林", con: 2, str: 5, dex: 14, loot: "vineLoot", action: "看似普通的藤蔓", actionBattle: "在你的腳邊纏繞過來" },
+            { name: "蘑菇怪", type: "植物", terrain: "森林", con: 4, str: 1, dex: 8, addStatus: "中毒", addChance: 0.5, loot: "mushroomLoot", action: "藏身在一片蘑菇之間", actionBattle: "歪著頭好奇地看你" },
             { name: "食人花", type: "植物", terrain: "森林", con: 14, str: 20, dex: 12, loot: "manEaterSeed", action: "靜靜地隨風搖曳", actionBattle: "張開了血盆大口" },
-            { name: "樹妖", type: "植物", terrain: "森林", con: 50, str: 23, dex: 6, loot: ["treantLoot","wood","wood","wood"], action: "看似普通的樹", actionBattle: "樹枝緩慢地動了起來" },
+            { name: "樹人", type: "植物", terrain: "森林", con: 50, str: 25, dex: 6, addStatus: "倒地", addChance: 0.5, loot: ["treantLoot","wood","wood","wood"], action: "樹皮上浮現一張臉孔", actionBattle: "緩慢地揮動粗壯的樹枝" },
             // 不死（晴天不會出現）,
             { name: "骷髏", type: "不死", terrain: ["草原","洞穴"], con: 6, str: 10, dex: 9, loot: "lootClothes03", action: "死在地上", actionBattle: "搖搖晃晃地站了起來" },
-            { name: "食屍鬼", type: "不死", terrain: ["森林","洞穴"], con: 10, str: 12, dex: 12, loot: "rottenMeat", action: "盲目地尋找人肉", actionBattle: "飢腸轆轆地爬過來" },
-            { name: "吸血鬼", type: ["不死","智慧"], terrain: ["草原","森林"], con: 12, str: 14, dex: 16, wis: 14, cha: 12, weaponId: "dagger01", armorId: "fineClothes01", money: 50, action: "在樹下躲太陽", actionBattle: "露出尖銳的獠牙", description: "低等吸血鬼，徘迴在夜晚的森林中，狩獵迷途之人。" },
+            { name: "食屍鬼", type: "不死", terrain: ["森林","洞穴"], con: 9, str: 12, dex: 12, loot: "rottenMeat", action: "盲目地尋找人肉", actionBattle: "飢腸轆轆地爬過來" },
+            { name: "吸血鬼", type: ["不死","類人","智慧"], terrain: ["草原","森林"], con: 12, str: 14, dex: 16, wis: 14, cha: 12, addStatus: "流血", addChance: 0.8, money: 50, loot: "fineClothes01", action: "在樹下躲太陽", actionBattle: "露出尖銳的獠牙", description: "低等吸血鬼，徘迴在夜晚的森林中，狩獵迷途之人。" },
+            { name: "騎士幽靈", type: ["不死","類人"], terrain: "森林", con: 27, str: 24, dex: 13, loot: "knightGhostLoot", action: "鬼魂身影一晃而過", actionBattle: "騎著幽靈馬奔馳而來" },
             // 競技場,
-            { name: "角鬥士", type: ["類人","智慧"], terrain: "競技場", con: 14, str: 14, dex: 12, wis: 12, cha: 10, weaponId: "sword02", armorId: "armor03" },
-            { name: "獸人獵手", type: ["類人","智慧"], terrain: "競技場", con: 16, str: 16, dex: 10, wis: 10, cha: 8, weaponId: "axe01", armorId: "armor03" },
+            { name: "角鬥士", type: ["類人","智慧"], terrain: "競技場", con: 15, str: 14, dex: 12, wis: 12, cha: 10, weaponId: "sword02", armorId: "armor03" },
+            { name: "獸人士兵", type: ["類人","智慧"], terrain: "競技場", con: 17, str: 17, dex: 10, wis: 10, cha: 8, weaponId: "axe01", armorId: "armor04" },
             { name: "精靈遊俠", type: ["類人","智慧"], terrain: "競技場", con: 10, str: 10, dex: 16, wis: 15, cha: 16, weaponId: "sword01", armorId: "armor03" },
-            { name: "矮人戰士", type: ["類人","智慧"], terrain: "競技場", con: 14, str: 15, dex: 10, wis: 10, cha: 10, weaponId: "hammer02", armorId: "armor05" },
-            { name: "侏儒盜賊", type: ["類人","智慧"], terrain: "競技場", con: 7, str: 10, dex: 15, wis: 11, cha: 10, weaponId: "dagger01", armorId: "armor02" },
+            { name: "矮人戰士", type: ["類人","智慧"], terrain: "競技場", con: 14, str: 16, dex: 10, wis: 10, cha: 10, weaponId: "hammer02", armorId: "armor05" },
+            { name: "侏儒盜賊", type: ["類人","智慧"], terrain: "競技場", con: 7, str: 10, dex: 15, wis: 11, cha: 10, weaponId: "bow01", armorId: "armor02" },
             // 劇情敵人,
-            { name: "守衛", type: ["類人","智慧"], terrain: "劇情", con: 12, str: 12, dex: 12, wis: 12, cha: 10, weaponId: "sword01", armorId: "armor03", action: "正在巡視四周", actionBattle: "拔出了劍" },
+            { name: "守衛", type: ["類人","智慧"], terrain: "劇情", con: 12, str: 12, dex: 12, wis: 12, cha: 10, weaponId: "sword01", armorId: "armor04", action: "正在巡視四周", actionBattle: "拔出了劍" },
             { name: "食人花幼苗", type: "植物", terrain: "劇情", con: 7, str: 9, dex: 6, action: "靜靜地隨風搖曳", actionBattle: "張開了血盆大口" },
             { name: "骷髏守衛", type: "不死", terrain: "劇情", con: 6, str: 6, dex: 6, weaponId: "sword01_old", armorId: "armor05_old", action: "死在地上", actionBattle: "搖搖晃晃地站了起來" }
-];
+        ];
 
         // 形容詞庫
         const adjs = ["平凡", "醜陋", "猙獰", "英俊", "美豔", "清秀", "蒼白", "黝黑", "刀疤", "年輕", "年長", "滄桑", "纖細", "圓潤", "壯碩", "矮小", "高大"];
@@ -293,7 +303,7 @@
             // 隨機選擇一種敵人
             let randomIndex = Math.floor(Math.random() * possibleEnemies.length);
             let selectedEnemy = possibleEnemies[randomIndex];
-            //selectedEnemy = enemies[0]; // 測試用
+            //selectedEnemy = enemies.find(e => e.name.startsWith("石化")); // 測試用
 
             // 使用加權隨機決定敵人數量
                 let enemyCount;
@@ -341,8 +351,6 @@
                 }   
 
                 // 取得敵人的裝備資料，如果沒有裝備就都是 0
-                //const weapon = itemDatabase.find(item => item.id === selectedEnemy.weaponId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
-                //const armor = itemDatabase.find(item => item.id === selectedEnemy.armorId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
                 const weapon = selectedEnemy.weaponId ? findItemData(selectedEnemy.weaponId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 } : { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
                 const armor = selectedEnemy.armorId ? findItemData(selectedEnemy.armorId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 } : { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };
 
@@ -415,13 +423,15 @@
                     MaxHP: selectedEnemy.con*3, // MaxHP
                     HP: selectedEnemy.con*3, // 初始 HP   
                     status: [], // 初始狀態
+                    addStatus: selectedEnemy.addStatus,
+                    addChance: selectedEnemy.addChance,
                 });
             }
 
             // 儲存敵人資訊到 localStorage
             localStorage.setItem("enemyCount", enemyCount);
             localStorage.setItem("enemies", JSON.stringify(enemiesEncountered));
-            localStorage.setItem("actableEnemies", JSON.stringify(enemiesEncountered));
+            localStorage.setItem("availableEnemies", JSON.stringify(enemiesEncountered));
         }
 
         // 跳轉畫面

@@ -24,7 +24,7 @@ h1{
 /* 列表標題 */
 h3 {
     color: white;
-    margin: 10px 0;
+    margin: 0.5em 0;
 }
 
 /* 名字、品名 */
@@ -42,6 +42,8 @@ a{
 
 p {
     text-align: justify; /* 平均分布內文 */
+    margin-block-start: 0.5em;
+    margin-block-end: 0.5em;
 }
 
 
@@ -117,6 +119,7 @@ hr {
     justify-content: center;
     position: relative;
     width: 100%;
+    
 }
 
 /* 返回按鈕 */
@@ -192,7 +195,7 @@ hr {
 /* 品項 */
 .item {
     padding: 10px 15px;
-    margin: 20px 0px;
+    margin: 1em 0px;
     background: #111;
     border-radius: 5px; 
 }
@@ -266,7 +269,8 @@ hr {
 /* 下框線 */
 .bottomborder {
     background: none;
-    border-bottom: 1px solid #333;
+    border-radius: 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* 初始隱藏 */
@@ -302,8 +306,7 @@ hr {
 
 /* 小字 */
 .small {
-    font-size: 0.85em;
-    padding: 5px;
+    font-size: 0.8em;
 }
 
 /* 小按鈕*/
@@ -313,15 +316,9 @@ hr {
 }
 
 
-/* 選擇敵人 */
-#enemy-list button {
-    width: 100%;
-    text-align: left;
-}
-
-/* 背景變紅 */
-#enemy-list .selected, #enemy-list button:hover {
-    border: 1px solid rgba(255, 55, 55, 1); 
+/* 選中的敵人 */
+.selected {
+    border: 1px solid rgba(255, 55, 55, 1); /* 加上紅框 */
     background-color: rgba(0,0,0,0.5);
     color: #fff;
 }
@@ -338,9 +335,12 @@ hr {
     color: #984B4B;
 }
 
-/* 狀態圖示 */
-.status-icon {
+/* 狀態圖示按鈕 */
+.status-button {
     font-size: 0.7em;
+    margin: 0;
+    padding: 0;
+    background: none;
 }
 
 /* 戰鬥訊息 */

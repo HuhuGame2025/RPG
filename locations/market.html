@@ -194,23 +194,15 @@
                     let itemDiv = document.createElement("div");
                     itemDiv.classList.add("item", "background");
 
-                    itemDiv.innerHTML = `
-                        <div class="column-container" style="cursor: pointer;">
-                            <span class="column">${item.name} × ${count[itemId]}</span>
-                            <span class="column-small">$${item.price}</span>
-                            <button class="small-button" onclick="sellItem('${item.id}')">
-                                <spam class="small">賣出</span>
-                            </button>
-                        </div>
-                        <span class="small note" style="display: none;">${item.description}</span>
-                    `;
+                    // 顯示物品資料
+                    itemDiv.innerHTML = showItemHTML(item, count[itemId], "sell");
 
                     // 點擊物品時，顯示或隱藏描述
                     let itemElement = itemDiv.querySelector(".column-container");
-                    let noteElement = itemDiv.querySelector(".note");
+                    let hidedElement = itemDiv.querySelector(".hided");
 
                     itemElement.addEventListener("click", () => {
-                        noteElement.style.display = (noteElement.style.display === "none") ? "block" : "none";
+                        hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
                     });
 
                     itemList.appendChild(itemDiv);

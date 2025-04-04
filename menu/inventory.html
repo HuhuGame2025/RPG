@@ -190,44 +190,8 @@
                 let itemDiv = document.createElement("div");
                 itemDiv.classList.add("item");
 
-                itemDiv.innerHTML = `
-                    <div class="column-container" style="cursor: pointer;">
-                        <span class="column">${item.name} × ${count[itemId]}</span>
-                        <span class="column-small">
-                            ${item.price ? `$${item.price}` : "-"}
-                        </span>
-                    </div>
-
-                    <div class="hided" style="display: none;">
-                        <div class="column-container">
-                            <p class="column small note">
-                                ${item.description}<br><br>
-                                ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}` : item.str)}<br>` : ""}
-                                ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}` : item.cha)}<br>` : ""}
-                                ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}` : item.arm)}<br>` : ""}
-                                ${item.dex && !item.needStr ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
-                                ${item.heal ? `恢復 ${item.heal} HP` : ""}
-                                ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%<br>` : ""}
-                                ${item.needStr ? `<br>裝備需求：力量 ${item.needStr} <br>（如果力量不足，會承受敏捷減值）` : ""}
-                            </p>
-                        </div>
-
-                        <div class="row-buttons">
-                            ${item.usable ? 
-                                `<button class="column center" onclick="useItem('${item.id}')">
-                                    <span class="small">使用</span>
-                                </button>` : ""}
-                            ${item.investigable ? 
-                                `<button class="column center" onclick="investigateItem('${item.id}')">
-                                    <span class="small">查看</span>
-                                </button>` : ""}
-                            ${item.type !== "specialItem" && !item.owner ? 
-                                `<button class="column center" onclick="discardItem('${item.id}')">
-                                    <span class="small">🗑️ 丟棄</span>
-                                </button>` : ""}
-                        </div>
-                    </div>
-                `;
+                // 顯示物品資料
+                itemDiv.innerHTML = showItemHTML(item, count[itemId], "inventory");
 
                 // 點擊物品時，顯示或隱藏詳細資訊
                 let itemElement = itemDiv;
@@ -308,11 +272,11 @@
 
                             // 死亡角色補血後，回歸上場成員、可行動成員
                             let presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
-                            let actableMembers = JSON.parse(localStorage.getItem("actableMembers")) || [];
+                            let availableMember = JSON.parse(localStorage.getItem("availableMember")) || [];
                             presentMembers.push(member);
-                            actableMembers.push(member);
+                            availableMember.push(member);
                             localStorage.setItem("presentMembers", JSON.stringify(presentMembers));
-                            localStorage.setItem("actableMembers", JSON.stringify(actableMembers));
+                            localStorage.setItem("availableMember", JSON.stringify(availableMember));
                         } else {
                             // 非死亡角色只補血
                             member.HP = Math.min(member.HP + item.heal, member.MaxHP);
@@ -485,11 +449,11 @@
 
                         // 死亡角色補血後，回歸上場成員、可行動成員
                         let presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
-                        let actableMembers = JSON.parse(localStorage.getItem("actableMembers")) || [];
+                        let availableMember = JSON.parse(localStorage.getItem("availableMember")) || [];
                         presentMembers.push(member);
-                        actableMembers.push(member);
+                        availableMember.push(member);
                         localStorage.setItem("presentMembers", JSON.stringify(presentMembers));
-                        localStorage.setItem("actableMembers", JSON.stringify(actableMembers));
+                        localStorage.setItem("availableMember", JSON.stringify(availableMember));
                     } else {
                         // 非死亡角色只補血
                         member.HP = member.MaxHP; // 完全治療

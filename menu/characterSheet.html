@@ -382,17 +382,7 @@
                 let item = findItemData(member[itemType].id); // 從資料庫查找物品
 
                 // 顯示裝備中的物品描述
-                note.innerHTML = `
-                    <p class="column small note">
-                        ${item.description ? `${item.description}<br><br>` : ""}
-                        ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
-                        ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
-                        ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
-                        ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%<br>` : ""}
-                        ${item.heal ? `恢復 ${item.heal} HP` : ""}
-                        ${item.needStr ? `<br>裝備需求：力量 ${item.needStr} <br>（如果力量不足，會承受敏捷減值）` : ""}
-                    </p>
-                `;
+                note.innerHTML = showItemHTML(item, null, "description");
             }
 
             // 讀取主角的物品
@@ -417,26 +407,8 @@
                     let itemDiv = document.createElement("div");
                     itemDiv.classList.add("item");
 
-                    itemDiv.innerHTML = `
-                        <div class="column-container" style="cursor: pointer;">
-                            <span class="column">${item.name} × ${count[itemId]}</span>
-                            <button class="small-button" onclick="(equip(memberId, '${item.id}'), showCharacterSheet())">
-                                <span class="small">選擇</span>
-                            </button>
-                        </div>
-                        <div class="hided" style="display: none;">
-                            <p class="column small note">
-                                ${item.description ? `${item.description}<br><br>` : ""}
-                                ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
-                                ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
-                                ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
-                                ${item.dex && !item.needStr ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
-                                ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%<br>` : ""}
-                                ${item.heal ? `恢復 ${item.heal} HP` : ""}
-                                ${item.needStr ? `<br>裝備需求：力量 ${item.needStr} <br>（如果力量不足，會承受敏捷減值）` : ""}
-                            </p>
-                        </div>
-                    `;
+                    // 顯示物品資料
+                    itemDiv.innerHTML = showItemHTML(item, count[itemId], "equip");
 
                     // 點擊物品時，顯示或隱藏描述
                     let itemElement = itemDiv;

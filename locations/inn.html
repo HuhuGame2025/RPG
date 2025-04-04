@@ -285,11 +285,11 @@
 
         // 住宿
         function stay() {
+            // 檢查資金
             let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
             let cost = 20; // 住宿費
             if (playerMoney >= cost) {
-                playerMoney -= cost;
-                localStorage.setItem("playerMoney", playerMoney);
+                loseItem("$" + cost);
                 document.getElementById('playerMoney').textContent = playerMoney;
             } else {
                 alert("金錢不足");

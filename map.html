@@ -17,11 +17,13 @@
         }
         .controls button {
             background: none;
-            border: 1px solid #aaa;
             width: auto;
+            font-size: 2em;
+            padding: 0 5px;
+            color: rgba(255, 255, 255, 0.5);
+            border-radius: 15px;
         }
         .controls button:hover {
-            border: 1px solid #fff;
             background: #666;
             color: #fff;
         }
@@ -33,14 +35,15 @@
             margin-right: auto;
             background-color: rgba(61, 97, 64, 0.5); /* 綠色 */
             border-collapse: collapse;
+            border-radius: 20px;
         }
 
         /* 地圖單元格 */
         td {
             font-size: 36px;
             position: relative;
-            width: 50px;
-            height: 50px;
+            width: 48px;
+            height: 48px;
             text-align: center;
             vertical-align: middle;
             border: none;
@@ -48,21 +51,21 @@
         }
         td span {
             position: absolute;
-            top: 18px; /* 比玩家稍高 */
+            top: 14px; /* 比玩家稍高 */
             left: 25px;
             transform: translate(-50%, -50%); 
         }
 
         /* 森林 */
         .forest-tree1 {
-            top: -5px;
-            left: 10px;
-            font-size: 30px;
+            top: -10px;
+            left: 6px;
+            font-size: 32px;
         }
         .forest-tree2 {
-            top: 8px;
-            left: -8px;
-            font-size: 36px;
+            top: 4px;
+            left: -12px;
+            font-size: 38px;
         }
 
         /* 沙漠 */
@@ -79,17 +82,38 @@
             border-radius: 20px;
         }
         .lake-fish1 {
-            top: 12px;
-            left: 8px;
+            top: 16px;
+            left: 6px;
         }
         .lake-fish2 {
-            top: -2px;
-            left: -8px;
+            top: 0px;
+            left: -10px;
         }
 
         /* 小屋 */
         td:has(.cabin) {
             font-size: 24px;
+        }
+
+        /* 農田 */
+        td:has(.farm) {
+            font-size: 16px;
+        }
+        .farm-wheat1 {
+            top: 0px;
+            left: -8px;
+        }
+        .farm-wheat2 {
+            top: 0px;
+            left: 8px;
+        }
+        .farm-wheat3 {
+            top: 16px;
+            left: -14px;
+        }
+        .farm-wheat4 {
+            top: 16px;
+            left: 2px;
         }
         
         /* 玩家位置 */
@@ -102,7 +126,7 @@
         .companion {
             font-size: 24px;
             position: absolute;
-            top: 32px;
+            top: 30px;
             left: 27px;
         }
 
@@ -130,6 +154,24 @@
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
         <br>
+
+        <!-- 地圖 -->
+        <table id="map"></table>
+
+        <!-- 方向按鈕 -->
+        <div class="controls">
+            <div class="column" style="text-align: right;">
+                <button onclick="move(-1, 0)">◀</button>
+            </div>
+            <div class="">
+                <button onclick="move(0, -1)">▲</button><br><br>
+                <button onclick="move(0, 1)">▼</button>
+            </div>
+            <div class="column" style="text-align: left;">
+                <button onclick="move(1, 0)">▶</button>
+            </div>
+        </div>
+
         <div class="column-container bottomborder">
             <!-- 天氣 -->
             <p class="column top" id="weather">
@@ -156,23 +198,8 @@
             <div id="button-container"></div>
         </div>
 
-        <!-- 方向按鈕 -->
-        <div class="controls">
-            <div class="column" style="text-align: right;">
-                <button onclick="move(-1, 0)">◀</button>
-            </div>
-            <div class="column center">
-                <button onclick="move(0, -1)">▲</button><br>
-                <button onclick="move(0, 1)">▼</button>
-            </div>
-            <div class="column" style="text-align: left;">
-                <button onclick="move(1, 0)">▶</button>
-            </div>
-        </div>
 
 
-        <!-- 地圖 -->
-        <table id="map"></table>
 
     </div>
 
@@ -194,12 +221,12 @@
 
         // 6x6 地圖 (x=0~5,y=0~5)
         const mapData = [
-            ["", "🏘️", "", "🌲", "🪨", "🌲"],
-            ["🌲", "", "", "", "🌲", "🌲"],
-            ["🌲", "🌲", "🌲", "", "🌲", "🪨"],
-            ["🪨", "🐟", "🛖", "", "", "🐟"],
-            ["🌲", "🏰", "🐟", "🌲", "", "🏘️"],
-            ["", "🌲", "🌲", "🪨", "🌲", ""],
+            ["🌾", "🏘️", "🌾", "🌲", "🪨", "🌲", "🌲"],
+            ["🌾", "", "", "", "🌲", "🌲", "🛖"],
+            ["🌲", "🌲", "🌲", "", "🌲", "🪨", "🌲"],
+            ["🌲", "🐟", "🛖", "", "", "🐟", "🪨"],
+            ["🌲", "🏰", "🐟", "🌲", "🌾", "🏘️", "🌲"],
+            ["", "🌲", "🌲", "🪨", "🌲", "", "🌲"],
         ];
 
         // 定義圖標
@@ -215,6 +242,7 @@
             desert: "🌵",
             lake: "🐟",
             quest: "❗",
+            farm: "🌾",
         };
 
         // 地點
@@ -231,15 +259,16 @@
         const texts = {
             town: (townName) => `你抵達了${townName}的大門，門前有守衛站崗，令人感到安全。`,
             followed: (name) => `${name}察覺到一絲動靜，某人或某種生物正在悄悄靠近……`,
-            chance: (name, count, enemy) => `${name}發現遠處有 ${count} 個${enemy}，對方似乎毫無防備。`,
+            chance: (name, count, unitWord, enemy) => `${name}發現遠處有 ${count} ${unitWord}${enemy}，似乎毫無防備。`,
             guards: "一支巡邏隊正好經過，跟著他們走就能安全地回到最近的城鎮。",
-            victim: (count, enemy) => `附近傳來呼救的聲音，有 ${count} 個${enemy}正在攻擊平民。`,
+            victim: (count, unitWord, enemy) => `附近傳來呼救的聲音，有 ${count} ${unitWord}${enemy}正在攻擊平民。`,
             helpVictim: "獲救的平民感激你出手相助，你的名聲上升了 1 。",
             merchant: "一個哥布林背著大得誇張的背包，面帶微笑地向你招手，看起來沒有攻擊的意圖。",
             thieves: "前方有一個很深的洞穴。",
             thievesCompleted: "前方是盜賊巢穴，你已經探索過了。",
-            castle: "眼前的是一座陰森的古堡，看起來荒廢已久，成群的蝙蝠盤據在此。",
+            castle: "眼前是一座陰森的古堡，看起來荒廢已久，成群的蝙蝠盤據在此。",
             castleCompleted: "眼前的是一座陰森的古堡，你已經探索過了。",
+            nearLake: "你走向湛藍的湖泊，平靜的湖面之下深不可測，湖邊有小船出租。",
         };
 
         // 對話資料庫
@@ -935,7 +964,7 @@
     
             for (let y = 0; y < 6; y++) {
                 let row = document.createElement("tr");
-                for (let x = 0; x < 6; x++) {
+                for (let x = 0; x < 7; x++) {
                     let cell = document.createElement("td");
             
                     // 根據 mapData 的內容填入圖示
@@ -979,6 +1008,19 @@
                         // 如果是小屋
                         let Icon = document.createElement("span");
                         Icon.classList.add("cabin");
+                        cell.appendChild(Icon);
+
+                    } else if (mapData[y][x] === icons.farm) {
+                        // 如果是農田
+                        let Icon = document.createElement("span");
+                        Icon.innerHTML = `
+                            <span class="farm-wheat1");>🌾</span>
+                            <span class="farm-wheat2");>🌾</span>
+                            <span class="farm-wheat3");>🌾</span>
+                            <span class="farm-wheat4");>🌾</span>
+                        `;
+                        Icon.classList.add("farm");
+                        cell.innerHTML = ""; // 清空原本的icon
                         cell.appendChild(Icon);
                     }
 
@@ -1035,16 +1077,15 @@
             let newY = playerPos.y + dy;
 
             // 確保不超出範圍，並且不能走進湖泊
-            if (newX >= 0 && newX < 6 && newY >= 0 && newY < 6 && mapData[newY][newX] !== icons.lake) {
+            if (newX >= 0 && newX < 7 && newY >= 0 && newY < 6 && mapData[newY][newX] !== icons.lake) {
+                // 更新位置
                 playerPos.x = newX;
                 playerPos.y = newY;
                 localStorage.setItem("playerPos", JSON.stringify(playerPos));
                 renderMap();
-
-                let background;
                 
                 // 當角色抵達某個格子時，變更背景圖，觸發遭遇
-                if (mapData[newY][newX] === "") {
+                if (mapData[newY][newX] === "" || mapData[newY][newX] === icons.farm) {
                     // 草原
                     localStorage.setItem("playerTerrain", "草原");
                     loadBackground("field"); // 讀取背景
@@ -1068,6 +1109,39 @@
 
                 localStorage.removeItem("situation"); // 如果在安全區，清除之前的情況
                 showSituation(); // 顯示情況
+            
+            // 走向湖
+            } else if (mapData[newY][newX] === icons.lake) {
+                loadBackground("lake"); // 讀取背景
+                document.getElementById("situation").textContent = texts.nearLake;
+
+                // 顯示按鈕
+                document.getElementById("button-container").innerHTML = `
+                    <button id="situation-btn">🛶 租船（$5）</button>
+                `;
+                document.getElementById("situation-btn").addEventListener("click", function () {
+                    // 檢查資金
+                    let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+                    let cost = 5; // 租船費
+                    if (playerMoney >= cost) {
+                        loseItem("$" + cost);
+                    } else {
+                        alert("金錢不足");
+                        return;
+                    }
+
+                    // 更新位置
+                    playerPos.x = newX;
+                    playerPos.y = newY;
+                    localStorage.setItem("playerPos", JSON.stringify(playerPos));
+                    renderMap();
+
+                    // 湖泊
+                    localStorage.setItem("playerTerrain", "湖泊");
+                    window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
+
+                });
+
             }
         }
 
@@ -1193,15 +1267,23 @@
 
             // 發現無防備的敵人
             } else if (situation === 4) {
-                // 讀取敵人
-                const enemyCount = parseInt(localStorage.getItem("enemyCount"));
-                const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-
                 //讀取發現的成員
                 const awaredMembers = JSON.parse(localStorage.getItem("awaredMembers")) || [];
                 const memberName = awaredMembers.join("、");
 
-                document.getElementById("situation").textContent = texts.chance(memberName, enemyCount, enemies[0].name);
+                // 讀取敵人
+                const enemyCount = parseInt(localStorage.getItem("enemyCount"));
+                const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+
+                // 判斷量詞
+                let unitWord;
+                if (enemies[0].type.includes("類人")) {
+                    unitWord = "個";
+                } else {
+                    unitWord = "隻";
+                }
+
+                document.getElementById("situation").textContent = texts.chance(memberName, enemyCount, unitWord, enemies[0].name);
 
                 // 按鈕
                 document.getElementById("button-container").innerHTML = `
@@ -1218,6 +1300,14 @@
                 const memberName = awaredMembers.join("、");
 
                 document.getElementById("situation").textContent = texts.followed(memberName);
+
+                // 按鈕
+                document.getElementById("button-container").innerHTML = `
+                    <button id="situation-btn">⚔️ 應戰</button>
+                `;
+                document.getElementById("situation-btn").addEventListener("click", function () {
+                    window.location.href = 'battle.html';
+                });
             
             // 巡邏隊
             } else if (situation === 6) {
@@ -1231,7 +1321,16 @@
             } else if (situation === 7) {
                 const enemyCount = parseInt(localStorage.getItem("enemyCount"));
                 const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-                document.getElementById("situation").textContent = texts.victim(enemyCount, enemies[0].name);
+
+                // 判斷量詞
+                let unitWord;
+                if (enemies[0].type.includes("類人")) {
+                    unitWord = "個";
+                } else {
+                    unitWord = "隻";
+                }
+
+                document.getElementById("situation").textContent = texts.victim(enemyCount, unitWord, enemies[0].name);
 
                 // 按鈕
                 document.getElementById("button-container").innerHTML = `
