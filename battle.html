@@ -67,15 +67,15 @@
         const texts = {
             noTarget: "請選擇一個敵人為目標",
             noAttacker: "請選擇我方的行動",
-            fightWin: (damage) => `擊中敵人(${damage})！`,
-            fightWinWithStatus: (damage, status) => `擊中敵人(${damage})，使他${status}了！`,
+            fightWin: (name, damage) => `擊中${name}(${damage})！`,
+            fightWinWithStatus: (name, damage, status) => `擊中${name}(${damage})，使他${status}了！`,
             fightLose: (name) => `試圖攻擊${name}，但被躲開了`,
-            fightFlyingEnemy: "無法觸及空中的敵人",
-            killEnemy: (damage) => `打敗了敵人(${damage})！`,
+            fightFlyingEnemy: (name) => `${name}飛得太高，無法擊中`,
+            killEnemy: (name, damage) => `打敗了${name}(${damage})！`,
             die: (deadMembers) => `${deadMembers}倒下了！`,
-            teamFightWin: (damage) => `你們聯手，對敵人造成了重創！(${damage})`,
-            teamFightLose: "敵人非常頑強，避開了所有的攻擊",
-            teamKillEnemy: (damage) => `你們聯手打敗敵人(${damage})！`,
+            teamFightWin: (name, damage) => `你們聯手，對${name}造成了重創！(${damage})`,
+            teamFightLose: (name) => `${name}非常頑強，避開了所有的攻擊`,
+            teamKillEnemy: (name, damage) => `你們聯手打敗${name}(${damage})！`,
             escapeSuccess: (name) => `${name}逃走了`,
             escapeFail: (name) => `敵人阻擋了${name}的去路！`,
             teamEscapeFail: (name) => `${name}跑不過敵人，你們只好停下來！`,
@@ -439,10 +439,10 @@
                     // 敵人死亡
                     if (attackerId === "team") {
                         // 顯示聯手擊殺訊息（在隊伍的欄位）
-                        document.getElementById("team-action").textContent = texts.teamKillEnemy(damage);
+                        document.getElementById("team-action").textContent = texts.teamKillEnemy(enemyName, damage);
                     } else {
                         // 顯示單獨擊殺訊息（在攻擊者的欄位）
-                        localStorage.setItem(`${attackerId}-action-text`, texts.killEnemy(damage));
+                        localStorage.setItem(`${attackerId}-action-text`, texts.killEnemy(enemyName, damage));
                     }
                     // 清除目標
                     localStorage.removeItem("selectedTarget");
@@ -451,11 +451,11 @@
                     // 敵人活著
                     if (attackerId === "team") {
                         // 顯示聯手攻擊成功訊息（在隊伍的欄位）
-                        localStorage.setItem(`${attackerId}-action-text`, texts.teamFightWin(damage));
+                        localStorage.setItem(`${attackerId}-action-text`, texts.teamFightWin(enemyName, damage));
 
                     } else {
                         // 顯示單獨攻擊成功訊息（在攻擊者的欄位）
-                        localStorage.setItem(`${attackerId}-action-text`, texts.fightWin(damage));
+                        localStorage.setItem(`${attackerId}-action-text`, texts.fightWin(enemyName, damage));
                     }
 
                     // 附加狀態
@@ -463,7 +463,7 @@
                         let statusName = giveStatus(weapon, targetEnemy);
                         if (statusName) {
                             // 顯示附加的訊息
-                            localStorage.setItem(`${attackerId}-action-text`, texts.fightWinWithStatus(damage, statusName));
+                            localStorage.setItem(`${attackerId}-action-text`, texts.fightWinWithStatus(enemyName, damage, statusName));
                             console.log("造成" + statusName);
                         };
                     });
@@ -478,10 +478,10 @@
                     // 如果失敗是因為目標在飛行，且沒有遠程武器
                     if (attackerId === "team") {
                         // 顯示聯手攻擊無法觸及訊息（在隊伍的欄位）
-                        document.getElementById("team-action").textContent = texts.fightFlyingEnemy;
+                        document.getElementById("team-action").textContent = texts.fightFlyingEnemy(enemyName);
                     } else {
                         // 顯示單獨攻擊無法觸及訊息（在攻擊者的欄位）
-                        localStorage.setItem(`${attackerId}-action-text`, texts.fightFlyingEnemy);
+                        localStorage.setItem(`${attackerId}-action-text`, texts.fightFlyingEnemy(enemyName));
                     }
                     
                 } else {

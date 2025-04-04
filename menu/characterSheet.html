@@ -95,8 +95,8 @@
                             <span id="mood-level"></span>
                             <span class="small note" id="mood-description"></span>
                         </div>
+                        <span class="column center small note" id="emotion-btn">[詳細]</span>
                         <span class="column center">${member.mood}</span>
-                        <span class="column center note" id="emotion-btn">[詳細]</span>
                     </div>
                     <div id="emotion-list"></div>
                 </div>
@@ -284,9 +284,9 @@
                     }
                     break;
                 case "con":
-                    if (member.con < 8) {
+                    if (member.con.total < 8) {
                         description = "弱不禁風";
-                    } else if (member.con <= 12) {
+                    } else if (member.con.total <= 12) {
                         description = "中等";
                     } else {
                         description = "身強體壯";
@@ -311,9 +311,9 @@
                     }
                     break;
                 case "wis":
-                    if (member.wis < 8) {
+                    if (member.wis.total < 8) {
                         description = "少一根筋";
-                    } else if (member.wis <= 12) {
+                    } else if (member.wis.total <= 12) {
                         description = "一般";
                     } else {
                         description = "明察秋毫";
