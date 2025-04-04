@@ -95,8 +95,8 @@
                             <span id="mood-level"></span>
                             <span class="small note" id="mood-description"></span>
                         </div>
-                        <span class="column center small note" id="emotion-btn">[詳細]</span>
-                        <span class="column center">${member.mood}</span>
+                        <span class="small note" id="emotion-btn">[詳細]</span>
+                        <span class="column-small">${member.mood}</span>
                     </div>
                     <div id="emotion-list"></div>
                 </div>
@@ -235,12 +235,14 @@
                     member.emotion.forEach(emotion => {
                         let emotionDiv = document.createElement("div");
                         emotionDiv.innerHTML = `
-                            <div class="column-container note small">
-                                <span class="column">
+                            <div class="column-container note small" style="margin-top: 5px;">
+                                <p class="column" style="margin-left: 30px;">
                                     ${emotion.name}
                                     ${emotion.note ? `（${emotion.note}）` : "" }
-                                </span>
-                                <span class="column-small">${emotion.mood > 0 ? "+" : ""}${emotion.mood}</span>
+                                </p>
+                                <p class="column-small">
+                                    ${emotion.mood > 0 ? "+" : ""}${emotion.mood}
+                                </p>
                             </div>
                         `;
 
