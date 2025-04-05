@@ -31,38 +31,60 @@
                 <a onclick="goTo('menu/quest')">📜<span>任務</span></a>
                 <a onclick="goTo('menu/inventory')">💰<span>物品</span></a>
                 <a onclick="goTo('menu/option')">⚙️<span>選項</span></a>
-                <a class="column-small" onclick="enterFullScreen()">⛶</a>
+                <a class="column-small" onclick="toggleFullScreen()">⛶</a>
             `;
         } else {
-            // 戰鬥頁面禁用物品
+            // 戰鬥頁面禁用物品按鈕
             buttonBar.innerHTML =`
                 <!-- 按鈕列 -->
                 <a onclick="goTo('menu/character')">🎭<span>角色</span></a>
                 <a onclick="goTo('menu/quest')">📜<span>任務</span></a>
                 <a>🚫<span class="warn">物品</span></a>
                 <a onclick="goTo('menu/option')">⚙️<span>選項</span></a>
-                <a class="column-small" onclick="enterFullScreen()">⛶</a>
+                <a class="column-small" onclick="toggleFullScreen()">⛶</a>
             `;
         }
     }
 
-    // 全螢幕
+    // 檢查是否全螢幕
+    function toggleFullScreen() {
+        if (!document.fullscreenElement &&   // 如果不在全螢幕模式
+            !document.mozFullScreenElement &&    // Firefox
+            !document.webkitFullscreenElement && // Chrome, Safari, Opera
+            !document.msFullscreenElement) {     // IE/Edge
+            // 進入全螢幕模式
+            enterFullScreen();
+        } else {
+            // 退出全螢幕模式
+            exitFullScreen();
+        }
+    }
+
+    // 進入全螢幕
     function enterFullScreen() {
         const docElm = document.documentElement;
         if (docElm.requestFullscreen) {
             docElm.requestFullscreen();
         } else if (docElm.mozRequestFullScreen) { // Firefox
             docElm.mozRequestFullScreen();
-        } else if (docElm.webkitRequestFullscreen) { // Chrome, Safari and Opera
+        } else if (docElm.webkitRequestFullscreen) { // Chrome, Safari, Opera
             docElm.webkitRequestFullscreen();
         } else if (docElm.msRequestFullscreen) { // IE/Edge
             docElm.msRequestFullscreen();
         }
     }
 
-    // 返回上一頁
-    function goBack() {
-        window.history.back(); 
+    // 退出全螢幕
+    function exitFullScreen() {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.mozCancelFullScreen) { // Firefox
+            document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) { // Chrome, Safari, Opera
+            document.webkitExitFullscreen();
+        } else if (document.msExitFullscreen) { // IE/Edge
+            document.msExitFullscreen();
+        }
     }
 
     // 畫面置頂
@@ -1600,6 +1622,11 @@
     }
     
 // 場景跳轉相關
+
+    // 返回上一頁
+    function goBack() {
+        window.history.back(); 
+    }
 
     // 快速旅行
     function fastTravel() {

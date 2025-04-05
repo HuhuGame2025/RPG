@@ -1,6 +1,4 @@
-﻿/* styles.css */
-
-body{
+﻿body{
     font-size: 20px; /* 文字大小 */
     color: #ccc; /* 文字顏色 */
     font-family: Arial, sans-serif;
@@ -47,6 +45,7 @@ p {
 }
 
 
+/* 所有按鈕 */
 button {
     background-color: #222;
     color: #ccc;
@@ -288,7 +287,6 @@ hr {
     color: #9B1212;
 }
 
-
 /* 置中 */
 .center {
     text-align: center;
@@ -316,93 +314,84 @@ hr {
 }
 
 
-/* 選中的敵人 */
-.selected {
-    border: 1px solid rgba(255, 55, 55, 1); /* 加上紅框 */
-    background-color: rgba(0,0,0,0.5);
-    color: #fff;
-}
+/* 戰鬥相關 */
 
-/* 受到攻擊後的 HP 變成粗體紅字 */
-.red-hp {
-    color: red;
-    font-weight: bold;
-}
+    /* 選中的敵人 */
+    .selected {
+        border: 1px solid rgba(255, 55, 55, 1); /* 加上紅框 */
+        background-color: rgba(0,0,0,0.5);
+        color: #fff;
+    }
 
-.hp {
-    font-size: 0.9em;
-    margin: 0;
-    color: #984B4B;
-}
+    /* HP 預設顏色 */
+    .hp {
+        font-size: 0.9em;
+        margin: 0;
+        color: #984B4B;
+    }
 
-/* 狀態圖示按鈕 */
-.status-button {
-    font-size: 0.7em;
-    margin: 0;
-    padding: 0;
-    background: none;
-}
+    /* HP 受到攻擊後變成紅字 */
+    .red-hp {
+        color: red;
+        font-weight: bold;
+    }
 
-/* 戰鬥訊息 */
-.battle-text {
-    font-size: 0.9em;
-    color: #999;
-}
+    /* 狀態圖示按鈕 */
+    .status-button {
+        font-size: 0.7em;
+        margin: 0;
+        padding: 0;
+        background: none;
+    }
 
-
-
-
-/* 主選單按鈕列 */
-.button-bar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    background-color: rgba(0, 0, 0, 0.9);
-    display: flex;
-    transition: transform 0.3s ease-in-out; /* 平滑動畫 */
-    font-size: 1em;
-    z-index: 10;
-}
-
-.button-bar a {
-    color: #666;
-    font-size: 1em;
-    cursor: pointer;
-    width: 100%;
-    padding: 10px 0;
-    text-align: center;
-}
-
-.button-bar a:hover {
-    background-color: #333;
-    color: white;
-}
-
-/* 隱藏到畫面外 */
-.hidden {
-    transform: translateY(-100%); 
-}
-
-.button-bar span {
-    font-size: 0.8em;
-}
-
-/* 返回按鈕 */
-.button-bar button {
-    margin-left: 0;
-    background-color: rgba(0, 0, 0, 0);
-}
-.button-bar button:hover {
-    background-color: rgba(0, 0, 0, 0); 
-}
+    /* 戰鬥訊息 */
+    .battle-text {
+        font-size: 0.9em;
+        color: #999;
+    }
 
 
+/* 上方按鈕列 */
+    .button-bar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        background-color: rgba(0, 0, 0, 0.9);
+        display: flex;
+        transition: transform 0.3s ease-in-out; /* 平滑動畫 */
+        font-size: 1em;
+        z-index: 10;
+    }
 
-/* 創建角色頁面 */
-input{
-    font-size: 20px;
-    margin: 5px 0;
-    padding: 5px 10px;
-    border-radius: 5px;
-}
+    .button-bar a {
+        color: #666;
+        font-size: 1em;
+        cursor: pointer;
+        width: 100%;
+        padding: 10px 0;
+        text-align: center;
+    }
+
+    .button-bar a:hover {
+        background-color: #333;
+        color: white;
+    }
+
+    /* 隱藏到畫面外 */
+    .hidden {
+        transform: translateY(-100%); 
+    }
+
+    .button-bar span {
+        font-size: 0.8em;
+    }
+
+    /* 返回按鈕 */
+    .button-bar button {
+        margin-left: 0;
+        background-color: rgba(0, 0, 0, 0);
+    }
+    .button-bar button:hover {
+        background-color: rgba(0, 0, 0, 0); 
+    }
