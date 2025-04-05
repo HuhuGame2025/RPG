@@ -10,8 +10,6 @@
             background-color: #000 !important; /* 背景顏色 */
         }
         
-
-
     </style>
 </head>
 <body>
@@ -241,10 +239,12 @@
             menu.id = "userMenu";
             menu.classList.add("menu");
 
-            // 顯示「要讓誰使用」的提示
-            let message = document.createElement("p");
-            message.textContent = texts.chooseUser(item.name, count);
-            menu.appendChild(message);
+            // 顯示「要讓誰使用」的提示（如果該物品還有）
+            if (playerItems.includes(itemId)) {
+                let message = document.createElement("p");
+                message.textContent = texts.chooseUser(item.name, count);
+                menu.appendChild(message);
+            }
 
             // 為每個成員建立一個按鈕
             teamMembers.forEach((member, index) => {
@@ -255,6 +255,11 @@
                 `;
 
                 button.onclick = function () {
+                    // 檢查是否已經用完
+                    if (!playerItems.includes(itemId)) {
+                        return;
+                    }
+
                     // 如果是消耗品，移除一個物品
                     if (item.consumable) {
                         let itemIndex = playerItems.indexOf(itemId);
@@ -308,18 +313,12 @@
                     document.body.removeChild(menu);  // 清除選單
 
                     // 檢查是不是在戰鬥中
-                    if (enemies.length > 0) {
+                    if (isTrue("inBattle")) {
                         goBack(); // 使用後立刻返回戰鬥畫面
                         return;
                     }
 
                     useItem(itemId); // 更新顯示選單
-
-                    // 檢查是否已經用完
-                    if (!playerItems.includes(itemId)) {
-                        message.textContent = "";
-
-                    }
                 };
 
                 menu.appendChild(button);

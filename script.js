@@ -23,7 +23,7 @@
         buttonBar.classList.add("button-bar");
 
         const pageName = window.location.pathname.split('/').pop();
-        if (pageName !== "battle") {
+        if (pageName !== "battle.html") {
             // 一般頁面
             buttonBar.innerHTML =`
                 <!-- 按鈕列 -->
@@ -31,7 +31,7 @@
                 <a onclick="goTo('menu/quest')">📜<span>任務</span></a>
                 <a onclick="goTo('menu/inventory')">💰<span>物品</span></a>
                 <a onclick="goTo('menu/option')">⚙️<span>選項</span></a>
-                <a class="column-small" onclick="toggleFullScreen()">⛶</a>
+                <!-- <a style="flex: 0 0 40px;" onclick="toggleFullScreen()">⛶</a> -->
             `;
         } else {
             // 戰鬥頁面禁用物品按鈕
@@ -41,7 +41,7 @@
                 <a onclick="goTo('menu/quest')">📜<span>任務</span></a>
                 <a>🚫<span class="warn">物品</span></a>
                 <a onclick="goTo('menu/option')">⚙️<span>選項</span></a>
-                <a class="column-small" onclick="toggleFullScreen()">⛶</a>
+                <!-- <a style="flex: 0 0 40px;" onclick="toggleFullScreen()">⛶</a> -->
             `;
         }
     }
@@ -792,7 +792,7 @@
         let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
         let player = teamMembers.find(m => m.id === "player");
         player.HP += amount;
-        player.HP = Math.min(player.HP, player.MaxHP); // 確保 HP 不超過最大 HP
+        player.HP = Math.min(Math.max(player.HP + (s.HP || 0), 0), player.MaxHP); // 確保不會超過最大值，也不會小於0
         localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
     }
 

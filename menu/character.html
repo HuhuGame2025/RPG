@@ -870,8 +870,7 @@
             }
 
             // 檢查是否在戰鬥中
-            const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-            if (enemies.length > 0) {
+            if (isTrue("inBattle")) {
                 showDialogue("戰鬥中");
                 return;
             }

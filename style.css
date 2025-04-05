@@ -323,6 +323,12 @@ hr {
         color: #fff;
     }
 
+    /* 可行動成員 */
+    .availableMember {
+        border: 1px solid rgba(255, 255, 255, 1); /* 加上白框 */
+        color: #fff;
+    }
+
     /* HP 預設顏色 */
     .hp {
         font-size: 0.9em;

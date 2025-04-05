@@ -152,6 +152,7 @@
             localStorage.removeItem("battleResult");
             localStorage.removeItem("respawn");
             turnSwitch("enemySurrender", false); // 清除敵人投降
+            turnSwitch("inBattle", false); // 清除戰鬥中
             localStorage.removeItem("encounter"); // 清除指定遭遇
 
             // 清空隊員的狀態
