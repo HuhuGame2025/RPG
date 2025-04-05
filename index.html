@@ -29,12 +29,12 @@
     <script>
         // 載入頁面後執行
         window.onload = function() {
-            // 讀取上次的頁面位置（預設為標題頁面）
-            const lastPage = localStorage.getItem("lastScene") || "title.html";
-            gameFrame.src = lastPage; // 載入遊戲畫面
+            // 讀取上次的頁面位置（只能在伺服器上運作）
+            const lastPage = localStorage.getItem("lastScene") || "title.html"; // 預設為標題頁面
+            gameFrame.src = lastPage; // 在 iframe 載入頁面
         }
 
-        // 每當遊戲畫面載入完成，記錄目前頁面
+        // 每當 iframe 載入完成，記錄目前頁面
         const gameFrame = document.getElementById("game-frame");
         gameFrame.addEventListener("load", () => {
             try {
@@ -45,7 +45,6 @@
                 console.warn("無法存取 iframe 的內容，可能是跨網域。");
             }
         });
-
 
     </script>
 

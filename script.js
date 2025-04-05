@@ -20,16 +20,30 @@
 
     // 顯示按鈕列
     function showButtonBar() {
-        buttonBar.innerHTML =`
-            <!-- 按鈕列 -->
-            <div class="button-bar" id="buttonBar">
-                <a href="menu/character.html">🎭<span>角色</span></a>
-                <a href="menu/quest.html">📜<span>任務</span></a>
-                <a href="menu/inventory.html">💰<span>物品</span></a>
-                <a href="menu/option.html">⚙️<span>選項</span></a>
+        buttonBar.classList.add("button-bar");
+
+        const pageName = window.location.pathname.split('/').pop();
+        if (pageName !== "battle") {
+            // 一般頁面
+            buttonBar.innerHTML =`
+                <!-- 按鈕列 -->
+                <a onclick="goTo('menu/character')">🎭<span>角色</span></a>
+                <a onclick="goTo('menu/quest')">📜<span>任務</span></a>
+                <a onclick="goTo('menu/inventory')">💰<span>物品</span></a>
+                <a onclick="goTo('menu/option')">⚙️<span>選項</span></a>
                 <a class="column-small" onclick="enterFullScreen()">⛶</a>
-            </div>
-        `;
+            `;
+        } else {
+            // 戰鬥頁面禁用物品
+            buttonBar.innerHTML =`
+                <!-- 按鈕列 -->
+                <a onclick="goTo('menu/character')">🎭<span>角色</span></a>
+                <a onclick="goTo('menu/quest')">📜<span>任務</span></a>
+                <a>🚫<span class="warn">物品</span></a>
+                <a onclick="goTo('menu/option')">⚙️<span>選項</span></a>
+                <a class="column-small" onclick="enterFullScreen()">⛶</a>
+            `;
+        }
     }
 
     // 全螢幕

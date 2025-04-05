@@ -13,12 +13,7 @@
 </head>
 <body>
     <!-- 按鈕列 -->
-    <div class="button-bar" id="buttonBar">
-        <a href="../menu/character.html">🎭<span>角色</span></a>
-        <a href="../menu/quest.html">📜<span>任務</span></a>
-        <a href="../menu/inventory.html">💰<span>物品</span></a>
-        <a href="../menu/option.html">⚙️<span>選項</span></a>
-    </div>
+    <div id="buttonBar"></div>
 
     <!-- 主要內容區域 -->
     <div id= "main" class="main-content">
@@ -58,7 +53,9 @@
             showText('player'); // 顯示健康程度
             showCountDown(); // 顯示倒數天數
             loadEvent() || workEnd(); // 讀取進度，如果沒在事件中就跳到結束工作
+
             npcPreferences(); // NPC偏好設定
+            showButtonBar(); // 顯示按鈕列
             loadBackground("prison"); // 讀取背景
 
         };

@@ -12,12 +12,7 @@
 </head>
 <body>
     <!-- 按鈕列 -->
-    <div class="button-bar" id="buttonBar">
-        <a href="menu/character.html">🎭<span>角色</span></a>
-        <a href="menu/quest.html">📜<span>任務</span></a>
-        <a href="menu/inventory.html">💰<span>物品</span></a>
-        <a href="menu/option.html">⚙️<span>選項</span></a>
-    </div>
+    <div id="buttonBar"></div>
 
     <!-- 對話區域 -->
     <div id="dialogue" class="main-content"></div>
@@ -794,8 +789,9 @@
         // 畫面載入時
         window.onload = function() {
             getDialogueNpc(); // 判斷交談對象
-            loadBackground(); // 讀取背景
             npcPreferences(); // NPC偏好設定
+            showButtonBar(); // 顯示按鈕列
+            loadBackground(); // 讀取背景
         };
 
         // 判斷交談對象

@@ -356,9 +356,8 @@ hr {
 .button-bar {
     position: fixed;
     top: 0;
-    left: 50%;
+    left: 0;
     width: 100%;
-    transform: translateX(-50%);
     background-color: rgba(0, 0, 0, 0.9);
     display: flex;
     transition: transform 0.3s ease-in-out; /* 平滑動畫 */
@@ -382,7 +381,7 @@ hr {
 
 /* 隱藏到畫面外 */
 .hidden {
-    transform: translateX(-50%) translateY(-100%); 
+    transform: translateY(-100%); 
 }
 
 .button-bar span {
