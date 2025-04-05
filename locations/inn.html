@@ -290,7 +290,7 @@
             let cost = 20; // 住宿費
             if (playerMoney >= cost) {
                 loseItem("$" + cost);
-                document.getElementById('playerMoney').textContent = playerMoney;
+                loadPartyData();
             } else {
                 alert("金錢不足");
                 return;

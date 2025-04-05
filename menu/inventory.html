@@ -211,14 +211,13 @@
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
             let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
             let count = playerItems.filter(item => item === itemId).length; // 計算剩餘數量
+            const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
 
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
             // 如果是紅寶石
             if (itemId === "devilGem02") { 
                 const soulCount = parseInt(localStorage.getItem("soulCount"));
-                const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-                
                 localStorage.setItem("npcName", "紅寶石中的惡魔");
 
                 if (soulCount > 0) {
@@ -264,7 +263,7 @@
                         }
                     }
 
-                    // 如果有治療效果
+                    // 如果能治療
                     if (item.heal) { 
                         // 檢查角色是否已死亡
                         if (member.HP === 0) {
@@ -283,15 +282,14 @@
                         }
                     }
 
-                    // 如果是繃帶
-                    if (item.id === "bandage") {
-                        // 刪除找到的第一筆流血狀態
-                        const index = member.status.findIndex(status => status.name === "流血");
+                    // 如果能解除狀態
+                    if (item.removeStatus) {
+                        // 刪除找到的第一筆狀態
+                        const index = member.status.findIndex(status => status.name === item.removeStatus);
                         if (index !== -1) {
                             member.status.splice(index, 1);
                         }
                     }
-
 
                     // 儲存
                     localStorage.setItem("playerItems", JSON.stringify(playerItems));
@@ -309,12 +307,18 @@
 
                     document.body.removeChild(menu);  // 清除選單
 
-                    // 檢查還有沒有這個物品
-                    if (playerItems.includes(itemId)) {
-                        useItem(itemId); // 重新顯示選單，方便連續使用
-                    } else {
-                        showItem(); // 顯示物品列表
-                        document.getElementById("main").style.display = "block"; // 顯示主要內容
+                    // 檢查是不是在戰鬥中
+                    if (enemies.length > 0) {
+                        goBack(); // 使用後立刻返回戰鬥畫面
+                        return;
+                    }
+
+                    useItem(itemId); // 更新顯示選單
+
+                    // 檢查是否已經用完
+                    if (!playerItems.includes(itemId)) {
+                        message.textContent = "";
+
                     }
                 };
 

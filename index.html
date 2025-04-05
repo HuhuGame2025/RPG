@@ -8,26 +8,46 @@
     <style>
         body {
             background-color: #000 !important; /* 背景顏色 */
+            padding: 0;
+        }
+
+        iframe {
+            width: 100%;
+            height: 100vh;
+            border: none;
         }
 
     </style>
 </head>
 <body>
-    <div class="item">
-        <p class="note small">
-            遊戲仍在開發中，僅供測試。<br>
-            版本更新後請選擇「新遊戲」以免發生錯誤。
-        </p>
-    </div>
 
-    <div class="center item bottomborder">
-        <h1 class="center" style="font-size: 2.3em">𝕰𝖝𝖎𝖑𝖊'𝖘 𝕱𝖔𝖗𝖊𝖘𝖙</h1>
-        <h4 class="center">純文字RPG ➵ 流放者之森</h4>
-    </div>
-    <br>
-    <div class="menu">
-        <a href="create.html"><button>新遊戲</button></a>
-        <a href="map.html"><button>繼續遊戲</button></a>
-    </div>
+    <!-- 遊戲畫面 -->
+    <iframe id="game-frame"></iframe>
+    
+    <!--<script src="script.js"></script>-->
+
+    <script>
+        // 載入頁面後執行
+        window.onload = function() {
+            // 讀取上次的頁面位置（預設為標題頁面）
+            const lastPage = localStorage.getItem("lastScene") || "title.html";
+            gameFrame.src = lastPage; // 載入遊戲畫面
+        }
+
+        // 每當遊戲畫面載入完成，記錄目前頁面
+        const gameFrame = document.getElementById("game-frame");
+        gameFrame.addEventListener("load", () => {
+            try {
+                const currentURL = gameFrame.contentWindow.location.pathname;
+                localStorage.setItem("lastScene", currentURL);
+                console.log(lastPage);
+            } catch (e) {
+                console.warn("無法存取 iframe 的內容，可能是跨網域。");
+            }
+        });
+
+
+    </script>
+
 </body>
 </html>

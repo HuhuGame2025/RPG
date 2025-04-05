@@ -232,7 +232,7 @@
                     const infor = `【${status.name}】${status.description}（剩餘回合：${status.duration}）`;
 
                     // 顯示圖示按鈕
-                    const statusDiv = document.createElement("div");
+                    const statusDiv = document.createElement("span");
                     statusDiv.innerHTML = `
                         <button onClick="alert('${infor}')" class="status-button">${status.icon}</button>
                     `;
@@ -311,7 +311,7 @@
                     const infor = `【${status.name}】${status.description}（剩餘回合：${status.duration}）`;
 
                     // 顯示圖示按鈕
-                    const statusDiv = document.createElement("div");
+                    const statusDiv = document.createElement("span");
                     statusDiv.innerHTML = `
                         <button onClick="alert('${infor}')" class="status-button">${status.icon}</button>
                     `;
@@ -947,6 +947,7 @@
             if (presentMembers.length === 0) { // 檢查上場成員是否 0 人
                 if (escapeMember.length === 0) { // 檢查逃跑成員是否 0 人
                     // 全員死亡
+                    generateEnemy(); // 重新顯示敵人
                     defeated();
                 } else {
                     // 全員逃走
@@ -1074,14 +1075,12 @@
 
             // 每個敵人的狀態生效，並減少持續回合
             enemies.forEach(enemy => {
-                // 如果沒有狀態，則清除屬性加值
-                if (!enemy.status) {
-                    ['str', 'dex', 'con', 'wis', 'cha', 'arm'].forEach(attr => {
-                      enemy[attr].total -= enemy[attr][status] || 0; // 更新 total 屬性
-                      enemy[attr][status] = 0; // 清除 status 屬性
-                    });
-                    return; 
-                }
+                // 先重置屬性
+                ['str', 'dex', 'con', 'wis', 'cha', 'arm'].forEach(attr => {
+                    enemy[attr].total -= enemy[attr][status] || 0; // 更新 total 屬性
+                    enemy[attr][status] = 0; // 清除 status 屬性
+                });
+                return; 
 
                 // 狀態效果
                 enemy.status.forEach(s => {

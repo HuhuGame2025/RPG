@@ -626,6 +626,92 @@
                     ]
                 },
             },
+            "鼠人": {
+                "start": {
+                    npc: "npc",
+                    text: "吱？",
+                    choices: [
+                        { text: "不想死就快點投降（力量）", next: "", action: "intimidate()" },
+                        { text: "我們不要互相傷害（魅力）", condition: "!isTrue('hasPersuaded')", action: "persuade()" },
+                        { text: "錢給你，放過我吧（$50）", next: "", action: "pay()" },
+                        { text: "繼續戰鬥", next: "", action: "fight()" },
+                    ]
+                },
+                "威嚇成功": {
+                    npc: "npc",
+                    text: "吱吱吱吱——（發出驚嚇的叫聲，舉起雙手露出了肉球，似乎在求饒）",
+                    choices: [
+                        { text: "繼續戰鬥", next: "", action: "fight()" },
+                        { text: "別再讓我見到你", next: "", action: "spare()" },
+                        { text: "把值錢的東西留下", next: "", action: "rob()" },
+                        { text: "你必須跟我走", next: "", action: "capture()" },
+                    ]
+                },
+                    "capture": {
+                        npc: "npc",
+                        text: "吱……（身體縮起來，害怕地發抖，但似乎不敢反抗）",
+                        choices: [
+                            { text: "（繼續）", next: "", action: "enemyJoin('俘虜')" },
+                        ]
+                    },
+                "威嚇失敗": {
+                    npc: "npc",
+                    text: "吱！吱！吱！（張大嘴巴，用四支小小的門牙嚇唬你）",
+                    choices: [
+                        { text: "沒辦法了", next: "", action: "fight()" },
+                    ]
+                },
+                "說服成功": {
+                    npc: "npc",
+                    text: "吱？吱吱！（把劍收起來，放鬆地用手搓搓臉）",
+                    choices: [
+                        { text: "再見", next: "", action: "returnMap()" },
+                        { text: "想加入我的隊伍嗎？", condition: "!isTrue('hasInvited')", action: "invite()" },
+                    ]
+                },
+                    "邀請成功": {
+                        npc: "npc",
+                        text: "吱吱！（興奮地舉起雙手，似乎想要跳上你的手）",
+                        choices: [
+                            { text: "我們走吧", next: "", action: "enemyJoin('隨從')" },
+                        ]
+                    },
+                    "邀請失敗": {
+                        npc: "npc",
+                        text: "……（似乎不感興趣，一溜煙跑進了草叢中）",
+                        choices: [
+                            { text: "好吧", next: "", action: "returnMap()" },
+                        ]
+                    },
+                "說服失敗": {
+                    npc: "npc",
+                    text: "……（僵硬地盯著你，不知是沒聽懂還是心存警戒）",
+                    choices: [
+                        { text: "（繼續）", next: "start" },
+                    ]
+                },
+                "付錢成功": {
+                    npc: "npc",
+                    text: "吱！吱！（眼睛亮了起來，把錢幣一個一個塞進頰囊）",
+                    choices: [
+                        { text: "（繼續）", next: "", action: "returnMap()" },
+                    ]
+                },
+                "AfterKill": {
+                    npc: "npc",
+                    text: "吱吱！吱吱！（全身的毛豎了起來，似乎很生氣）",
+                    choices: [
+                        { text: "（繼續）", next: "start" },
+                    ]
+                },
+                "AfterAttack": {
+                    npc: "npc",
+                    text: "吱吱！（充滿警戒地拱著背，似乎不敢掉以輕心）",
+                    choices: [
+                        { text: "（繼續）", next: "start" },
+                    ]
+                },
+            },
             "守衛": {
                 "start": {
                     npc: "npc",

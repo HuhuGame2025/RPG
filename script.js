@@ -18,6 +18,34 @@
             lastScrollTop = currentScroll;
         });
 
+    // 顯示按鈕列
+    function showButtonBar() {
+        buttonBar.innerHTML =`
+            <!-- 按鈕列 -->
+            <div class="button-bar" id="buttonBar">
+                <a href="menu/character.html">🎭<span>角色</span></a>
+                <a href="menu/quest.html">📜<span>任務</span></a>
+                <a href="menu/inventory.html">💰<span>物品</span></a>
+                <a href="menu/option.html">⚙️<span>選項</span></a>
+                <a class="column-small" onclick="enterFullScreen()">⛶</a>
+            </div>
+        `;
+    }
+
+    // 全螢幕
+    function enterFullScreen() {
+        const docElm = document.documentElement;
+        if (docElm.requestFullscreen) {
+            docElm.requestFullscreen();
+        } else if (docElm.mozRequestFullScreen) { // Firefox
+            docElm.mozRequestFullScreen();
+        } else if (docElm.webkitRequestFullscreen) { // Chrome, Safari and Opera
+            docElm.webkitRequestFullscreen();
+        } else if (docElm.msRequestFullscreen) { // IE/Edge
+            docElm.msRequestFullscreen();
+        }
+    }
+
     // 返回上一頁
     function goBack() {
         window.history.back(); 
@@ -1150,7 +1178,6 @@
 
             itemList.appendChild(itemDiv);
         });
-        window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
     }
 
     // 顯示物品資料
@@ -1181,7 +1208,7 @@
                     </span>
 
                     ${usage !== "equip" ? `
-                        <span class="column-small">${itemPrice}</span>
+                        <span class="column-small">$${itemPrice}</span>
                     ` : "" }
                 
                     ${usage === "equip" ? `
@@ -1282,7 +1309,7 @@
             let buyAmount; // 購買數量
 
             // 讓玩家輸入數量
-            let input = prompt(`目前金錢有 $${playerMoney}，要購買幾份？`, "1");
+            let input = prompt(`資金有 $${playerMoney}，要購買幾份？`, "1");
 
             // 如果玩家按「取消」，則直接結束函式
             if (input === null) {

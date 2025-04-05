@@ -712,6 +712,69 @@
                         ]
                     },
             },
+            "鼠人": {
+                "start": {
+                    npc: "npc",
+                    text: "（豎起大大的耳朵，仔細聽你說話）",
+                    choices: [
+                        { text: "現在該做什麼？", next: "建議" },
+                        { text: "和我說說你的事", next: "了解" },
+                        { text: "我不需要你了", next: "解散" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "建議": {
+                    npc: "npc",
+                    text: "吱？（歪著頭看你，似乎在等你先想到答案）",
+                    choices: [
+                        { text: "知道了", next: "start" },
+                    ]
+                },
+                "了解": {
+                    npc: "npc",
+                    text: "吱，吱吱，吱！吱吱！（雙手在空中比劃，表情豐富，似乎在說一段驚心動魄的故事）",
+                    choices: [
+                        { text: "原來如此", next: "start" },
+                    ]
+                },
+                "解散": {
+                    npc: "npc",
+                    text: "吱……（雙耳垂下來，像被棄養的寵物一樣悲傷地看著你）",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
+                "戰鬥中": {
+                    npc: "npc",
+                    text: "吱！吱吱——（躲在你的腳邊，對著敵人尖叫）",
+                    choices: [
+                        { text: "好吧", next: "", action: "goBack()" },
+                    ]
+                },
+                "start_俘虜": {
+                    npc: "npc",
+                    text: "（縮著身子，驚恐地盯著你，彷彿你是一條蛇）",
+                    choices: [
+                        { text: "和我說說你的事", next: "了解俘虜" },
+                        { text: "你可以走了", next: "解散俘虜" },
+                        { text: "沒事", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                    "了解俘虜": {
+                        npc: "npc",
+                        text: "（似乎太害怕了，動也不敢動，只是一直盯著你）",
+                        choices: [
+                            { text: "原來如此", next: "start_俘虜" },
+                        ]
+                    },
+                    "解散俘虜": {
+                        npc: "npc",
+                        text: "吱！（四腳著地，一眨眼就跑得不見蹤影了）",
+                        choices: [
+                            { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                        ]
+                    },
+            },
             "囚犯": {
                 "監獄中": {
                     npc: "npc",
