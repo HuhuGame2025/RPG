@@ -10,125 +10,136 @@
         }
 
         /* 方向按鈕 */
-        .controls {
-            display: flex;
-            text-align: center;
-            margin: 20px;
-        }
-        .controls button {
-            background: none;
-            width: auto;
-            font-size: 2em;
-            padding: 0 5px;
-            color: rgba(255, 255, 255, 0.5);
-            border-radius: 15px;
-        }
-        .controls button:hover {
-            background: #666;
-            color: #fff;
-        }
+            .controls {
+                display: flex;
+                text-align: center;
+                margin: 20px 0;
+            }
+            .controls button {
+                background: none;
+                box-shadow: none;
+                width: auto;
+                font-size: 2em;
+                padding: 0 5px;
+                color: rgba(255, 255, 255, 0.5);
+                border-radius: 15px;
+            }
+            .controls button:hover {
+                background: #666;
+                color: #fff;
+            }
 
+        /* 勾選方塊 */
+        #stealthToggle {
+            transform: scale(1.2);
+        }
 
         /* 地圖 */
-        #map {
-            margin-left: auto;
-            margin-right: auto;
-            background-color: rgba(61, 97, 64, 0.5); /* 綠色 */
-            border-collapse: collapse;
-            border-radius: 20px;
-        }
+            #map {
+                margin-left: auto;
+                margin-right: auto;
+                background-color: rgba(61, 97, 64, 0.5); /* 綠色 */
+                border-collapse: collapse;
+                border-radius: 20px;
+            }
 
-        /* 地圖單元格 */
-        td {
-            font-size: 36px;
-            position: relative;
-            width: 48px;
-            height: 48px;
-            text-align: center;
-            vertical-align: middle;
-            border: none;
-            padding: 0;
-        }
-        td span {
-            position: absolute;
-            top: 14px; /* 比玩家稍高 */
-            left: 25px;
-            transform: translate(-50%, -50%); 
-        }
+            /* 地圖單元格 */
+            td {
+                font-size: 36px;
+                position: relative;
+                width: 48px;
+                height: 48px;
+                text-align: center;
+                vertical-align: middle;
+                border: none;
+                padding: 0;
+            }
+            td span {
+                position: absolute;
+                top: 14px; /* 比玩家稍高 */
+                left: 25px;
+                transform: translate(-50%, -50%); 
+            }
 
         /* 森林 */
-        .forest-tree1 {
-            top: -10px;
-            left: 6px;
-            font-size: 32px;
-        }
-        .forest-tree2 {
-            top: 4px;
-            left: -12px;
-            font-size: 38px;
-        }
+            .forest-tree1 {
+                top: -5px;
+                left: 10px;
+                font-size: 28px;
+            }
+            .forest-tree2 {
+                top: 5px;
+                left: -10px;
+                font-size: 34px;
+            }
 
-        /* 沙漠 */
-        td:has(.desert) {
-            font-size: 14px;
-            background-color: rgba(163, 105, 46, 0.7); 
-        }
+            /* 沙漠 */
+            .desert {
+                font-size: 14px;
+                background-color: rgba(163, 105, 46, 0.7); 
+            }
 
         /* 湖泊 */
-        td:has(.lake) {
-            font-size: 10px;
-            color: #33BEFF;
-            background-color: rgba(0, 167, 245, 0.5); 
-            border-radius: 20px;
-        }
-        .lake-fish1 {
-            top: 16px;
-            left: 6px;
-        }
-        .lake-fish2 {
-            top: 0px;
-            left: -10px;
+            .lake {
+                font-size: 10px;
+                color: #33BEFF;
+                background-color: rgba(0, 167, 245, 0.5); 
+                border-radius: 20px;
+            }
+            .lake-fish1 {
+                top: 16px;
+                left: 6px;
+            }
+            .lake-fish2 {
+                top: 0px;
+                left: -10px;
+            }
+
+        /* 城鎮 */
+        .town {
+            /*background-color: rgba(208, 157, 103, 0.5); */
+            /*border-radius: 10px;*/
         }
 
         /* 小屋 */
-        td:has(.cabin) {
+        .cabin {
             font-size: 24px;
         }
 
         /* 農田 */
-        td:has(.farm) {
-            font-size: 16px;
-        }
-        .farm-wheat1 {
-            top: 0px;
-            left: -8px;
-        }
-        .farm-wheat2 {
-            top: 0px;
-            left: 8px;
-        }
-        .farm-wheat3 {
-            top: 16px;
-            left: -14px;
-        }
-        .farm-wheat4 {
-            top: 16px;
-            left: 2px;
-        }
+            .farm {
+                font-size: 12px;
+            }
+            .farm-wheat1 {
+                top: 0px;
+                left: -8px;
+            }
+            .farm-wheat2 {
+                top: 0px;
+                left: 8px;
+            }
+            .farm-wheat3 {
+                top: 16px;
+                left: -14px;
+            }
+            .farm-wheat4 {
+                top: 16px;
+                left: 2px;
+            }
         
         /* 玩家位置 */
-        .player {
-            font-size: 24px;
-            position: absolute;
-            top: 25px;
-            left: 25px;
-        }
-        .companion {
-            font-size: 24px;
-            position: absolute;
-            top: 30px;
-            left: 27px;
-        }
+            .player {
+                font-size: 24px;
+                position: absolute;
+                top: 25px;
+                left: 25px;
+            }
+            .companion {
+                font-size: 24px;
+                position: absolute;
+                top: 30px;
+                left: 27px;
+            }
 
         /* 任務標誌 */
         .quest {
@@ -152,35 +163,42 @@
         <!-- 地圖 -->
         <table id="map"></table>
 
-        <!-- 方向按鈕 -->
-        <div class="controls">
-            <div class="column" style="text-align: right;">
-                <button onclick="move(-1, 0)">◀</button>
+        <div class="column-container bottomborder">
+            <div class="column">
+                <!-- 天氣 -->
+                <p id="weather">
+                    <span id="weather-name"></span>
+                    <span id="weather-description" class="note small"></span>
+                </p>
+                <br>
+                <div class="menu">
+                    <!-- 潛行開關 -->
+                    <button class="small-button" style="padding: 5px;" onclick="stealth()">
+                        <input type="checkbox" id="stealthToggle">
+                        <span class="small">潛行模式</span>
+                        <span id="stealth-chance" class="note small"></span>
+                    </button>
+                </div>
             </div>
-            <div class="">
-                <button onclick="move(0, -1)">▲</button><br><br>
-                <button onclick="move(0, 1)">▼</button>
-            </div>
-            <div class="column" style="text-align: left;">
-                <button onclick="move(1, 0)">▶</button>
+
+            <!-- 方向按鈕 -->
+            <div class="controls column">
+                <div class="column" style="text-align: right;">
+                    <button onclick="move(-1, 0)">◀</button>
+                </div>
+                <div class="">
+                    <button onclick="move(0, -1)">▲</button><br>
+                    <button></button><br>
+                    <button onclick="move(0, 1)">▼</button>
+                </div>
+                <div class="column" style="text-align: left;">
+                    <button onclick="move(1, 0)">▶</button>
+                </div>
             </div>
         </div>
 
         <div class="column-container bottomborder">
-            <!-- 天氣 -->
-            <p class="column top" id="weather">
-                <span id="weather-name"></span>
-                <span id="weather-description" class="note small"></span>
-            </p>
 
-            <!-- 潛行開關 -->
-            <p class="right top">
-                <label>
-                    <input type="checkbox" id="stealthToggle" onchange="stealth(this.checked)">
-                    潛行
-                    <span id="stealth-chance" class="note small"></span>
-                </label>
-            </p>
         </div>
 
 
@@ -211,14 +229,13 @@
             loadBackground(); // 讀取背景
         };
 
-        // 6x6 地圖 (x=0~5,y=0~5)
+        // 7x5 地圖 (x=0~6,y=0~4)
         const mapData = [
             ["🌾", "🏘️", "🌾", "🌲", "🪨", "🌲", "🌲"],
             ["🌾", "", "", "", "🌲", "🌲", "🛖"],
             ["🌲", "🌲", "🌲", "", "🌲", "🪨", "🌲"],
-            ["🌲", "🐟", "🛖", "", "", "🐟", "🪨"],
+            ["🪨", "🐟", "🛖", "", "", "🐟", "🪨"],
             ["🌲", "🏰", "🐟", "🌲", "🌾", "🏘️", "🌲"],
-            ["", "🌲", "🌲", "🪨", "🌲", "", "🌲"],
         ];
 
         // 定義圖標
@@ -244,7 +261,7 @@
             thieves: { id:"thieves", name: "盜賊巢穴", x: 4, y: 0 }, 
         };
 
-        // 讀取角色位置，預設在正中央 (2,2)
+        // 讀取角色位置，預設在 (2,2)
         let playerPos = JSON.parse(localStorage.getItem("playerPos")) || { x: 1, y: 1 };
 
         // 顯示文本
@@ -954,7 +971,7 @@
             const table = document.getElementById("map");
             table.innerHTML = "";
     
-            for (let y = 0; y < 6; y++) {
+            for (let y = 0; y < 5; y++) {
                 let row = document.createElement("tr");
                 for (let x = 0; x < 7; x++) {
                     let cell = document.createElement("td");
@@ -965,6 +982,10 @@
                         let icon = document.createElement("span");
                         icon.textContent = cellContent;
                         cell.appendChild(icon);
+
+                        // 添加樣式
+                        let iconName = Object.keys(icons).find(key => icons[key] === mapData[y][x]);
+                        cell.classList.add(iconName);
                     }
 
                     // 調整樣式
@@ -975,14 +996,12 @@
                             <span class="forest-tree1");>🌲</span>
                             <span class="forest-tree2");>🌲</span>
                         `;
-                        Icon.classList.add("forest");
                         cell.innerHTML = ""; // 清空原本的icon
                         cell.appendChild(Icon);
 
                     } else if (mapData[y][x] === icons.desert) {
                         // 如果是沙漠
                         let Icon = document.createElement("span");
-                        Icon.classList.add("desert");
                         cell.appendChild(Icon);
 
                     } else if (mapData[y][x] === icons.lake) {
@@ -992,14 +1011,7 @@
                             <span class="lake-fish1");>🐟</span>
                             <span class="lake-fish2");>🐟</span>
                         `;
-                        Icon.classList.add("lake");
                         cell.innerHTML = ""; // 清空原本的icon
-                        cell.appendChild(Icon);
-
-                    } else if (mapData[y][x] === icons.cabin) {
-                        // 如果是小屋
-                        let Icon = document.createElement("span");
-                        Icon.classList.add("cabin");
                         cell.appendChild(Icon);
 
                     } else if (mapData[y][x] === icons.farm) {
@@ -1011,7 +1023,6 @@
                             <span class="farm-wheat3");>🌾</span>
                             <span class="farm-wheat4");>🌾</span>
                         `;
-                        Icon.classList.add("farm");
                         cell.innerHTML = ""; // 清空原本的icon
                         cell.appendChild(Icon);
                     }
@@ -1069,7 +1080,7 @@
             let newY = playerPos.y + dy;
 
             // 確保不超出範圍，並且不能走進湖泊
-            if (newX >= 0 && newX < 7 && newY >= 0 && newY < 6 && mapData[newY][newX] !== icons.lake) {
+            if (newX >= 0 && newX < 7 && newY >= 0 && newY < 5 && mapData[newY][newX] !== icons.lake) {
                 // 更新位置
                 playerPos.x = newX;
                 playerPos.y = newY;
@@ -1378,6 +1389,12 @@
 
         // 潛行
         function stealth() { 
+            if (!isTrue("stealth")) {
+                stealthToggle.checked = true; // 如果尚未啟用就勾選
+            } else {
+                stealthToggle.checked = false; // 否則取消勾選
+            }
+
             let isChecked = document.getElementById("stealthToggle").checked; // 取得勾選框狀態
             turnSwitch("stealth", isChecked); // 設定潛行狀態
         }

@@ -44,6 +44,11 @@
                 <!-- <a style="flex: 0 0 40px;" onclick="toggleFullScreen()">⛶</a> -->
             `;
         }
+
+        // 等一個 event loop 後再加動畫 class
+        setTimeout(() => {
+            buttonBar.classList.add('animated');
+        }, 0);
     }
 
     // 檢查是否全螢幕
@@ -297,82 +302,26 @@
             replaceText("少年", "少女");
         }
 
-        // 老練的冒險者
-        const newReynald = localStorage.getItem("newReynald");
-        if(newReynald) {
-            replaceText("雷納德", newReynald);
-            observeTextChanges("雷納德", newReynald);
-        }
+        const nameMap = [
+            { original: "雷納德", key: "newReynald" },
+            { original: "塔爾穆克", key: "newTarmuk" },
+            { original: "賽恩", key: "newSain" },
+            { original: "艾德蒙", key: "newEdmund" },
+            { original: "諾伊爾", key: "newNoirel" },
+            { original: "羅文", key: "newRowan" },
+            { original: "戴瑞", key: "newDerrick" },
+            { original: "馬卡斯", key: "newMarcus" },
+            { original: "賽爾瑞斯", key: "newSelreth" },
+        ];
 
-        // 獸人狂戰士
-        const newTarmuk = localStorage.getItem("newTarmuk");
-        if(newTarmuk) {
-            replaceText("塔爾穆克", newTarmuk);
-            observeTextChanges("塔爾穆克", newTarmuk);
-        }
-        
-        // 吸血鬼刺客
-        const newSain = localStorage.getItem("newSain");
-        if(newSain) {
-            replaceText("賽恩", newSain);
-            observeTextChanges("賽恩", newSain);
-        }
-        
-        // 小混混
-        const newEdmund = localStorage.getItem("newEdmund");
-        if(newEdmund) {
-            replaceText("艾德蒙", newEdmund);
-            observeTextChanges("艾德蒙", newEdmund);
-        }
-        
-        // 精靈少年
-        const newNoirel = localStorage.getItem("newNoirel");
-        if(newNoirel) {
-            replaceText("諾伊爾", newNoirel);
-            observeTextChanges("諾伊爾", newNoirel);
-        }
-
-        // 公會NPC
-        const newRowan = localStorage.getItem("newRowan");
-        if(newRowan) {
-            replaceText("羅文", newRowan);
-            observeTextChanges("羅文", newRowan);
-        }
-
-        // 公會NPC
-        const newWood = localStorage.getItem("newWood");
-        if(newWood) {
-            replaceText("伍德", newWood);
-            observeTextChanges("伍德", newWood);
-        }
-
-        // 哥布林商人
-        const newLazrik = localStorage.getItem("newLazrik");
-        if(newLazrik) {
-            replaceText("拉茲", newLazrik);
-            observeTextChanges("拉茲", newLazrik);
-        }
-
-        // 哥布林商人
-        const newZibber = localStorage.getItem("newZibber");
-        if(newZibber) {
-            replaceText("齊布", newZibber);
-            observeTextChanges("齊布", newZibber);
-        }
-
-        // 吸血鬼抓走的小孩
-        const newMarcus = localStorage.getItem("newMarcus");
-        if(newMarcus) {
-            replaceText("馬卡斯", newMarcus);
-            observeTextChanges("馬卡斯", newMarcus);
-        }
-
-        // 吸血鬼領主
-        const newSelreth = localStorage.getItem("newSelreth");
-        if(newSelreth) {
-            replaceText("賽爾瑞斯", newSelreth);
-            observeTextChanges("賽爾瑞斯", newSelreth);
-        }                
+        // 替換 NPC 名字
+        nameMap.forEach(({ original, key }) => {
+            const newName = localStorage.getItem(key);
+            if (newName) {
+                replaceText(original, newName);
+                observeTextChanges(original, newName);
+            }
+        });
     }
 
 // 事件相關
@@ -717,6 +666,11 @@
         if (companion.name === "賽恩") {
             turnSwitch("用血支付賽恩", false);
         }
+
+        // 如果是傭兵，加入冷卻傭兵名單，當天不會再次出現
+        let cooldownMerc = JSON.parse(localStorage.getItem("cooldownMerc")) || [];
+        cooldownMerc.push(companion);
+        localStorage.setItem("cooldownMerc", JSON.stringify(cooldownMerc));
     }
 
     // 回滿隊伍 HP
@@ -791,8 +745,7 @@
     function addPlayerHP(amount) {
         let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
         let player = teamMembers.find(m => m.id === "player");
-        player.HP += amount;
-        player.HP = Math.min(Math.max(player.HP + (s.HP || 0), 0), player.MaxHP); // 確保不會超過最大值，也不會小於0
+        player.HP = Math.min(Math.max(player.HP + amount, 0), player.MaxHP); // 確保不會超過最大值，也不會小於0
         localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
     }
 
@@ -1221,10 +1174,10 @@
         if (usage !== "description") {
             // 判斷物品價格
             let itemPrice;
-            if (usage === "shop") {
-                itemPrice = item.price * 2; // 顯示商店價格（2倍）
+            if (usage === "shop" || usage === "tavern") {
+                itemPrice = "$" + item.price * 2; // 顯示商店價格（2倍）
             } else if (item.price) {
-                itemPrice = item.price; // 顯示賣出價格
+                itemPrice = "$" + item.price; // 顯示賣出價格
             } else {
                 itemPrice = "-"; // 無價格
             }
@@ -1244,7 +1197,7 @@
                     </span>
 
                     ${usage !== "equip" ? `
-                        <span class="column-small">$${itemPrice}</span>
+                        <span class="column-small">${itemPrice}</span>
                     ` : "" }
                 
                     ${usage === "equip" ? `
@@ -1337,6 +1290,7 @@
     function buyItem(itemId) {
         let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
         let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+        let orderedMeals = JSON.parse(localStorage.getItem("orderedMeals")) || [];
 
         // 找到這件商品的資料
         let item = itemDatabase.find(i => i.id === itemId);
@@ -1367,13 +1321,40 @@
                 // 扣除金錢
                 playerMoney -= totalCost;
 
-                // 把物品加入玩家背包 (考慮數量)
-                for (let i = 0; i < buyAmount; i++) {
-                    playerItems.push(itemId);
+                if (item.type === "meal") {
+                    // 如果是料理，加入點餐清單（乘以數量）
+                    for (let i = 0; i < buyAmount; i++) {
+                        orderedMeals.push(item);
+                    }
+
+                    // 重新計算隊伍需要的治療量
+                    const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+                    let requiredHeal = 0;
+                    teamMembers.forEach(member =>{
+                        requiredHeal += member.MaxHP;
+                        requiredHeal -= member.HP;
+                    });
+
+                    // 重新計算料理的總治療量
+                    const totalHeal = orderedMeals.reduce((sum, meal) => sum + meal.heal, 0);
+
+                    // 重新顯示訊息
+                    if (teamMembers.length > 1) {
+                        document.getElementById("text").innerHTML = texts.sitTogether(requiredHeal, totalHeal); // 和同伴坐下
+                    } else {
+                        document.getElementById("text").innerHTML = texts.sit(requiredHeal, totalHeal); // 獨自坐下
+                    }
+
+                } else {
+                    // 如果是商品，加入玩家背包 (乘以數量)
+                    for (let i = 0; i < buyAmount; i++) {
+                        playerItems.push(itemId);
+                    }
                 }
 
                 // 存回 localStorage
                 localStorage.setItem("playerItems", JSON.stringify(playerItems));
+                localStorage.setItem("orderedMeals", JSON.stringify(orderedMeals));
                 localStorage.setItem("playerMoney", playerMoney);
 
                 // 更新顯示的金錢
@@ -1477,6 +1458,7 @@
         { type: "good", mood: 1, id: "battleWin", name: "戰鬥勝利" },
         { type: "good", mood: 1, id: "criticalHit", name: "打出了爆擊" },
         { type: "good", mood: 1, id: "completeQuest", name: "完成任務" },
+        { type: "good", mood: 1, id: "enjoyMeal", name: "享用餐點" },
 
         { type: "bad", mood: -1, id: "lowHP", name: "非常疲憊" },
         { type: "bad", mood: -1, id: "knockedDown", name: "在戰鬥中被擊倒" },
@@ -1505,9 +1487,9 @@
         { type: "good", mood: 1, id: "comforted", name: "受到安慰", note: "你安慰了夥伴" },
 
         // 雷納德
-        { type: "good", mood: 1, id: "teamwork", name: "團隊合作", note: "以聯手攻擊終結敵人" },
+        { type: "good", mood: 1, id: "teamwork", name: "團隊合作", note: "聯手終結敵人" },
         { type: "bad", mood: -1, id: "reactToStealing", name: "失望", note: "發現你偷竊" },
-        { type: "bad", mood: -1, id: "selfBlame", name: "自責", note: "你在戰鬥中被擊倒" },
+        { type: "bad", mood: -1, id: "selfBlame", name: "自責", note: "目睹你被敵人擊倒" },
 
         // 塔爾穆克
         { type: "good", mood: 1, id: "kill", name: "殺戮快感", note: "終結敵人" },
@@ -1637,7 +1619,7 @@
         localStorage.setItem("playerPos", JSON.stringify(townPos));
 
         // 跳轉到城鎮頁面
-        goTo("locations/town.html");
+        goTo("locations/town");
     }
 
     // 跳轉場景，根據目前頁面調整路徑
@@ -1651,6 +1633,7 @@
     }
 
     // 指定戰鬥
+        // 一個守衛 battle(2, "守衛", 1)
     function battle(situation, enemyName, enemyCount, destination, successKey, failKey) {
         let encounter;
 
@@ -1720,7 +1703,7 @@
         addWantedLevel(-1);
 
         // 重置酒館
-        localStorage.removeItem("tavernClose"); // 重置打烊
+        turnSwitch("酒館用餐", false); // 重置打烊
         localStorage.removeItem("drinkingStart");
         localStorage.removeItem("drinkingResults");
         localStorage.removeItem("drinkingEnd");
@@ -1728,6 +1711,8 @@
         // 重置雷納德
         turnSwitch("雷納德路過", false);
 
+        // 重置冷卻中傭兵
+        localStorage.removeItem("cooldownMerc");
 
         // 抽天氣
         const weathers = [ 

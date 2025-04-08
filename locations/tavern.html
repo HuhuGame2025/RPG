@@ -22,24 +22,26 @@
         </div>
 
         <p id="text">你走進了酒館，這裡是認識其他冒險者的好地方。你可以雇用他們成為傭兵，直到當前的任務完成為止。</p>
-        <p class="small">🪙 $<span id="playerMoney"></span></p>
+        <p id="money" class="small">🪙 $<span id="playerMoney"></span></p>
     
         <!-- 商品列表 -->
         <div id="item-list"></div>
 
-        <!-- 選單 -->
+         <!-- 餐桌區域 -->
+        <div id="seat-top"></div>
+        <div id="table"></div>
+        <div id="seat-bottom"></div>
+        <br>
+
+       <!-- 選單 -->
         <div class="menu" id="button-container">
-            <button onclick="order()">坐下來點餐</button>
+            <button id="orderButton" onclick="order()">坐下來點餐</button>
             <button onclick="drinkingContest()">和在場的人拚酒量（$10）</button>
         </div>
 
         <!-- 傭兵列表 -->
         <div id="companion-list"></div>
 
-        <!-- 餐桌區域 -->
-        <div id="seat-top"></div>
-        <div id="table"></div>
-        <div id="seat-bottom"></div>
         <br>
 
         <!-- Top按紐 -->
@@ -57,7 +59,11 @@
         window.onload = function() {
             rollCompanions(); // 抽選在場的人
             loadPartyData();
-            checkOrder(); // 檢查是否有點餐
+
+            // 檢查是否已經用過餐
+            if (isTrue("酒館用餐")) {
+                document.getElementById("orderButton").style.display = "none"; // 隱藏點餐按鈕
+            }
 
             npcPreferences(); // NPC偏好設定
             showButtonBar(); // 顯示按鈕列
@@ -70,23 +76,23 @@
             "雷納德": {
                 "start": {
                     npc: "npc",
-                    text: "這個地方還是老樣子，能遇見充滿夢想和鬥志的年輕人。<br><br>你看起來很有潛力，正在為下一趟旅行尋找夥伴嗎？你應該會需要一名老手的協助。",
+                    text: "這個地方還是老樣子，能遇見充滿夢想和鬥志的年輕人。<br><br>你看起來很有潛力，正在為下一趟旅行尋找夥伴嗎？或許我這個老骨董還能派上一點用場。",
                     choices: [
                         { text: "你擅長什麼？", next: "了解" },
-                        { text: "我想僱用你（免費）", next: "僱用", action: "hireCompanion()" },
+                        { text: "我想僱用你", next: "僱用", action: "hireCompanion()" },
                         { text: "再見", next: "", action: "removeDialogue()" },
                     ]
                 },
                 "了解": {
                     npc: "npc",
-                    text: "我不會說自己樣樣精通，但至少是沒有哪一方面會拖垮你的隊伍。<br><br>只要你願意聽我的意見，那麼我的劍、我的經驗、我的人脈都可以為你所用。",
+                    text: "我是個戰士，你可以讓我當前鋒，我會盡力保護你的安全。<br><br>如果你不嫌我囉嗦，我的知識和經驗都可以為你所用。",
                     choices: [
                         { text: "了解了", next: "start" },
                     ]
                 },
                 "僱用": {
                     npc: "npc",
-                    text: "我很樂意加入你的隊伍，不需要任何報酬，因為看著新人成長的喜悅就是最好的報酬。<br><br>開始冒險之前別忘了好好休息一晚，養精蓄銳。<br><br>準備好的話我們就出發吧。",
+                    text: "我很樂意加入你的隊伍，不需要任何報酬，對我來說能看著後輩成長就是最好的報酬。<br><br>離開城鎮前別忘了好好休息一晚，養精蓄銳。<br><br>準備好的話我們就出發吧。",
                     choices: [
                         { text: "我們走", next: "", action: "removeDialogue()" },
                     ]
@@ -95,7 +101,7 @@
             "塔爾穆克": {
                 "start": {
                     npc: "npc",
-                    text: "這算什麼酒？喝起來跟尿一樣，也敢拿出來賣！<br><br>你看什麼看啊？如果不是來雇用我的就閃遠一點，別碰到我的斧頭，否則你會少一隻手臂。",
+                    text: "這算什麼酒？喝起來跟尿一樣還敢拿來賣！<br><br>你看什麼看啊？不是來雇用我的就閃遠一點！別碰到我的斧頭，等一下你瘦弱的手臂斷掉。",
                     choices: [
                         { text: "你擅長什麼？", next: "了解" },
                         { text: "我想僱用你（$120）", next: "僱用", action: "hireCompanion()" },
@@ -210,8 +216,8 @@
             drinkingAllLose: "所有人都醉倒了，沒有人一個人撐到最後。",
             drinkingEnd: "今天已經玩過了，明天再來吧。",
             drinkingNoOne: "酒館裡目前沒有人在。",
-            sit: "你找了一個空位坐下。",
-            sitTogether: "你和同伴一起坐下。",
+            sit: (requiredHeal, totalHeal) => `你找了一個空位坐下。<br>你需要補充 ${requiredHeal} 生命值，目前點的餐點能補充 ${totalHeal}。`,
+            sitTogether: (requiredHeal, totalHeal) => `你和同伴一起坐下。<br>你們需要補充 ${requiredHeal} 生命值，目前點的餐點能補充 ${totalHeal}。`,
             serveMeal: (meal) => `稍後，服務生送上了${meal}。`,
             eat: "你獨自享用，十分滿足。",
             eatTogether: "你們一起分享，度過了愉快的時光。",
@@ -266,12 +272,16 @@
             menu.innerHTML = "";
 
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            let cooldownMerc = JSON.parse(localStorage.getItem("cooldownMerc")) || [];
+            console.log(cooldownMerc);
 
             // 決定誰會出現
             mercenaries.forEach(companion => {
-                let isHired = teamMembers.some(hired => hired.name === companion.name);
-                // 已雇用角色不會出現，其他角色 50% 機率出現
-                if (!isHired && Math.random() < 0.5) { 
+                let isHired = teamMembers.some(m => m.name === companion.name);
+                let isCoolingdown = cooldownMerc.some(m => m.name === companion.name);
+
+                // 已雇用或冷卻中的傭兵不會出現，其他角色 50% 機率出現
+                if (!isHired && !isCoolingdown && Math.random() < 0.5) { 
                     tavernCompanions.push({ name: companion.name, description: companion.description, cost: companion.cost, con: companion.con, str: companion.Str, dex: companion.Dex });
                 }
             });
@@ -351,75 +361,97 @@
         // 坐下來點餐
         function order() {
             document.getElementById("companion-list").innerHTML = ""; // 清空傭兵列表
-
-            // 顯示坐下訊息
-            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
-            if (teamMembers.length > 1) {
-                document.getElementById("text").textContent = texts.sitTogether; // 和同伴坐下
-            } else {
-                document.getElementById("text").textContent = texts.sit; // 獨自坐下
-            }
+            document.querySelectorAll(".exit-button").forEach(btn => {
+                btn.style.display = "none"; // 隱藏離開按鈕
+            });
 
             // 顯示料理列表
             showShop("tavern");
+
+            // 計算隊伍需要的治療量
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            let requiredHeal = 0;
+            teamMembers.forEach(member =>{
+                requiredHeal += member.MaxHP;
+                requiredHeal -= member.HP;
+            });
+
+            // 計算料理的總治療量
+            const orderedMeals = JSON.parse(localStorage.getItem("orderedMeals")) || [];
+            const totalHeal = orderedMeals.reduce((sum, meal) => sum + meal.heal, 0);
+
+            // 顯示訊息
+            if (teamMembers.length > 1) {
+                document.getElementById("text").innerHTML = texts.sitTogether(requiredHeal, totalHeal); // 和同伴坐下
+            } else {
+                document.getElementById("text").innerHTML = texts.sit(requiredHeal, totalHeal); // 獨自坐下
+            }
             
-            // 顯示送出菜單按鈕
+            // 顯示等待按鈕
             document.getElementById("button-container").innerHTML = `
-                <button id="order-btn">送出菜單</button>
+                <button id="order-btn">等待餐點</button>
+                <button id="cancel-btn">取消</button>
             `;
+
+            // 等待餐點
             document.getElementById("order-btn").addEventListener("click", function () {
                 checkOrder();
+            });
+
+            // 取消
+            document.getElementById("cancel-btn").addEventListener("click", function () {
+                // 計算料理的總花費
+                const orderedMeals = JSON.parse(localStorage.getItem("orderedMeals")) || [];
+                const totalPrice = orderedMeals.reduce((sum, meal) => sum + meal.price*2, 0);
+                
+                // 把錢存回去
+                let playerMoney = parseInt(localStorage.getItem("playerMoney"));
+                playerMoney += totalPrice;
+                localStorage.setItem("playerMoney", playerMoney);
+
+                // 移除料理
+                localStorage.removeItem("orderedMeals");
+
+                location.reload();  // 重新加載當前頁面
             });
         }
 
         // 檢查是否有點餐
         function checkOrder() {
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
-
-            // 從物品資料庫篩選料理資料
-            const mealDatabase = itemDatabase.filter(i => i.type === "meal");
-
-            // 找到主角點的料理資料
-            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-
-            // 計算料理數量
-            let mealCounts = {};
-            let orderedMeals = mealDatabase
-                .map(meal => {
-                    const count = playerItems.filter(itemId => itemId === meal.id).length;
-                    if (count > 0) mealCounts[meal.id] = count; // 記錄數量
-                    return { ...meal, count };
-                })
-                .filter(meal => meal.count > 0); // 只保留有點的料理
+            let orderedMeals = JSON.parse(localStorage.getItem("orderedMeals")) || [];
 
             // 如果有點料理
             if (orderedMeals.length > 0) {
                 document.getElementById("item-list").innerHTML = ""; // 清空列表
-                localStorage.removeItem("tavernClose"); // 還沒吃，移除打烊標記
+                document.getElementById("money").style.display = "none"; // 隱藏金錢
+                turnSwitch("酒館用餐", false);; // 還沒吃，移除標記
                 showTeam(); // 顯示隊伍
 
                 // 生成所有餐點名稱的字符串，並去除 emoji
                 const emojiRegex = /[\p{Emoji}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Emoji_Modifier_Base}\p{Emoji_Component}]/gu; // 用正則表達式來匹配所有 emoji 字符
-                const mealNames = orderedMeals
-                    .map(meal => meal.name.replace(emojiRegex, "").replace(/\s+/g, "")) // 去除 emoji 和空白
-                    .join("、");
+                const mealNames = [...new Set( // 去除重複值
+                    orderedMeals.map(meal => meal.name.replace(emojiRegex, "").replace(/\s+/g, "")) // 去除 emoji 和空白
+                )].join("、");
 
                 // 顯示上菜訊息
                 document.getElementById("text").textContent = texts.serveMeal(mealNames); 
 
                 // 計算啤酒數量
-                let beers = mealCounts["meal01"] || 0;
+                let beers = orderedMeals.filter(m => m.id === "meal01").length;
                 
-                // 如果啤酒比隊伍人數多，取得多出的啤酒 emoji 並依數量生成
+                // 如果啤酒不等於隊伍人數，生成啤酒 emoji
                 let beerDisplay;
                 if (beers > teamMembers.length) {
-                    beerDisplay = "🍺".repeat(beers - teamMembers.length);
+                    beerDisplay = "🍺".repeat(beers - teamMembers.length); // 比人數多，多的放中間
+                } else if (beers < teamMembers.length){
+                    beerDisplay = "🍺".repeat(beers); // 比人數少，全部放中間
                 }
 
                 // 取得其他餐點的 emoji 並依數量生成
                 let mealDisplay = orderedMeals
                     .filter(meal => meal.id !== "meal01") // 排除啤酒
-                    .map(meal => Array.from(meal.name)[0].repeat(meal.count)) // 取第一個字符（emoji）並重複
+                    .map(meal => Array.from(meal.name)[0]) // 取第一個字符（emoji）並重複
                     .join(" ");
 
                 // 顯示桌上的餐點
@@ -429,11 +461,11 @@
                     <div class="column-container">
                         ${teamMembers.length > 0 ? `<p class="column center">
                             ${mealDisplay ? `<span style="font-size: 1.2em;">🍽️</span>` : ""}
-                            ${beers > 0 ? `🍺` : "" }
+                            ${beers >= teamMembers.length ? `🍺` : "" }
                         </p>` : "" }
                         ${teamMembers.length > 1 ? `<p class="column center">
                             ${mealDisplay ? `<span style="font-size: 1.2em;">🍽️</span>` : ""}
-                            ${beers > 1 ? `🍺` : "" }
+                            ${beers >= teamMembers.length ? `🍺` : "" }
                         </p>` : "" }
                     </div>
 
@@ -446,11 +478,11 @@
                     <div class="column-container">
                         ${teamMembers.length > 2 ? `<p class="column center">
                             ${mealDisplay ? `<span style="font-size: 1.2em;">🍽️</span>` : ""}
-                            ${beers > 2 ? `🍺` : "" }
+                            ${beers >= teamMembers.length ? `🍺` : "" }
                         </p>` : "" }
                         ${teamMembers.length > 3 ? `<p class="column center">
                             ${mealDisplay ? `<span style="font-size: 1.2em;">🍽️</span>` : ""}
-                            ${beers > 3 ? `🍺` : "" }
+                            ${beers >= teamMembers.length ? `🍺` : "" }
                         </p>` : "" }
                     </div>
                 `;
@@ -489,10 +521,11 @@
                     // 儲存
                     localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
 
-                    // 如果滿血，添加滿血情緒
+                    // 添加情緒
                     teamMembers.forEach(member => {
+                        getEmotion(member.id, "enjoyMeal"); // 添加用餐情緒
                         if (member.HP === member.MaxHP) {
-                            getEmotion(member.id, "fullHP");
+                            getEmotion(member.id, "fullHP"); // 添加滿血情緒
                         }
                     });
 
@@ -504,22 +537,17 @@
                     }
 
                     // 移除料理
-                    let newPlayerItems = playerItems.filter(i => !orderedMeals.some(meal => meal.id === i));
-                    localStorage.setItem("playerItems", JSON.stringify(newPlayerItems));
+                    localStorage.removeItem("orderedMeals");
 
-                    // 顯示點餐按鈕
+                    // 顯示離開按鈕
                     document.getElementById("button-container").innerHTML = `
-                        <button id="order-btn">繼續點餐</button>
                         <button id="leave-btn">離開座位</button>
                     `;
-                    document.getElementById("order-btn").addEventListener("click", function () {
-                        order();
-                    });
                     document.getElementById("leave-btn").addEventListener("click", function () {
                         location.reload();  // 重新加載當前頁面
                     });
 
-                    localStorage.setItem("tavernClose", "true"); // 用餐後標記為打烊
+                    turnSwitch("酒館用餐");
                     showTeam(); // 顯示隊伍健康程度
                 });
             }
@@ -537,13 +565,17 @@
             document.getElementById("seat-top").innerHTML = `
                 <br>
                 <div class="column-container">
-                    <div class="column center background">
-                        <h4>${teamMembers[0].name}</h4>
+                    <div class="column center">
                         <h4 class="hp">${teamMembers[0].HP} / ${teamMembers[0].MaxHP}</h4>
+                        <div class="avatar background">
+                            <span class="small note">${teamMembers[0].name}</span>
+                        </div>
                     </div>
-                    ${teamMembers[1] ? `<div class="column center background">
-                        <h4>${teamMembers[1].name}</h4>
+                    ${teamMembers[1] ? `<div class="column center">
                         <h4 class="hp">${teamMembers[1].HP} / ${teamMembers[1].MaxHP}</h4>
+                        <div class="avatar background">
+                            <span class="small note">${teamMembers[1].name}</span>
+                        </div>
                     </div>` : ""}
                 </div>
             `;
@@ -551,12 +583,16 @@
             // 顯示同伴（下排）
             document.getElementById("seat-bottom").innerHTML = `
                 <div class="column-container">
-                    ${teamMembers[2] ? `<div class="column center background">
-                        <h4>${teamMembers[2].name}</h4>
+                    ${teamMembers[2] ? `<div class="column center">
+                        <div class="avatar background">
+                            <span class="small note">${teamMembers[2].name}</span>
+                        </div>
                         <h4 class="hp">${teamMembers[2].HP} / ${teamMembers[2].MaxHP}</h4>
                     </div>` : ""}
-                    ${teamMembers[3] ? `<div class="column center background">
-                        <h4>${teamMembers[3].name}</h4>
+                    ${teamMembers[3] ? `<div class="column center">
+                        <div class="avatar background">
+                            <span class="small note">${teamMembers[3].name}</span>
+                        </div>
                         <h4 class="hp">${teamMembers[3].HP} / ${teamMembers[3].MaxHP}</h4>
                     </div>` : ""}
                 </div>

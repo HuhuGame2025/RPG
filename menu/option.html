@@ -10,6 +10,9 @@
             background-color: #000 !important; /* 背景顏色 */
         }
         
+        input {
+            font-size: 1em;
+        }
     </style>
 </head>
 <body>
@@ -103,11 +106,9 @@
                 { key: "newSain", label: "蒙面刺客", defaultName: "賽恩" },
                 { key: "newEdmund", label: "像小混混的傭兵", defaultName: "艾德蒙" },
                 { key: "newNoirel", label: "精靈少年", defaultName: "諾伊爾" },
-                { key: "newRowan", label: "公會接待員", defaultName: "羅文" },
-                { key: "newWood", label: "公會接待員", defaultName: "伍德" },
-                { key: "newLazrik", label: "哥布林商人", defaultName: "拉茲" },
-                { key: "newZibber", label: "哥布林商人", defaultName: "齊布" },
-                { key: "newMarcus", label: "小孩", defaultName: "馬卡斯" },
+                { key: "newRowan", label: "晨曦鎮公會接待員", defaultName: "羅文" },
+                { key: "newDerrick", label: "鐵石鎮公會接待員", defaultName: "戴瑞" },
+                { key: "newMarcus", label: "被吸血鬼俘虜的孩子", defaultName: "馬卡斯" },
                 { key: "newSelreth", label: "吸血鬼領主", defaultName: "賽爾瑞斯" },
             ];
 
@@ -115,10 +116,10 @@
             npcList.forEach(npc => {
                 const storedName = localStorage.getItem(npc.key) || "";
                 npcContainer.innerHTML += `
-                    <p>
-                        <label>${npc.label}：</label><br>
-                        <input type="text" id="${npc.key}" value="${storedName}" placeholder="${npc.defaultName}">
-                    </p>
+                    <div class="item">
+                        <p class="small"><label>${npc.label}：</label></p>
+                        <p><input type="text" id="${npc.key}" value="${storedName}" placeholder="${npc.defaultName}"></p>
+                    </div>
                 `;
             });
 

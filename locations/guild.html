@@ -208,7 +208,7 @@
                     },
             },
 
-            "伍德": {
+            "戴瑞": {
                 // 聊天
                     "start": {
                         npc: "npc",
@@ -359,7 +359,7 @@
             if (playerPos.id === "town01") {
                 npcName = "羅文";
             } else if (playerPos.id === "town02") {
-                npcName = "伍德";
+                npcName = "戴瑞";
             }
 
             localStorage.setItem("npcName", npcName);
@@ -415,7 +415,7 @@
                     if (damagedCount > 0) {
                         // 包裹損壞，扣除雙倍金錢，乘上損壞包裹數量
                         price = mission.price * 2 * damagedCount;
-                        getItem("$" + price);
+                        getItem("$" - price);
 
                         // 從物品中移除損壞的包裹
                         newPlayerItems = playerItems.filter(i => i !== "package01_damaged");

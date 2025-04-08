@@ -27,8 +27,26 @@
     <br>
     <div class="menu">
         <a href="create.html"><button>新遊戲</button></a>
-        <a href="map.html"><button>繼續遊戲</button></a>
+        <a onclick="continueGame()"><button>繼續遊戲</button></a>
     </div>
 
+    <script src="script.js" defer></script>
+
+    <script>
+        // 繼續遊戲
+        function continueGame() {
+            // 以主角身分判斷位置
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            const player = teamMembers.find(member => member.id === "player");
+            if (player.type === "囚犯") {
+                goTo("locations/prison");
+            } else if (player.type === "血奴") {
+                goTo("locations/underground");
+            } else {
+                goTo("map");
+            }
+        }
+
+    </script>
 </body>
 </html>

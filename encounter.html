@@ -38,7 +38,7 @@
             // 將活著的成員設為上場成員、可行動成員
             let presentMembers = teamMembers.filter(member => member.HP > 0);
             localStorage.setItem("presentMembers", JSON.stringify(presentMembers));
-            localStorage.setItem("availableMember", JSON.stringify(presentMembers));
+            localStorage.setItem("availableMembers", JSON.stringify(presentMembers));
 
             // 清空逃跑隊伍
             localStorage.removeItem("escapeMember");
@@ -264,7 +264,10 @@
         ];
 
         // 形容詞庫
-        const adjs = ["平凡", "醜陋", "猙獰", "英俊", "美豔", "清秀", "蒼白", "黝黑", "刀疤", "年輕", "年長", "滄桑", "纖細", "圓潤", "壯碩", "矮小", "高大"];
+        const adjs = {
+            "類人": ["平凡", "醜陋", "猙獰", "英俊", "美豔", "清秀", "蒼白", "黝黑", "刀疤", "年輕", "年長", "滄桑", "纖細", "圓潤", "壯碩", "矮小", "高大"],
+            "其他": ["平凡", "醜陋", "猙獰", "威武", "鮮豔", "光禿", "蒼白", "烏黑", "骯髒", "纖細", "圓潤", "壯碩", "小巧", "高大"],
+        };
         
 
         // 抽選敵人種類和數量
@@ -329,8 +332,8 @@
             // 如果有指定遭遇
             const encounter = JSON.parse(localStorage.getItem("encounter"));
             if (encounter) {
-                // 使用指定的敵人（只要指定的名字中包含資料庫中的名字即可）
-                selectedEnemy = enemies.find(e => encounter.enemyName.includes(e.name)); 
+                // 使用指定的敵人
+                selectedEnemy = enemies.find(e => encounter.enemyName === e.name); 
             }
             if (encounter && encounter.enemyCount) {
                 // 使用指定的數量
@@ -340,11 +343,16 @@
             // 建立敵人陣列（所有敵人都是相同種類）
             let enemiesEncountered = [];
             for (let i = 0; i < enemyCount; i++) {
-                // 如果是智慧或類人生物，隨機抽形容詞
+                // 隨機抽形容詞
                 let adj = "";
                 if (selectedEnemy.type.includes("智慧") || selectedEnemy.type.includes("類人")) {
-                    let adjIndex = Math.floor(Math.random() * adjs.length); // 隨機選擇一個形容詞
-                    adj = adjs[adjIndex];
+                    // 智慧或類人生物
+                    let adjIndex = Math.floor(Math.random() * adjs["類人"].length); // 隨機選擇一個形容詞
+                    adj = adjs["類人"][adjIndex];
+                } else {
+                    // 其他生物
+                    let adjIndex = Math.floor(Math.random() * adjs["其他"].length); // 隨機選擇一個形容詞
+                    adj = adjs["其他"][adjIndex];
                 }
 
                 // 如果有指定形容詞
@@ -364,7 +372,7 @@
                 selectedEnemy.weapon = weapon;
                 selectedEnemy.armor = armor;
 
-                // 將裝備屬性存入敵人屬性中
+                // 建立敵人屬性
                 let enemyStr = { basic: selectedEnemy.str, weapon: weapon.str || 0, armor: armor.str || 0 };
                 let enemyCha = { basic: selectedEnemy.cha, weapon: weapon.cha || 0, armor: armor.cha || 0 };
                 let enemyArm = { basic: selectedEnemy.arm || 0, weapon: weapon.arm || 0, armor: armor.arm || 0 };
@@ -385,24 +393,12 @@
                 }
 
                 // 加總屬性
-                enemyStr.total = Object.entries(enemyStr)
-                    .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-                enemyDex.total = Object.entries(enemyDex)
-                    .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-                enemyWis.total = Object.entries(enemyWis)
-                    .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-                enemyCha.total = Object.entries(enemyCha)
-                    .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-                enemyArm.total = Object.entries(enemyArm)
-                    .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-                enemyCon.total = Object.entries(enemyCon)
-                    .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
-                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+                [enemyStr, enemyDex, enemyWis, enemyCha, enemyArm, enemyCon].forEach(attr => {
+                    attr.total = Object.entries(attr)
+                        .filter(([key]) => key !== "total") // 過濾掉 "total" 鍵
+                        .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+                });
+
 
                 // 生成敵人的id
                 const enemyId = `enemy${enemiesEncountered.length + 1}`;

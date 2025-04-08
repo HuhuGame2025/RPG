@@ -25,7 +25,7 @@
         <div class="location-menu">
             <a href="inn.html"><button>🛌<br>旅館</button></a>
             <a href="guild.html"><button>🤝<br>公會</button></a>
-            <button onclick="enterTavern()">🍺<br>酒館</button>
+            <a href="tavern.html"><button>🍺<br>酒館</button></a>
             <a href="market.html"><button>💰<br>商店街</button></a>
             <a href="arena.html"><button>⚔<br>競技場</button></a>
             <a href="station.html"><button>🛞<br>驛站</button></a>
@@ -70,7 +70,7 @@
 
         // 顯示文本
         const texts = {
-            tavernClose: "酒館今天已經打烊了，明天再去吧。",
+            //tavernClose: "酒館今天已經打烊了，明天再去吧。",
         };
 
         // 顯示城鎮名稱
@@ -89,16 +89,6 @@
                 showDialogue("被守衛攔下");
             } else {
                 window.location.href = '../map.html'; // 跳轉到地圖
-            }
-        }
-
-        // 進入酒館
-        function enterTavern() {
-            const tavernClose = localStorage.getItem("tavernClose");
-            if (tavernClose) {
-                document.getElementById("text").textContent = texts.tavernClose; // 顯示打烊
-            } else {
-                window.location.href = 'tavern.html'; // 跳轉到酒館
             }
         }
     </script>

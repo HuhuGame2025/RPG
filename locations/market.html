@@ -99,18 +99,35 @@
                     ]
                 },
                 "偷竊失敗_雷納德在": {
-                    text: "正當你將商品放進背包時，店家大喊「小偷！」<br><br>雷納德將商品還回去，並為你的行為道歉，店家看在他的面子上才不再追究。",
+                    text: "正當你將商品放進背包時，雷納德阻止了你。<br><br>他將商品還回去，並為你的行為向店家道歉，對方看在雷納德的面子上才沒有追究。",
                     choices: [
-                        { text: "（繼續）", next: "雷納德離隊" },
+                        { text: "（繼續）", next: "雷納德失望" },
                     ]
                 },
-                "雷納德離隊": {
+                "雷納德失望": {
                     npc: "雷納德",
-                    text: "你在做什麼？竟然偷東西，我對你感到很失望……<br><br>抱歉，我應該去尋找更適合我的同伴。",
+                    text: "你在做什麼？竟然偷東西，你太讓我失望了……",
                     choices: [
-                        { text: "（繼續）", next: "", action: "removeDialogue()" },
+                        { text: "我很抱歉", next: "向雷納德道歉" },
+                        { text: "別多管閒事", next: "叫雷納德別管", action: "removeCompanion('雷納德')"},
                     ]
                 },
+                "向雷納德道歉": {
+                    npc: "雷納德",
+                    text: "知錯能改就好，下次別再做這種事了。",
+                    choices: [
+                        { text: "好的", action: "removeDialogue()" },
+                    ]
+                },
+                "叫雷納德別管": {
+                    npc: "雷納德",
+                    text: "這樣啊……好吧，我不會再管你了。<br><br>我要去尋找更適合我的同伴。",
+                    choices: [
+                        { text: "再見", action: "removeDialogue()" },
+                    ]
+                },
+
+
             },
         };
 
@@ -118,10 +135,7 @@
         function stealItem(itemId) {
             // 讓玩家確認
             let input = confirm("確定要偷走這個物品？");
-
-            if (!input) {
-                return;
-            }
+            if (!input) return;
 
             // 取得主角的敏捷
             const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
@@ -135,28 +149,24 @@
             console.log(`主角敏捷: ${player.dex.total}, NPC感知: ${npcWis}`);
             console.log(`偷竊成功率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
+            //如果雷納德在，會阻止主角
+            let reynald = teamMembers.find(m => m.name === "雷納德");
+            if (reynald) {
+                addPlayerFame(-1);
+                getEmotion(reynald.id, "reactToStealing");
+                showDialogue("偷竊失敗_雷納德在");
+                return;
+            }
+
             // 偷竊結果
             if (result.success === true) {
-                // 偷竊成功時
-                let item = itemDatabase.find(i => i.id === itemId);
-                playerItems.push(itemId);  // 把物品加入玩家背包
-                localStorage.setItem("playerItems", JSON.stringify(playerItems));
+                // 偷竊成功
+                getItem(itemId);
                 showDialogue("偷竊成功");
-
             } else {
-                // 偷竊失敗時
-                let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
-                let member = teamMembers.find(m => m.name === "雷納德");
-                if (member) {
-                    //如果雷納德在，會阻止主角
-                    addPlayerFame(-1);
-                    removeCompanion(member.id);
-                    showDialogue("偷竊失敗_雷納德在");
-                } else {
-                    // 否則會被警衛抓
-                    addWantedLevel(1); // 通緝等級上升
-                    showDialogue("偷竊失敗");
-                }
+                // 偷竊失敗
+                addWantedLevel(1); // 通緝等級上升
+                showDialogue("偷竊失敗");
             }
         }
 

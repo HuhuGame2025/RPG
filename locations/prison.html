@@ -488,17 +488,17 @@
             if (type === "搜索") {
                 if (randomValue <= 0.3) {
                     searchResult = 1;
-                    getItem("ironＷire", 1);
+                    getItem("ironＷire");
                     showDialogue("發現鐵絲");
 
                 } else if (randomValue <= 0.6) {
                     searchResult = 2;
-                    getItem("stone", 1);
+                    getItem("stone");
                     showDialogue("發現石頭");
 
                 } else if (randomValue <= 0.8) {
                     searchResult = 3;
-                    findMoney = Math.floor(Math.random() * 5);
+                    findMoney = Math.floor(Math.random() * 5) + 1; // 隨機撿到 1 ~ 5 元
                     getItem("$" + findMoney);
                     showDialogue("發現錢", findMoney);
 
@@ -511,7 +511,7 @@
             } else if (type === "扒竊") {
                 if (randomValue <= 0.5) {
                     searchResult = 4;
-                    getItem("key01", 1);
+                    getItem("key01");
                     showDialogue("發現鑰匙");
 
                 } else {
