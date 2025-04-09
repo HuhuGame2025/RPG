@@ -15,6 +15,9 @@
     <!-- 按鈕列 -->
     <div id="buttonBar"></div>
 
+    <!-- 通知框 -->
+   <div id="toast-container"></div>
+
     <!-- 主要內容區域 -->
     <div id= "main" class="main-content">
         <div class="header">    
@@ -176,7 +179,7 @@
                         choices: [
                             { text: "來吧", next: "來吧", condition: "!isTrue('欠賽恩一次')", action: "bloodSucked()" },
                             { text: "來吧", next: "來吧2", condition: "isTrue('欠賽恩一次')", action: "(bloodSucked(), bloodSucked(), turnSwitch('欠賽恩一次', false))" },
-                            { text: "今天不行", next: "不行", action: "getEmotion('賽恩', 'noBloodPaying')" },
+                            { text: "今天不行", next: "不行", action: "getEmotion('賽恩', 'noPaidWithBlood')" },
                         ]
                     },
                     "來吧": {
@@ -400,6 +403,7 @@
             if (npcName === "賽恩") {
                 // 如果是賽恩，吸 2 HP
                 addPlayerHP(-2);
+                getEmotion("賽恩", "paidWithBlood");
 
             } else if (npcName !== "賽恩" && isCompanion("雷納德") && isTrue('用血支付賽恩')) {
                 // 如果是其他吸血鬼，但賽恩在隊伍中，且已與賽恩談好用血支付，他會阻止吸血

@@ -14,10 +14,13 @@
 </head>
 <body>
     <!-- 返回按鈕 -->
-    <div class="button-bar header" id="buttonBar">
+    <div class="button-bar header animated" id="buttonBar">
         <button class="exit-button" onclick="goBack()">　〈 返回</button>
         <h3>角色</h3>
     </div>
+
+    <!-- 通知框 -->
+   <div id="toast-container"></div>
 
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
@@ -934,14 +937,14 @@
 
                 characterDiv.innerHTML = `
                     <div class="item center">
-                        <div class="column center">
+                        <div class="center">
                             <span class="note small">⇢ ${member.type} ⬸</span>
                             <div class="bottomborder">
                                 <h3>${member.name}</h3>
                                 <h4 class="hp" style="margin:5px 0;">${member.HP} / ${member.MaxHP}</h4>
                             </div>
                         </div>
-                        <div class="column row-buttons">
+                        <div class="row-buttons">
                             <button onclick="characterSheet('${member.id}')">🔎<span class="small">查看</span></button>
                             ${member.id !== "player" ? `
                                 <button onclick="getDialogueNpc('${member.id}')">💬<span class="small">交談</span></button>

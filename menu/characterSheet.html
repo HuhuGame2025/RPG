@@ -9,20 +9,32 @@
         body {
             background-color: #000 !important; /* 背景顏色 */
         }
+
+        .item {
+            margin-top: 0.5em;
+        }
         
     </style>
 </head>
 <body>
     <!-- 返回按鈕 -->
-    <div class="button-bar header" id="buttonBar">
+    <div class="button-bar header animated" id="buttonBar">
         <button class="exit-button" onclick="goBack()">　〈 返回</button>
         <h3>　</h3>
     </div>
+
+    <!-- 通知框 -->
+   <div id="toast-container"></div>
 
     <div class="main-content">
         <!-- 角色詳情 -->
         <div id="character-sheet">
         </div>
+
+        <br>
+        <!-- Top按紐 -->
+        <button class="top-button" onclick="goTop()"></button>
+
     </div>
 
     <script src="../script.js"></script>
@@ -105,7 +117,7 @@
                 <span class="small note">𒄬屬性</span>
                 <div class="item">
                     <div class="column-container bottomborder">
-                        <span class="column center">🫀 體質</span>
+                        <p class="column center">🫀 體質</p>
                         <div class="column row-buttons">
                             <span class="column center">${member.con.basic}</span>
                             <span class="column center note"></span>
@@ -162,9 +174,9 @@
 
                 <span class="small note">𒄬裝備</span>
                 <div class="item bottomborder">
-                    <div class="column-container">
-                        <button class="column center" onclick="chooseEquipment(member.name, 'weapon')">${weaponName}</button>
-                        <button class="column center" onclick="chooseEquipment(member.name, 'armor')">${armorName}</button>
+                    <div class="menu">
+                        <button onclick="chooseEquipment(member.name, 'weapon')">${weaponName}</button>
+                        <button onclick="chooseEquipment(member.name, 'armor')">${armorName}</button>
                     </div>
                     <div id="note"></div>
                     <div id="item-list"></div>
@@ -172,8 +184,15 @@
                 <br>
 
                 <span class="small note">𒄬特徵</span>
-                <div class="item">
+                <div class="item bottomborder">
                     <p>${member.description}</p>
+                </div>
+
+                <span class="small note">𒄬羈絆</span>
+                <div class="item">
+                    ${member.name === "雷納德" && isTrue('陪雷納德見夥伴3') ? `
+                        <p>你陪雷納德去見他昔日的夥伴，讓他放下心中的大石頭。</p>
+                    ` : "" }
                 </div>
             `;
             menu.appendChild(characterDiv);

@@ -261,14 +261,43 @@
         loadPartyData();
     }
 
-    // 顯示通知框
+    // 顯示通知框（3秒後消失）
     function showToast(message, duration = 3000) {
-        const toast = document.getElementById("toast");
-        toast.textContent = message;
-        toast.classList.add("show");
+        const toastContainer = document.getElementById("toast-container");
 
+        // 創建一個新的通知
+        const toast = document.createElement("div");
+        toast.classList.add("toast");
+    
+        // 設置通知的文本
+        toast.textContent = message;
+
+        // 創建關閉按鈕
+        const closeBtn = document.createElement("button");
+        closeBtn.classList.add("close-btn");
+        closeBtn.textContent = "×";
+        closeBtn.onclick = () => {
+            toast.classList.remove("show");
+            setTimeout(() => {
+                toastContainer.removeChild(toast);
+            }, 500);
+        };
+        toast.appendChild(closeBtn);
+
+        // 把通知加到容器中
+        toastContainer.appendChild(toast);
+
+        // 顯示通知
+        setTimeout(() => {
+            toast.classList.add("show");
+        }, 10); // 使用 setTimeout 確保動畫能正常運行
+
+        // 在指定時間後自動隱藏並移除通知
         setTimeout(() => {
             toast.classList.remove("show");
+            setTimeout(() => {
+                toastContainer.removeChild(toast);
+            }, 500);
         }, duration);
     }
 
@@ -366,7 +395,6 @@
             document.msExitFullscreen();
         }
     }
-
 
 // 事件相關
 
@@ -615,7 +643,7 @@
         equip("player", "clothes01"); 
 
         // 添加情緒
-        getEmotion("player", "fullHP"); 
+        getEmotion("player", "fullHP", false); 
 
 
         console.log("隊伍更新:", teamMembers);
@@ -666,7 +694,7 @@
         console.log("同伴加入", teamMembers);
 
         // 添加滿血情緒
-        getEmotion(companionId, "fullHP"); 
+        getEmotion(companionId, "fullHP", false); 
     }
 
     // 同伴離開隊伍（輸入 id 或 name 都可以）
@@ -1518,7 +1546,6 @@
         { type: "good", mood: 2, id: "hasComp2", name: "擁有兩名夥伴", indefinite: true },
         { type: "good", mood: 3, id: "hasComp3", name: "擁有三名夥伴", indefinite: true },
         { type: "good", mood: 1, id: "eatTogether", name: "和夥伴聚餐" },
-
         { type: "bad", mood: -1, id: "poor", name: "沒有錢", note: "財產少於 $ 50", indefinite: true },
         { type: "bad", mood: -1, id: "robbed", name: "被搶劫" },
         { type: "bad", mood: -1, id: "wanted", name: "被通緝", indefinite: true },
@@ -1541,8 +1568,8 @@
         { type: "bad", mood: -1, id: "reactToPeace", name: "無聊，我要看到血流成河", note: "成功說服敵人停戰" },
 
         // 賽恩
-        { type: "good", mood: 1, id: "fedblood", name: "鮮血款待", note: "你主動提供血" },
-        { type: "bad", mood: -1, id: "noBloodPaying", name: "沒有吸到血", note: "你拒絕讓他吸血" },
+        { type: "good", mood: 1, id: "paidWithBlood", name: "鮮血款待", note: "你允許他吸血" },
+        { type: "bad", mood: -1, id: "noPaidWithBlood", name: "沒有吸到血", note: "你拒絕讓他吸血" },
         { type: "bad", mood: -1, id: "vampireSucks", name: "獵物被染指", note: "你讓其他吸血鬼吸你的血" },
 
         // 艾德蒙
@@ -1569,7 +1596,7 @@
     ];
 
     // 獲得情緒（輸入 id 或 name 都可以）
-    function getEmotion(memberId, emotionId) {
+    function getEmotion(memberId, emotionId, toast = true) {
         // 取得該成員的資料
         let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
         let member = teamMembers.find(m => m.id === memberId || m.name === memberId);
@@ -1587,7 +1614,13 @@
         member.emotion.push(newEmotion);
 
         // 顯示通知
-        showToast(`${member.name}感覺${newEmotion.name}`);
+        if (toast) {
+            if (newEmotion.type === "good") {
+                showToast(`${member.name}因為${newEmotion.name}，心情變好了`);
+            } else {
+                showToast(`${member.name}因為${newEmotion.name}，心情變差了`);
+            }
+        }
 
         // 計算心情值
         member.mood += newEmotion.mood;

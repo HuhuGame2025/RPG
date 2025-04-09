@@ -9,11 +9,9 @@
         body {
         }
 
-
         .item {
             margin: 10px 0;
         }
-
 
         /* 選中的敵人 */
         .selected {
@@ -28,7 +26,6 @@
             border: 1px solid rgba(255, 255, 255, 1); /* 白框 */
             color: #fff;
         }
-
 
         /* HP 受到攻擊後變成紅字 */
         .red-hp {
@@ -50,17 +47,18 @@
             color: #999;
         }
 
-
-
     </style>
 </head>
 <body>
     <!-- 按鈕列 -->
     <div id="buttonBar"></div>
 
+    <!-- 通知框 -->
+   <div id="toast-container"></div>
+
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
-        <h3 id="situation"></h3>
+        <h3 id="situation" class="center"></h3>
 
         <div id="battle-content">
             <!-- 敵人列表 -->
@@ -84,11 +82,10 @@
             <!-- 隊伍按鈕 -->
             <p id="team-action" class="center"></p>
             <div class="menu">
-                <div class="menu team-btn">
-                    <button onclick="selectAttacker('team')">⚔️聯手攻擊</span></button>
-                    <button onclick="escape('team')">🏃一起逃跑</span></button>
+                <div class="row-buttons item background" id="team-btn">
+                    <button onclick="selectAttacker('team')">⚔️ <span class="small">聯手攻擊</span></button>
+                    <button onclick="escape('team')">🏃 <span class="small">一起逃跑</span></button>
                 </div>
-                <br>
                 <button onclick="endRound()">結束回合</button>
             </div>
         </div>
@@ -295,14 +292,10 @@
             // 檢查是否顯示隊伍按鈕
             if (availableMembers.length <  2) {
                 // 如果可行動的隊員不到 2 個，隱藏隊伍按鈕
-                document.querySelectorAll('.team-btn button').forEach(button => {
-                    button.style.display = "none";
-                });
+                document.getElementById("team-btn").style.display = "none";
             } else {
                 // 否則顯示
-                document.querySelectorAll('.team-btn button').forEach(button => {
-                    button.style.display = "block";
-                });
+                document.getElementById("team-btn").style.display = "flex";
             }
 
             // 如果物品中有可用的紅寶石，就顯示已獻祭的數量
@@ -569,6 +562,9 @@
                         // 顯示單獨擊殺訊息（在攻擊者的欄位）
                         localStorage.setItem(`${attackerId}-action-text`, texts.killEnemy(enemyName, damage));
                         showMember(singleAttacker);
+
+                        // 塔爾穆克添加情緒
+                        if (isCompanion("塔爾穆克")) getEmotion("塔爾穆克", "kill");
                     }
                     // 清除目標
                     localStorage.removeItem("selectedTarget");
@@ -645,9 +641,7 @@
                 });
 
                 // 隱藏聯手攻擊、一起逃跑按鈕
-                document.querySelectorAll('.team-btn button').forEach(button => {
-                    button.style.display = "none";
-                });
+                document.getElementById("team-btn").style.display = "none";
             } else {
                 // 單獨攻擊，隱藏攻擊者的攻擊、逃跑按鈕
                 document.querySelectorAll(`.${attackerId}-btn button`).forEach(button => {
@@ -678,7 +672,7 @@
                 let minDex = Infinity; // 設定初始值為無限大
                 availableMembers.forEach(member => {
                     if (member.dex.total < minDex) { // 如果找到更低的 dex，重置陣列，將該角色加入陣列
-                        minDex = member.dex.total; //更新最低 dex
+                        minDex = member.dex.total; // 更新最低 dex
                         minDexMembers = [member];
                     } else if (member.dex.total === minDex) {
                         minDexMembers.push(member); // 如果dex相同，將該角色加入陣列
@@ -774,9 +768,7 @@
                 });
 
                 // 隱藏聯手攻擊和一起逃跑按鈕
-                document.querySelectorAll('.team-btn button').forEach(button => {
-                    button.style.display = "none";
-                });
+                document.getElementById("team-btn").style.display = "none";
             } else {
                 // 單獨攻擊，隱藏逃跑者的攻擊、逃跑按鈕
                 document.querySelectorAll(`.${escaperId}-btn button`).forEach(button => {

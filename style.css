@@ -14,156 +14,6 @@
     background-blend-mode: multiply;
 }
 
-/* 元素 */
-
-    h1{
-        font-size: 1.8em;
-        color: white;
-    }
-
-    /* 列表標題 */
-    h3 {
-        color: white;
-        margin: 0.5em 0;
-    }
-
-    /* 名字、品名 */
-    h4 {
-        color: white;
-        margin: 0;
-        font-size: 1em;
-    }
-
-    a{
-        text-decoration: none; /* 移除超連結底線 */
-        color: #ccc;
-    }
-
-    p {
-        text-align: justify; /* 平均分布內文 */
-        margin-block-start: 0.5em;
-        margin-block-end: 0.5em;
-    }
-
-    /* 所有按鈕 */
-    button {
-        background-color: #222;
-        /*box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);*/
-        color: #ccc;
-        font-size: 1em;
-        border: none;
-        /*border: 1px solid #333;*/
-        padding: 10px 15px;
-        margin: 10px 5px;
-        cursor: pointer;
-        border-radius: 5px;
-        text-align: center;
-    }
-
-    button:hover {
-        background-color: #444;
-        color: #fff;
-    }
-
-    hr {
-        border: 1px solid #666;
-        margin: 30px 0;
-    }
-
-
-    /* 品項 */
-    .item {
-        padding: 10px 15px;
-        margin: 1em 0px;
-        background: #111;
-        border-radius: 5px; 
-    }
-
-    /* 深色背景 */
-    .background {
-        background-color: rgba(0, 0, 0, 0.6);
-        border-radius: 5px;
-        box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
-    }
-
-    /* 下框線 */
-    .bottomborder {
-        background: none;
-        border-radius: 0;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-    }
-
-    /* 初始隱藏 */
-    .hide {
-        display: none; 
-    }
-
-    /* 灰色字 */
-    .note {
-        color: #666;
-    }
-
-    /* 紅字 */
-    .warn {
-        color: #9B1212;
-    }
-
-    /* 置中 */
-    .center {
-        text-align: center;
-    }
-
-    /* 置右 */
-    .right {
-        text-align: right;
-    }
-
-    /* 靠上方 */
-    .top {
-        margin-top: 0;
-    }
-
-    /* 小字 */
-    .small {
-        font-size: 0.8em;
-    }
-
-    /* 小按鈕*/
-    .small-button {
-        padding: 5px 10px;
-        margin: auto;
-    }
-
-    /* HP 預設顏色 */
-    .hp {
-        font-size: 0.9em;
-        margin: 0;
-        color: #984B4B;
-    }
-
-    /* 通知 */
-    .toast {
-        font-size: 0.8em;
-        color: white;
-        background-color: #444;
-        position: fixed;
-        top: 30px;
-        left: 30px;
-        padding: 10px 15px;
-        border-radius: 15px;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.5s, transform 0.5s;
-        transform: translateY(-20px);
-        z-index: 9999;
-    }
-    .toast.show {
-        opacity: 1;
-        pointer-events: auto;
-        transform: translateY(0);
-    }
-
-
 /* 主要內容 */
     .main-content, .button-bar {
         width: 60%;
@@ -274,6 +124,171 @@
         border-right: 1px solid #333; /* 分隔線 */
     }
 
+/* 元素 */
+
+    h1{
+        font-size: 1.8em;
+        color: white;
+    }
+
+    /* 列表標題 */
+    h3 {
+        color: white;
+        margin: 0.5em 0;
+    }
+
+    /* 名字、品名 */
+    h4 {
+        color: white;
+        margin: 0;
+        font-size: 1em;
+    }
+
+    a{
+        text-decoration: none; /* 移除超連結底線 */
+        color: #ccc;
+    }
+
+    p {
+        text-align: justify; /* 平均分布內文 */
+        margin-block-start: 0.5em;
+        margin-block-end: 0.5em;
+    }
+
+    /* 所有按鈕 */
+    button {
+        background-color: #222;
+        /*box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);*/
+        color: #ccc;
+        font-size: 1em;
+        border: none;
+        /*border: 1px solid #333;*/
+        padding: 10px 15px;
+        margin: 10px 5px;
+        cursor: pointer;
+        border-radius: 5px;
+        text-align: center;
+    }
+
+    button:hover {
+        background-color: #444;
+        color: #fff;
+    }
+
+    hr {
+        border: 1px solid #666;
+        margin: 30px 0;
+    }
+
+
+    /* 品項 */
+    .item {
+        padding: 10px 15px;
+        margin: 1em 0px;
+        background: #111;
+        border-radius: 5px; 
+    }
+
+    /* 深色背景 */
+    .background {
+        background-color: rgba(0, 0, 0, 0.6);
+        border-radius: 5px;
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.1);
+    }
+
+    /* 下框線 */
+    .bottomborder {
+        background: none;
+        border-radius: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* 初始隱藏 */
+    .hide {
+        display: none; 
+    }
+
+    /* 灰色字 */
+    .note {
+        color: #666;
+    }
+
+    /* 紅字 */
+    .warn {
+        color: #9B1212;
+    }
+
+    /* 置中 */
+    .center {
+        text-align: center;
+    }
+
+    /* 置右 */
+    .right {
+        text-align: right;
+    }
+
+    /* 靠上方 */
+    .top {
+        margin-top: 0;
+    }
+
+    /* 小字 */
+    .small {
+        font-size: 0.8em;
+    }
+
+    /* 小按鈕*/
+    .small-button {
+        padding: 5px 10px;
+        margin: auto;
+    }
+
+    /* HP 預設顏色 */
+    .hp {
+        font-size: 0.9em;
+        margin: 0;
+        color: #984B4B;
+    }
+
+    /* 通知 */
+    #toast-container {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+    }
+    .toast {
+        font-size: 0.8em;
+        color: white;
+        background-color: #444;
+        padding: 10px 15px;
+        border-radius: 15px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s, transform 0.5s;
+        transform: translateY(-20px);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .toast.show {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+    /* 關閉按鈕 */
+    .toast .close-btn {
+        background: none;
+        border: none;
+        padding: 0;
+        margin: 0;
+        margin-left: 10px;
+    }
+
 /* 頭像 */
     .avatar {
         border-radius: 50%;
@@ -293,6 +308,15 @@
 /* 對話 */
 .dialogue-text {
     padding: 10px 20px;
+}
+
+/* 標題列 */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%; 
 }
 
 /* 上方按鈕列 */
@@ -344,15 +368,6 @@
         background-color: rgba(0, 0, 0, 0); 
     }
 
-/* 標題列 */
-.header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    width: 100%; 
-}
-
 /* 返回按鈕 */
     .exit-button {
         position: absolute;
@@ -371,9 +386,7 @@
 
 /* Top按鈕 */
     .top-button {
-        background-color: rgba(0, 0, 0, 0);
-        /*border-top: 2px solid #666;*/
-        border-radius: 5px;
+        background: none;
         width: 25px;
         height: 25px;
         position: fixed;
@@ -383,23 +396,13 @@
         display: flex;
         justify-content: center;
         align-items: center;
-    }
-    /* 用 CSS 畫箭頭 */
-    .top-button::before {
-        content: "";
-        width: 10px;
-        height: 10px;
-        border-left: 3px solid rgba(255, 255, 255, 0.5);
-        border-top: 3px solid rgba(255 255, 255, 0.5);
-        transform: rotate(45deg); /* 讓兩條線組成箭頭 */
-        position: absolute;
-        top: 35%;
+        margin: 0;
     }
     .top-button:hover {
         background: none;
     }
-    .top-button:hover::before {
-        border-left: 3px solid #fff;
-        border-top: 3px solid #fff;
+    /* 用 CSS 畫箭頭 */
+    .top-button::before {
+        content: "︿";
     }
 

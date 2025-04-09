@@ -13,7 +13,7 @@
             .controls {
                 display: flex;
                 text-align: center;
-                margin: 20px 0;
+                margin: 0;
             }
             .controls button {
                 background: none;
@@ -45,10 +45,10 @@
 
             /* 地圖單元格 */
             td {
-                font-size: 36px;
+                font-size: 32px;
                 position: relative;
-                width: 48px;
-                height: 48px;
+                width: 40px;
+                height: 40px;
                 text-align: center;
                 vertical-align: middle;
                 border: none;
@@ -56,21 +56,31 @@
             }
             td span {
                 position: absolute;
-                top: 14px; /* 比玩家稍高 */
-                left: 25px;
+                top: 12px; /* 比玩家稍高 */
+                left: 50%;
                 transform: translate(-50%, -50%); 
             }
 
+        /* 鎮名 */
+        .location-name {
+            font-size: 13px;
+            color: white;
+            top: -5px;
+            left: 50%;
+            width: 100%;
+        }
+
+
         /* 森林 */
             .forest-tree1 {
-                top: -5px;
-                left: 10px;
-                font-size: 28px;
+                top: -4px;
+                left: 8px;
+                font-size: 24px;
             }
             .forest-tree2 {
-                top: 5px;
-                left: -10px;
-                font-size: 34px;
+                top: 6px;
+                left: -6px;
+                font-size: 30px;
             }
 
             /* 沙漠 */
@@ -81,25 +91,19 @@
 
         /* 湖泊 */
             .lake {
-                font-size: 10px;
+                font-size: 8px;
                 color: #33BEFF;
                 background-color: rgba(0, 167, 245, 0.5); 
-                border-radius: 20px;
+                border-radius: 15px;
             }
             .lake-fish1 {
-                top: 16px;
-                left: 6px;
+                top: 0px;
+                left: -5px;
             }
             .lake-fish2 {
-                top: 0px;
-                left: -10px;
+                top: 15px;
+                left: 5px;
             }
-
-        /* 城鎮 */
-        .town {
-            /*background-color: rgba(208, 157, 103, 0.5); */
-            /*border-radius: 10px;*/
-        }
 
         /* 小屋 */
         .cabin {
@@ -108,37 +112,36 @@
 
         /* 農田 */
             .farm {
-                font-size: 12px;
+                font-size: 10px;
             }
             .farm-wheat1 {
                 top: 0px;
-                left: -8px;
+                left: -6px;
             }
             .farm-wheat2 {
                 top: 0px;
-                left: 8px;
+                left: 10px;
             }
             .farm-wheat3 {
                 top: 16px;
-                left: -14px;
+                left: -12px;
             }
             .farm-wheat4 {
                 top: 16px;
-                left: 2px;
+                left: 4px;
             }
         
         /* 玩家位置 */
             .player {
                 font-size: 24px;
                 position: absolute;
-                top: 25px;
-                left: 25px;
+                top: 18px;
             }
             .companion {
                 font-size: 24px;
                 position: absolute;
-                top: 30px;
-                left: 27px;
+                top: 25px;
+                left: 60%;
             }
 
         /* 任務標誌 */
@@ -155,6 +158,9 @@
 <body>
     <!-- 按鈕列 -->
     <div id="buttonBar"></div>
+
+    <!-- 通知框 -->
+    <div id="toast-container"></div>
 
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
@@ -229,13 +235,13 @@
             loadBackground(); // 讀取背景
         };
 
-        // 7x5 地圖 (x=0~6,y=0~4)
+        // 8x5 地圖 (x=0~7,y=0~4)
         const mapData = [
-            ["🌾", "🏘️", "🌾", "🌲", "🪨", "🌲", "🌲"],
-            ["🌾", "", "", "", "🌲", "🌲", "🛖"],
-            ["🌲", "🌲", "🌲", "", "🌲", "🪨", "🌲"],
-            ["🪨", "🐟", "🛖", "", "", "🐟", "🪨"],
-            ["🌲", "🏰", "🐟", "🌲", "🌾", "🏘️", "🌲"],
+            ["🌾", "🏘️", "🌾", "🌲", " 🪨 ", "🌲", "🌲", "🌲"],
+            ["🌾", "", "", "", "🌲", "🌲", "🛖", "🌲"],
+            ["🌲", "🌲", "🌲", "", "🌲", "🪨", "🐟", "🌲"],
+            ["🪨", "🐟", "🛖", "", "", "🌾", "🪨", "🌲"],
+            ["🌲", "🏰", "🌲", "🌲", "🐟", "🏘️", "🌲", "🌲"],
         ];
 
         // 定義圖標
@@ -248,6 +254,7 @@
             castle: "🏰",
             forest: "🌲",
             cave: "🪨",
+            thieves: " 🪨 ",
             desert: "🌵",
             lake: "🐟",
             quest: "❗",
@@ -255,11 +262,10 @@
         };
 
         // 地點
-        const locations = {
-            town01: { id:"town01", name: "晨曦鎮", x: 1, y: 0 },  
-            town02: { id:"town02", name: "鐵石鎮", x: 5, y: 4 }, 
-            thieves: { id:"thieves", name: "盜賊巢穴", x: 4, y: 0 }, 
-        };
+        const locations = [
+            { id: "town01", name: "晨曦鎮", x: 1, y: 0, visible: true },  
+            { id: "town02", name: "鐵石鎮", x: 5, y: 4, visible: true }, 
+        ];
 
         // 讀取角色位置，預設在 (2,2)
         let playerPos = JSON.parse(localStorage.getItem("playerPos")) || { x: 1, y: 1 };
@@ -973,7 +979,7 @@
     
             for (let y = 0; y < 5; y++) {
                 let row = document.createElement("tr");
-                for (let x = 0; x < 7; x++) {
+                for (let x = 0; x < 8; x++) {
                     let cell = document.createElement("td");
             
                     // 根據 mapData 的內容填入圖示
@@ -986,6 +992,16 @@
                         // 添加樣式
                         let iconName = Object.keys(icons).find(key => icons[key] === mapData[y][x]);
                         cell.classList.add(iconName);
+
+                        // 如果是城鎮，顯示鎮名
+                        locations.forEach(town => {
+                            if (x === town.x && y === town.y && town.visible) {
+                                let name = document.createElement("span");
+                                name.classList.add("location-name");
+                                name.textContent = town.name;
+                                cell.appendChild(name);
+                            }
+                        });
                     }
 
                     // 調整樣式
@@ -993,8 +1009,8 @@
                         // 如果是森林
                         let Icon = document.createElement("span");
                         Icon.innerHTML = `
-                            <span class="forest-tree1");>🌲</span>
-                            <span class="forest-tree2");>🌲</span>
+                            <span class="forest-tree1">🌲</span>
+                            <span class="forest-tree2">🌲</span>
                         `;
                         cell.innerHTML = ""; // 清空原本的icon
                         cell.appendChild(Icon);
@@ -1008,30 +1024,29 @@
                         // 如果是湖泊
                         let Icon = document.createElement("span");
                         Icon.innerHTML = `
-                            <span class="lake-fish1");>🐟</span>
-                            <span class="lake-fish2");>🐟</span>
+                            <span class="lake-fish1">🐟</span>
+                            <span class="lake-fish2">🐟</span>
                         `;
                         cell.innerHTML = ""; // 清空原本的icon
+                        cell.appendChild(Icon);
+
+                    } else if (mapData[y][x] === icons.thieves && localStorage.getItem("showThievesPos")) {
+                        // 如果是盜賊巢穴
+                        let Icon = document.createElement("span");
+                        Icon.textContent = icons.quest;
+                        Icon.classList.add("quest");
                         cell.appendChild(Icon);
 
                     } else if (mapData[y][x] === icons.farm) {
                         // 如果是農田
                         let Icon = document.createElement("span");
                         Icon.innerHTML = `
-                            <span class="farm-wheat1");>🌾</span>
-                            <span class="farm-wheat2");>🌾</span>
-                            <span class="farm-wheat3");>🌾</span>
-                            <span class="farm-wheat4");>🌾</span>
+                            <span class="farm-wheat1">🌾</span>
+                            <span class="farm-wheat2">🌾</span>
+                            <span class="farm-wheat3">🌾</span>
+                            <span class="farm-wheat4">🌾</span>
                         `;
                         cell.innerHTML = ""; // 清空原本的icon
-                        cell.appendChild(Icon);
-                    }
-
-                    // 檢查是否顯示盜賊巢穴
-                    if (x === locations.thieves.x && y === locations.thieves.y && localStorage.getItem("showThievesPos")) {
-                        let Icon = document.createElement("span");
-                        Icon.textContent = icons.quest;
-                        Icon.classList.add("quest");
                         cell.appendChild(Icon);
                     }
 
@@ -1063,15 +1078,6 @@
                 }
                 table.appendChild(row);
             }
-
-            // 計算距離最近的城鎮，儲存城鎮座標
-            let distance01 = Math.pow(playerPos.x - locations.town01.x, 2) + Math.pow(playerPos.y - locations.town01.y, 2);
-            let distance02 = Math.pow(playerPos.x - locations.town02.x, 2) + Math.pow(playerPos.y - locations.town02.y, 2);
-
-            // 比較並選擇較近的城鎮
-            let townPos = (distance01 <= distance02) ? locations.town01 : locations.town02;
-
-            localStorage.setItem("townPos", JSON.stringify(townPos));
         }
 
         // 角色移動
@@ -1080,12 +1086,24 @@
             let newY = playerPos.y + dy;
 
             // 確保不超出範圍，並且不能走進湖泊
-            if (newX >= 0 && newX < 7 && newY >= 0 && newY < 5 && mapData[newY][newX] !== icons.lake) {
+            if (newX >= 0 && newX < 8 && newY >= 0 && newY < 5 && mapData[newY][newX] !== icons.lake) {
                 // 更新位置
                 playerPos.x = newX;
                 playerPos.y = newY;
                 localStorage.setItem("playerPos", JSON.stringify(playerPos));
                 renderMap();
+
+                // 找到距離最近的城鎮，儲存城鎮座標
+                let shortestDistance = Infinity; // 設定初始值為無限大
+                locations.forEach(town => {
+                    // 計算距離
+                    let distance = Math.pow(playerPos.x - town.x, 2) + Math.pow(playerPos.y - town.y, 2);
+                    if (distance < shortestDistance) { // 如果找到更短的距離
+                        shortestDistance = distance; // 更新最短距離
+                        townPos = town; // 更新最近城鎮
+                    }
+                });
+                localStorage.setItem("townPos", JSON.stringify(townPos));
                 
                 // 當角色抵達某個格子時，變更背景圖，觸發遭遇
                 if (mapData[newY][newX] === "" || mapData[newY][newX] === icons.farm) {
@@ -1196,7 +1214,7 @@
                 loadBackground("cabin"); // 讀取背景
             
             // 位於盜賊巢穴
-            } else if (playerPos.x === locations.thieves.x && playerPos.y === locations.thieves.y) {
+            } else if (locationIcon === icons.thieves) {
                 let event = "盜賊巢穴";
 
                 // 檢查是否已完成事件
@@ -1413,11 +1431,8 @@
             const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             let minDex = Infinity; // 設定初始值為無限大
             teamMembers.forEach(member => {
-                if (member.dex.total < minDex) { // 如果找到更低的 dex，重置陣列，將該角色加入陣列
-                    minDex = member.dex.total; //更新最低 dex
-                    minDexMembers = [member];
-                } else if (member.dex.total === minDex) {
-                    minDexMembers.push(member); // 如果dex相同，將該角色加入陣列
+                if (member.dex.total < minDex) {
+                    minDex = member.dex.total; // 如果找到更低的 dex，更新最低 dex
                 }
             });
 
