@@ -14,333 +14,263 @@
     background-blend-mode: multiply;
 }
 
-h1{
-    font-size: 1.8em;
-    color: white;
-}
+/* 元素 */
 
-/* 列表標題 */
-h3 {
-    color: white;
-    margin: 0.5em 0;
-}
-
-/* 名字、品名 */
-h4 {
-    color: white;
-    margin: 0;
-    font-size: 1em;
-}
-
-
-a{
-    text-decoration: none; /* 移除超連結底線 */
-    color: #ccc;
-}
-
-p {
-    text-align: justify; /* 平均分布內文 */
-    margin-block-start: 0.5em;
-    margin-block-end: 0.5em;
-}
-
-
-/* 所有按鈕 */
-button {
-    background-color: #222;
-    /*box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);*/
-    color: #ccc;
-    font-size: 1em;
-    border: none;
-    /*border: 1px solid #333;*/
-    padding: 10px 15px;
-    margin: 10px 5px;
-    cursor: pointer;
-    border-radius: 5px;
-    text-align: center;
-}
-
-button:hover {
-    background-color: #444;
-    color: #fff;
-}
-
-hr {
-    border: 1px solid #666;
-    margin: 30px 0;
-}
-
-
-/* 主要頁面內容的空間 */
-.main-content, .button-bar {
-    width: 60%;
-    min-width: 400px;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-}
-@media (max-width: 480px) { /* 當螢幕小於 480px 時 */
-    .main-content, .button-bar {
-        width: 100%;
-        min-width: 100%;
-        max-width: none;
+    h1{
+        font-size: 1.8em;
+        color: white;
     }
-}
 
+    /* 列表標題 */
+    h3 {
+        color: white;
+        margin: 0.5em 0;
+    }
+
+    /* 名字、品名 */
+    h4 {
+        color: white;
+        margin: 0;
+        font-size: 1em;
+    }
+
+    a{
+        text-decoration: none; /* 移除超連結底線 */
+        color: #ccc;
+    }
+
+    p {
+        text-align: justify; /* 平均分布內文 */
+        margin-block-start: 0.5em;
+        margin-block-end: 0.5em;
+    }
+
+    /* 所有按鈕 */
+        button {
+            background-color: #222;
+            /*box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);*/
+            color: #ccc;
+            font-size: 1em;
+            border: none;
+            /*border: 1px solid #333;*/
+            padding: 10px 15px;
+            margin: 10px 5px;
+            cursor: pointer;
+            border-radius: 5px;
+            text-align: center;
+        }
+
+        button:hover {
+            background-color: #444;
+            color: #fff;
+        }
+
+        hr {
+            border: 1px solid #666;
+            margin: 30px 0;
+        }
+
+
+    /* 品項 */
+    .item {
+        padding: 10px 15px;
+        margin: 1em 0px;
+        background: #111;
+        border-radius: 5px; 
+    }
+
+    /* 深色背景 */
+    .background {
+        background-color: rgba(0, 0, 0, 0.6);
+        border-radius: 5px;
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
+    }
+
+    /* 下框線 */
+    .bottomborder {
+        background: none;
+        border-radius: 0;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    /* 初始隱藏 */
+    .hide {
+        display: none; 
+    }
+
+    /* 灰色字 */
+    .note {
+        color: #666;
+    }
+
+    /* 紅字 */
+    .warn {
+        color: #9B1212;
+    }
+
+    /* 置中 */
+    .center {
+        text-align: center;
+    }
+
+    /* 置右 */
+    .right {
+        text-align: right;
+    }
+
+    /* 靠上方 */
+    .top {
+        margin-top: 0;
+    }
+
+    /* 小字 */
+    .small {
+        font-size: 0.8em;
+    }
+
+    /* 小按鈕*/
+    .small-button {
+        padding: 5px 10px;
+        margin: auto;
+    }
+
+    /* HP 預設顏色 */
+    .hp {
+        font-size: 0.9em;
+        margin: 0;
+        color: #984B4B;
+    }
+
+/* 主要內容 */
+    .main-content, .button-bar {
+        width: 60%;
+        min-width: 400px;
+        max-width: 600px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    @media (max-width: 480px) { /* 當螢幕小於 480px 時 */
+        .main-content, .button-bar {
+            width: 100%;
+            min-width: 100%;
+            max-width: none;
+        }
+    }
 
 /* 一般選單 */
-.menu{
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-}
-
-.menu button {
-    width: 300px;
-    margin-left: auto;
-    margin-right: auto;
-}
-@media (max-width: 480px) { /* 當螢幕小於 480px 時 */
-    .menu button {
-        width: 80%;
+    .menu{
+        display: flex;
+        flex-direction: column;
+        text-align: center;
     }
-}
 
+    .menu button {
+        width: 300px;
+        margin-left: auto;
+        margin-right: auto;
+    }
+    @media (max-width: 480px) { /* 當螢幕小於 480px 時 */
+        .menu button {
+            width: 80%;
+        }
+    }
 
+/* 地點選單 */
+    .location-menu{
+        text-align: center;
+    }
+
+    .location-menu button{
+        width: 90px;
+        height: 90px;
+    }
+
+/* 兩欄容器 */
+    .column-container {
+        display: flex;
+        flex-wrap: wrap; /* 如果內容過長，允許換行 */
+        gap: 10px; /* 設定欄之間的間距 */
+        margin: 0;
+    }
+
+    /* 欄 */
+    .column {
+        flex: 1; /* 佔滿剩餘空間 */
+        margin: auto 0; /* 垂直置中 */
+        text-align: left;
+    }
+
+    /* 名字欄 */
+    .column-name {
+        flex: 0 0 120px; /* 欄的寬度 */
+        margin: auto 0; /* 垂直置中 */
+        text-align: center;
+    }
+
+    /* 小欄 */
+    .column-small {
+        flex: 0 0 60px; /* 欄的寬度 */
+        margin: auto 0; /* 垂直置中 */
+        text-align: center;
+    }
+
+    /* 欄內按鈕 */
+    .column button {
+        width: 90%;
+        margin-left: auto;
+        margin-right: auto;
+    }
+
+    /* 角色頁面名字 */
+    .column h3 {
+        color: white;
+        font-size: 1.1em;
+    }
+
+    /* 欄內提示 */
+    .column .note {
+        text-align: center;
+    }
+
+/* 按鈕列 */
+    .row-buttons {
+        display: flex;
+        text-align: center;
+    }
+
+    /* 按鈕列裡的按鈕 */
+    .row-buttons button {
+        flex: 1; /* 佔滿剩餘空間 */
+        margin: 5px 0;
+        padding: 5px;
+        font-size: 1em;
+        background: rgba(0,0,0,0);
+        border-radius: 0;
+    }
+    .row-buttons button:not(:last-child) {
+        border-right: 1px solid #333; /* 分隔線 */
+    }
+
+/* 頭像 */
+    .avatar {
+        border-radius: 50%;
+        box-shadow: 0 0 5px rgba(255, 255, 255, 0.4); /* 光暈 */
+        width: 75px;
+        height: 75px;
+        padding: 5px;
+        margin: 5px auto;
+        display: flex;           /* 啟用彈性盒模型 */
+        justify-content: center; /* 水平居中 */
+        align-items: center;     /* 垂直居中 */
+    }
+    .avatar span {
+        text-align: center;
+    }
+
+/* 對話 */
 .dialogue-text {
     padding: 10px 20px;
 }
-
-
-/* 標題列 */
-.header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    width: 100%;
-    
-}
-
-/* 返回按鈕 */
-.exit-button {
-    position: absolute;
-    left: 0; /* 靠左對齊 */
-    margin: 0;
-    padding: 0;
-    background: none;
-    box-shadow: none;
-    border: none;
-    color: #666;
-    font-size: 0.9em;
-}
-.exit-button:hover {
-    background: none;
-}
-
-
-/* Top按鈕 */
-.top-button {
-    background-color: rgba(0, 0, 0, 0);
-    /*border-top: 2px solid #666;*/
-    border-radius: 5px;
-    width: 25px;
-    height: 25px;
-    position: fixed;
-    bottom: 0;
-    right: 50%; /* 置中 */
-    transform: translateX(50%); /* 置中 */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
-/* 用 CSS 畫箭頭 */
-.top-button::before {
-    content: "";
-    width: 10px;
-    height: 10px;
-    border-left: 3px solid rgba(255, 255, 255, 0.5);
-    border-top: 3px solid rgba(255 255, 255, 0.5);
-    transform: rotate(45deg); /* 讓兩條線組成箭頭 */
-    position: absolute;
-    top: 35%;
-}
-.top-button:hover {
-    background: none;
-}
-.top-button:hover::before {
-    border-left: 3px solid #fff;
-    border-top: 3px solid #fff;
-}
-
-
-/* 地點選單 */
-.location-menu{
-    text-align: center;
-}
-
-.location-menu button{
-    width: 90px;
-    height: 90px;
-}
-
-
-/* 兩欄容器（戰鬥、商店） */
-.column-container {
-    display: flex;
-    flex-wrap: wrap; /* 如果內容過長，允許換行 */
-    gap: 10px; /* 設定欄之間的間距 */
-    margin: 0;
-}
-
-/* 品項 */
-.item {
-    padding: 10px 15px;
-    margin: 1em 0px;
-    background: #111;
-    border-radius: 5px; 
-}
-
-/* 欄 */
-.column {
-    flex: 1; /* 佔滿剩餘空間 */
-    margin: auto 0; /* 垂直置中 */
-    text-align: left;
-}
-
-/* 名字欄 */
-.column-name {
-    flex: 0 0 120px; /* 欄的寬度 */
-    margin: auto 0; /* 垂直置中 */
-    text-align: center;
-}
-
-/* 小欄 */
-.column-small {
-    flex: 0 0 60px; /* 欄的寬度 */
-    margin: auto 0; /* 垂直置中 */
-    text-align: center;
-}
-
-/* 欄內按鈕 */
-.column button {
-    width: 90%;
-    margin-left: auto;
-    margin-right: auto;
-}
-
-/* 欄內提示 */
-.column .note {
-    text-align: center;
-}
-
-/* 按鈕列 */
-.row-buttons {
-    display: flex;
-    text-align: center;
-}
-
-/* 按鈕列裡的按鈕 */
-.row-buttons button {
-    flex: 1; /* 佔滿剩餘空間 */
-    margin: 5px 0;
-    padding: 5px;
-    font-size: 1em;
-    background: rgba(0,0,0,0);
-    border-radius: 0;
-}
-.row-buttons button:not(:last-child) {
-    border-right: 1px solid #333; /* 分隔線 */
-}
-
-
-
-/* 角色頁面名字 */
-.column h3 {
-    color: white;
-    font-size: 1.1em;
-}
-
-/* 深色背景 */
-.background {
-    background-color: rgba(0, 0, 0, 0.6);
-    border-radius: 5px;
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);
-}
-
-/* 下框線 */
-.bottomborder {
-    background: none;
-    border-radius: 0;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* 初始隱藏 */
-.hide {
-    display: none; 
-}
-
-/* 灰色字 */
-.note {
-    color: #666;
-}
-
-/* 紅字 */
-.warn {
-    color: #9B1212;
-}
-
-/* 置中 */
-.center {
-    text-align: center;
-}
-
-/* 置右 */
-.right {
-    text-align: right;
-}
-
-/* 靠上方 */
-.top {
-    margin-top: 0;
-}
-
-/* 小字 */
-.small {
-    font-size: 0.8em;
-}
-
-/* 小按鈕*/
-.small-button {
-    padding: 5px 10px;
-    margin: auto;
-}
-
-/* 頭像 */
-.avatar {
-    border-radius: 50%;
-    box-shadow: 0 0 5px rgba(255, 255, 255, 0.4); /* 光暈 */
-    width: 75px;
-    height: 75px;
-    padding: 5px;
-    margin: 5px auto;
-    display: flex;           /* 啟用彈性盒模型 */
-    justify-content: center; /* 水平居中 */
-    align-items: center;     /* 垂直居中 */
-}
-.avatar span {
-    text-align: center;
-}
-
-
-/* HP 預設顏色 */
-.hp {
-    font-size: 0.9em;
-    margin: 0;
-    color: #984B4B;
-}
-
-
 
 /* 上方按鈕列 */
     .button-bar {
@@ -390,3 +320,63 @@ hr {
     .button-bar button:hover {
         background-color: rgba(0, 0, 0, 0); 
     }
+
+/* 標題列 */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    width: 100%; 
+}
+
+/* 返回按鈕 */
+    .exit-button {
+        position: absolute;
+        left: 0; /* 靠左對齊 */
+        margin: 0;
+        padding: 0;
+        background: none;
+        box-shadow: none;
+        border: none;
+        color: #666;
+        font-size: 0.9em;
+    }
+    .exit-button:hover {
+        background: none;
+    }
+
+/* Top按鈕 */
+    .top-button {
+        background-color: rgba(0, 0, 0, 0);
+        /*border-top: 2px solid #666;*/
+        border-radius: 5px;
+        width: 25px;
+        height: 25px;
+        position: fixed;
+        bottom: 0;
+        right: 50%; /* 置中 */
+        transform: translateX(50%); /* 置中 */
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    /* 用 CSS 畫箭頭 */
+    .top-button::before {
+        content: "";
+        width: 10px;
+        height: 10px;
+        border-left: 3px solid rgba(255, 255, 255, 0.5);
+        border-top: 3px solid rgba(255 255, 255, 0.5);
+        transform: rotate(45deg); /* 讓兩條線組成箭頭 */
+        position: absolute;
+        top: 35%;
+    }
+    .top-button:hover {
+        background: none;
+    }
+    .top-button:hover::before {
+        border-left: 3px solid #fff;
+        border-top: 3px solid #fff;
+    }
+
