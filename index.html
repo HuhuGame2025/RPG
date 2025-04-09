@@ -26,7 +26,7 @@
         body {
             background-color: #000 !important; /* 背景顏色 */
             padding: 0;
-            height: 110vh;
+            height: 101vh;
             position: relative
         }
 
@@ -53,10 +53,16 @@
             // 讀取上次的頁面位置（只能在伺服器上運作）
             const lastPage = localStorage.getItem("lastScene") || "title.html"; // 預設為標題頁面
             gameFrame.src = lastPage; // 在 iframe 載入頁面
-
-            // 畫面滾動到底部（為了隱藏網址列）
-            window.scrollTo({ bottom: 0 });
         }
+
+        // 畫面滾動到底部（為了觸發隱藏網址列）
+        window.addEventListener("load", () => {
+            setTimeout(() => {
+            window.scrollTo({
+                top: document.body.scrollHeight
+            });
+            }, 100);
+        });
 
         // 每當 iframe 載入完成，記錄目前頁面
         const gameFrame = document.getElementById("game-frame");

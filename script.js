@@ -261,6 +261,17 @@
         loadPartyData();
     }
 
+    // 顯示通知框
+    function showToast(message, duration = 3000) {
+        const toast = document.getElementById("toast");
+        toast.textContent = message;
+        toast.classList.add("show");
+
+        setTimeout(() => {
+            toast.classList.remove("show");
+        }, duration);
+    }
+
     // 替換靜態文字
     function replaceText(oldWord, newWord) {
         // 立即替換頁面中的文字
