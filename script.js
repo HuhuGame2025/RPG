@@ -178,7 +178,7 @@
         // 顯示對話 UI
         document.getElementById("dialogue").style.display = "block";
         const dialogueContainer = document.getElementById("dialogue");
-        if (dialogue.npc) { // 如果事件中有指定NPC
+        if (dialogue.npc && dialogue.choice) { // 如果有指定NPC也有選項
             // 對話的格式
             dialogueContainer.innerHTML = `
                 <br>
@@ -186,6 +186,16 @@
                 <div class="dialogue-text"><span id="npc-text"></span></div>
                 <br><br>
                 <h4>${playerName}：</h4>
+                <div id="choices" class="menu"></div>
+            `;
+        
+        } else if (dialogue.npc) { // 如果只有指定NPC，沒選項
+            // 對話的格式
+            dialogueContainer.innerHTML = `
+                <br>
+                <h4><span id="npc-name"></span>：</h4>
+                <div class="dialogue-text"><span id="npc-text"></span></div>
+                <br>
                 <div id="choices" class="menu"></div>
             `;
         
@@ -232,23 +242,45 @@
         const choicesContainer = document.getElementById("choices");
         choicesContainer.innerHTML = ""; 
 
-        // 建立選項按鈕
-        dialogue.choices.forEach(choice => {
-            // 滿足條件才顯示選項
-            if (!choice.condition || new Function(`return ${choice.condition}`)()) {
-                const button = document.createElement("button");
-                button.textContent = choice.text;
-                button.onclick = () => {
-                    showDialogue(choice.next); // 顯示下一個對話
+        // 如果有選項，顯示選項按鈕
+        if (dialogue.choices && dialogue.choices.length > 0) {
+            dialogue.choices.forEach(choice => {
+                // 滿足條件才顯示選項
+                if (!choice.condition || new Function(`return ${choice.condition}`)()) {
+                    const button = document.createElement("button");
+                    button.textContent = choice.text;
+                    button.onclick = () => {
+                        showDialogue(choice.next); // 顯示下一個對話
 
-                    // 如果選項有 action，執行它
-                    if (choice.action) {
-                        new Function(`return ${choice.action}`)();
-                    }
-                };
-                choicesContainer.appendChild(button);
-            }
-        });
+                        // 如果選項有 action，執行它
+                        if (choice.action) {
+                            new Function(`return ${choice.action}`)();
+                        }
+                    };
+                    choicesContainer.appendChild(button);
+                }
+            });
+        } else {
+            // 如果沒有選項，顯示「繼續」並自動進入下一個對話
+            const continueButton = document.createElement("button");
+            continueButton.textContent = "（繼續）";
+            continueButton.onclick = () => {
+                // 從字串中取出結尾的數字並加一
+                const match = key.match(/(.*?)-(\d+)$/);
+                let nextKey;
+
+                if (match) {
+                    const base = match[1]; // 文字部分
+                    const number = parseInt(match[2], 10); // 數字部分
+                    nextKey = `${base}-${number + 1}`; // 兩者組合
+                } else {
+                    // 如果沒有尾數，fallback 成 "next" 或其他預設值
+                    nextKey = "next";
+                }
+                showDialogue(nextKey);
+            };
+            choicesContainer.appendChild(continueButton);
+        }
 
         goTop();
     }
@@ -1488,6 +1520,7 @@
 
         // 雷納德
         { type: "good", mood: 1, id: "teamwork", name: "團隊合作", note: "聯手終結敵人" },
+        { type: "good", mood: 1, id: "reconciliation", name: "和夥伴和解", note: "見了羅文和戴瑞", indefinite: true },
         { type: "bad", mood: -1, id: "reactToStealing", name: "失望", note: "發現你偷竊" },
         { type: "bad", mood: -1, id: "selfBlame", name: "自責", note: "目睹你被敵人擊倒" },
 
@@ -1497,8 +1530,8 @@
 
         // 賽恩
         { type: "good", mood: 1, id: "fedblood", name: "鮮血款待", note: "你主動提供血" },
-        { type: "bad", mood: -1, id: "rejected", name: "被拒絕", note: "你拒絕被吸血" },
-        { type: "bad", mood: -1, id: "hateVampire", name: "討厭競爭者", note: "隊伍裡有吸血鬼" },
+        { type: "bad", mood: -1, id: "noBloodPaying", name: "沒有吸到血", note: "你拒絕讓他吸血" },
+        { type: "bad", mood: -1, id: "vampireSucks", name: "獵物被染指", note: "你讓其他吸血鬼吸你的血" },
 
         // 艾德蒙
         { type: "good", mood: 1, id: "gambleWin", name: "賭博贏錢" },
@@ -1523,11 +1556,11 @@
 
     ];
 
-    // 獲得情緒
+    // 獲得情緒（輸入 id 或 name 都可以）
     function getEmotion(memberId, emotionId) {
         // 取得該成員的資料
         let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
-        let member = teamMembers.find(m => m.id === memberId);
+        let member = teamMembers.find(m => m.id === memberId || m.name === memberId);
 
         // 找到情緒的資料
         const newEmotion = emotionData.find(e => e.id === emotionId);

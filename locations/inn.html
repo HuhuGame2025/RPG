@@ -176,7 +176,7 @@
                         choices: [
                             { text: "來吧", next: "來吧", condition: "!isTrue('欠賽恩一次')", action: "bloodSucked()" },
                             { text: "來吧", next: "來吧2", condition: "isTrue('欠賽恩一次')", action: "(bloodSucked(), bloodSucked(), turnSwitch('欠賽恩一次', false))" },
-                            { text: "今天不行", next: "不行" },
+                            { text: "今天不行", next: "不行", action: "getEmotion('賽恩', 'noBloodPaying')" },
                         ]
                     },
                     "來吧": {
@@ -247,9 +247,9 @@
                         ]
                     },
                     "不悅": {
-                        text: "你看不到賽恩的臉，但你感覺到憤怒的目光穿透他的面罩。<br><br>賽恩一句話也沒說，轉身就離開了旅館，直到隔天也沒回來。",
+                        text: "你看不到賽恩的臉，但你感覺到憤怒的目光穿透他的面罩。<br><br>賽恩一句話也沒說，轉身離開旅館，直到天亮才回來。",
                         choices: [
-                            { text: "繼續睡", next: "", action: "(removeCompanion('賽恩'), removeDialogue())" },
+                            { text: "繼續睡", next: "", action: "(getEmotion('賽恩', 'vampireSucks'), removeDialogue())" },
                         ]
                     },
                     "裝無辜": {
@@ -305,11 +305,10 @@
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
             
             // 檢查賽恩是否襲擊
-                const member = teamMembers.find(m => m.name.includes("賽恩"));
                 let nightWithSain = parseInt(localStorage.getItem("nightWithSain")) || 0;
             
                 // 賽恩首次襲擊
-                if (member && !isTrue('賽恩不再夜襲') && !isTrue('用血支付賽恩')) {
+                if (isCompanion("雷納德") && !isTrue('賽恩不再夜襲') && !isTrue('用血支付賽恩')) {
                     // 計算和賽恩過幾夜
                     if (nightWithSain < 3) { 
                         nightWithSain ++;
@@ -328,7 +327,7 @@
                 }
                 
                 // 用血支付賽恩
-                if (member && isTrue('用血支付賽恩')) {
+                if (isCompanion("雷納德") && isTrue('用血支付賽恩')) {
                     if (Math.random() <= 0.5) {  // 50% 機率吸血
                         localStorage.setItem("npcName", "賽恩");
                         showDialogue("日常吸血");
@@ -397,13 +396,12 @@
         function bloodSucked() {
             const npcName = localStorage.getItem("npcName");
             const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
-            const member = teamMembers.find(m => m.name.includes("賽恩"));
 
             if (npcName === "賽恩") {
                 // 如果是賽恩，吸 2 HP
                 addPlayerHP(-2);
 
-            } else if (npcName !== "賽恩" && member && isTrue('用血支付賽恩')) {
+            } else if (npcName !== "賽恩" && isCompanion("雷納德") && isTrue('用血支付賽恩')) {
                 // 如果是其他吸血鬼，但賽恩在隊伍中，且已與賽恩談好用血支付，他會阻止吸血
                 showDialogue("賽恩阻止");
 

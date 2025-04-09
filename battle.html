@@ -103,7 +103,7 @@
         // 顯示文本
         const texts = {
             noTarget: "請選擇一個敵人為目標",
-            noAttacker: "請選擇我方的行動",
+            noAttacker: "請選擇我方角色的行動",
             fightWin: (name, damage) => `擊中${name}(${damage})！`,
             fightWinWithStatus: (name, damage, status) => `擊中${name}(${damage})，使他${status}了！`,
             fightLose: (name) => `試圖攻擊${name}，但被躲開了`,
@@ -115,6 +115,7 @@
             teamKillEnemy: (name, damage) => `你們聯手打敗${name}(${damage})！`,
             escapeSuccess: "順利逃走了",
             escapeFail: "逃跑時被敵人阻擋了！",
+            teamEscapeSuccess: (name) => `${name}逃走了`,
             teamEscapeFail: (name) => `${name}跑不過敵人，你們只好停下來！`,
             enemyWin: (name, damage) => `擊中${name}(${damage})！`,
             enemyWinWithStatus: (name, damage, status) => `擊中${name}(${damage})，使他${status}了！`,
@@ -211,7 +212,7 @@
 
             // 顯示提示
             document.getElementById("team-note").textContent = texts.noAttacker;
-            document.getElementById("enemy-note").textContent = texts.noTarget;
+            
 
             // 創建敵人的圖像
             const enemyMenu = document.getElementById("enemy-container");
@@ -240,11 +241,11 @@
                 enemyMenu.appendChild(characterDiv);
 
                 // 如果已選為目標，加上 selected class
-                const selectedTarget = localStorage.getItem("selectedTarget");
-                if (selectedTarget === enemy.id) {
-                    document.getElementById(`${enemy.id}-avatar`).classList.add("selected");
-                    document.getElementById("enemy-note").textContent = ""; // 清除提示
-                }
+                //const selectedTarget = localStorage.getItem("selectedTarget");
+                //if (selectedTarget === enemy.id) {
+                //    document.getElementById(`${enemy.id}-avatar`).classList.add("selected");
+                //    document.getElementById("enemy-note").textContent = ""; // 清除提示
+                //}
             });
 
             // 創建隊員的圖像
@@ -419,9 +420,11 @@
                         <p id="${enemy.id}-status"></p>
                         <p id="${enemy.id}-action" class="battle-text"></p>
 
-                        <div id="${enemy.id}-btn" class="row-buttons">
-                            <button onclick="selectTarget('${enemy.id}')">⭕ <span class="small">選擇</span></button>
-                        </div>
+                        ${selectedAttacker ? `
+                            <div id="${enemy.id}-btn" class="row-buttons">
+                                <button onclick="selectTarget('${enemy.id}')">⊚ <span class="small">選擇</span></button>
+                            </div>
+                        ` : "" }
                     </div>
                 `;
                 menu.appendChild(characterDiv);
@@ -447,11 +450,11 @@
                 });
 
                 // 如果已選為目標，加上 selected class，並隱藏按紐
-                const selectedTarget = localStorage.getItem("selectedTarget");
-                if (selectedTarget === enemy.id) {
-                    document.getElementById(`${enemy.id}`).classList.add("selected");
-                    document.getElementById(`${enemy.id}-btn`).style.display = "none";
-                }
+                //const selectedTarget = localStorage.getItem("selectedTarget");
+                //if (selectedTarget === enemy.id) {
+                //    document.getElementById(`${enemy.id}`).classList.add("selected");
+                //    document.getElementById(`${enemy.id}-btn`).style.display = "none";
+                //}
         }
 
         let selectedAttacker = null; // 記錄攻擊者
@@ -461,25 +464,29 @@
             // 將選擇的角色設為攻擊者
             selectedAttacker = attackerId;
             document.getElementById("team-note").textContent = ""; // 清除提示
-            checkAndExecuteFight();
+            document.getElementById("enemy-note").textContent = texts.noTarget; // 顯示提示
+            //checkAndExecuteFight();
         }
 
         // 選擇目標敵人
         function selectTarget(targetId) {
             // 移除所有目標的 selected class
-            document.querySelectorAll(".selected").forEach(element => {
-                element.classList.remove("selected");
-            });
+            //document.querySelectorAll(".selected").forEach(element => {
+            //    element.classList.remove("selected");
+            //});
 
             // 為當前選中的目標加上 selected class，並清除欄位
-            document.getElementById(targetId).classList.add("selected");
-            document.getElementById(targetId + "-avatar").classList.add("selected");
-            document.getElementById("enemy-infor").innerHTML = "";
+            //document.getElementById(targetId).classList.add("selected");
+            //document.getElementById(targetId + "-avatar").classList.add("selected");
+            //document.getElementById("enemy-infor").innerHTML = "";
 
-            // 將選擇的敵人設為目標（儲存目標以防頁面刷新）
-            localStorage.setItem("selectedTarget", targetId);
-            document.getElementById("enemy-note").textContent = ""; // 清除提示
-            checkAndExecuteFight();
+            // 如果已經選擇攻擊者
+            if (selectedAttacker) {
+                // 將選擇的敵人設為目標（儲存目標以防頁面刷新）
+                localStorage.setItem("selectedTarget", targetId);
+                document.getElementById("enemy-note").textContent = ""; // 清除提示
+                checkAndExecuteFight();
+            }
         }
 
         // 檢查是否已選擇攻擊者和目標，然後執行攻擊
@@ -556,10 +563,7 @@
                         document.getElementById("team-action").textContent = texts.teamKillEnemy(enemyName, damage);
 
                         // 雷納德添加情緒
-                        let reynald = availableMembers.find(member => member.name === "雷納德")
-                        if (reynald) {
-                            getEmotion(reynald.id, "teamwork");
-                        }
+                        if (isCompanion("雷納德")) getEmotion("雷納德", "teamwork");
 
                     } else {
                         // 顯示單獨擊殺訊息（在攻擊者的欄位）
@@ -726,7 +730,7 @@
                     let escapers = availableMembers.map(member => member.name).join("、");
 
                     // 顯示一起逃跑成功訊息
-                    document.getElementById("team-action").textContent = texts.escapeSuccess(escapers);
+                    document.getElementById("team-action").textContent = texts.teamEscapeSuccess(escapers);
                     document.getElementById("member-infor").innerHTML = ""; // 清除欄位
 
                 } else {
@@ -1102,10 +1106,9 @@
                 });
 
                 // 如果主角死亡，雷納德添加情緒
-                let player = deadMembers.some(member => member.id === "player");
-                let reynald = teamMembers.find(member => member.name === "雷納德")
-                if (player && reynald) {
-                    getEmotion(reynald.id, "selfBlame");
+                let playerDead = deadMembers.some(member => member.id === "player");
+                if (playerDead && isCompanion("雷納德")) {
+                    getEmotion("雷納德", "selfBlame");
                 }
             }
 
