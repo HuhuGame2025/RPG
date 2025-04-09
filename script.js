@@ -1586,6 +1586,9 @@
         // 添加情緒
         member.emotion.push(newEmotion);
 
+        // 顯示通知
+        showToast(`${member.name}感覺${newEmotion.name}`);
+
         // 計算心情值
         member.mood += newEmotion.mood;
 

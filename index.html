@@ -26,13 +26,12 @@
         body {
             background-color: #000 !important; /* 背景顏色 */
             padding: 0;
-            height: 101vh;
-            position: relative
+            min-height: 100vh;
+            height: 100%; /* 多加保險 */
+            overflow: hidden; /* 避免 iOS 認定不需要隱藏網址列 */
         }
 
         iframe {
-            position: absolute;
-            top: 10vh;
             width: 100%;
             height: 100vh;
             border: none;
@@ -58,9 +57,7 @@
         // 畫面滾動到底部（為了觸發隱藏網址列）
         window.addEventListener("load", () => {
             setTimeout(() => {
-            window.scrollTo({
-                top: document.body.scrollHeight
-            });
+                window.scrollTo(0, 1); // iOS 上微小捲動，有助隱藏網址列
             }, 100);
         });
 
