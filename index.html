@@ -26,19 +26,21 @@
         body {
             background-color: #000 !important; /* 背景顏色 */
             padding: 0;
-            height: 120vh;
+            height: 110vh;
+            position: relative
         }
 
         iframe {
+            position: absolute;
+            top: 10vh;
             width: 100%;
-            height: 120vh;
+            height: 100vh;
             border: none;
         }
 
     </style>
 </head>
 <body>
-
 
     <!-- 遊戲畫面 -->
     <iframe id="game-frame"></iframe>
@@ -51,6 +53,9 @@
             // 讀取上次的頁面位置（只能在伺服器上運作）
             const lastPage = localStorage.getItem("lastScene") || "title.html"; // 預設為標題頁面
             gameFrame.src = lastPage; // 在 iframe 載入頁面
+
+            // 畫面滾動到底部（為了隱藏網址列）
+            window.scrollTo({ bottom: 0 });
         }
 
         // 每當 iframe 載入完成，記錄目前頁面

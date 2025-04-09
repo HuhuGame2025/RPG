@@ -46,29 +46,29 @@
     }
 
     /* 所有按鈕 */
-        button {
-            background-color: #222;
-            /*box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);*/
-            color: #ccc;
-            font-size: 1em;
-            border: none;
-            /*border: 1px solid #333;*/
-            padding: 10px 15px;
-            margin: 10px 5px;
-            cursor: pointer;
-            border-radius: 5px;
-            text-align: center;
-        }
+    button {
+        background-color: #222;
+        /*box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);*/
+        color: #ccc;
+        font-size: 1em;
+        border: none;
+        /*border: 1px solid #333;*/
+        padding: 10px 15px;
+        margin: 10px 5px;
+        cursor: pointer;
+        border-radius: 5px;
+        text-align: center;
+    }
 
-        button:hover {
-            background-color: #444;
-            color: #fff;
-        }
+    button:hover {
+        background-color: #444;
+        color: #fff;
+    }
 
-        hr {
-            border: 1px solid #666;
-            margin: 30px 0;
-        }
+    hr {
+        border: 1px solid #666;
+        margin: 30px 0;
+    }
 
 
     /* 品項 */
@@ -140,6 +140,29 @@
         margin: 0;
         color: #984B4B;
     }
+
+    /* 通知 */
+    .toast {
+        position: fixed;
+        bottom: 30px;
+        left: 30px;
+        background-color: #444;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 15px;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s, transform 0.5s;
+        transform: translateY(20px);
+        z-index: 9999;
+    }
+
+    .toast.show {
+        opacity: 1;
+        pointer-events: auto;
+        transform: translateY(0);
+    }
+
 
 /* 主要內容 */
     .main-content, .button-bar {
