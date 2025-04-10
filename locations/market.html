@@ -25,19 +25,20 @@
             <h1>商店街</h1>
         </div>
 
-        <p id="text">你來到了商店街，在這裡可以採購各種物品，也有人會收購你的戰利品。</p>
-        <p class="small">🪙 $<span id="playerMoney"></span></p>
-
         <!-- 選單 -->
         <div class="location-menu">
             <button onclick="showShop('blacksmith')">🔨<br>鐵匠鋪</button>
             <button onclick="showShop('grocery')">🫙<br>雜貨店</button>
             <button onclick="showShop('clothes')">🧥<br>服飾店</button>
-            <button onclick="loadPlayerItem()">💰<br>舊貨商</button>
+            <button onclick="showPlayerItems('sell')">♻️<br>舊貨商</button>
+            <button onclick="showDialogue('拍賣', threshold)">🪙<br>拍賣會</button>
         </div>
 
+        <p id="text">你來到了商店街，在這裡可以採購各種物品，也有人會收購你的戰利品。</p>
+        <p class="small">🪙 $<span id="playerMoney"></span></p>
+
+
         <!-- 商品列表 -->
-        
         <div id="item-list"></div>
         <br>
 
@@ -66,71 +67,83 @@
             blacksmith: "鐵匠鋪販售各種武器和盔甲。",
             grocery: "雜貨店販售旅行需要的補給品。",
             clothes: "服飾店販售最時尚的服裝精品。",
-            sellItem: "可以將冒險中獲得的戰利品售出。",
+            sell: "舊貨商會收購大部分的物品，價錢雖低但能馬上兌現。",
+            sellAtAuction: (threshold) => `價值高於 $${threshold} 的物品才能拍賣。`,
+            auction: "每件商品只能出價一次，出價最高越容易得標，得標後才需付款。",
             nothingToSell: "你目前沒有物品可賣。",
         };
 
         // 對話資料庫
         const dialogueData = {
             "商店街": {
-                "偷竊成功": {
-                    text: "你迅速將商品放進背包，沒有人看見。",
-                    choices: [
-                        { text: "（繼續）", next: "", action: "removeDialogue()" },
-                    ]
-                },
-                "偷竊失敗": {
-                    text: "正當你將商品放進背包時，店家大喊「小偷！」<br><br>守衛以最快的速度衝進了店裡。",
-                    choices: [
-                        { text: "（繼續）", next: "守衛抵達" },
-                    ]
-                },
-                "守衛抵達": {
-                    npc: "守衛",
-                    text: "在城裡犯罪是要付出代價的，放下武器，跟我們走！",
-                    choices: [
-                        { text: "投降", next: "", action: "arrested()" },
-                        { text: "抵抗", next: "", action: "battle(2, '守衛', 2, 'town.html')" },
-                    ]
-                },
-                "被守衛攔下": {
-                    npc: "守衛",
-                    text: "找到你了，罪犯！",
-                    choices: [
-                        { text: "投降", next: "", action: "arrested()" },
-                        { text: "抵抗", next: "", action: "battle(2, '守衛', '', 'town.html')" },
-                    ]
-                },
-                "偷竊失敗_雷納德在": {
-                    text: "正當你將商品放進背包時，雷納德阻止了你。<br><br>他將商品還回去，並為你的行為向店家道歉，對方看在雷納德的面子上才沒有追究。",
-                    choices: [
-                        { text: "（繼續）", next: "雷納德失望" },
-                    ]
-                },
-                "雷納德失望": {
-                    npc: "雷納德",
-                    text: "你在做什麼？竟然偷東西，你太讓我失望了……",
-                    choices: [
-                        { text: "我很抱歉", next: "向雷納德道歉" },
-                        { text: "別多管閒事", next: "叫雷納德別管", action: "removeCompanion('雷納德')"},
-                    ]
-                },
-                "向雷納德道歉": {
-                    npc: "雷納德",
-                    text: "知錯能改就好，下次別再做這種事了。",
-                    choices: [
-                        { text: "好的", action: "removeDialogue()" },
-                    ]
-                },
-                "叫雷納德別管": {
-                    npc: "雷納德",
-                    text: "這樣啊……好吧，我不會再管你了。<br><br>我要去尋找更適合我的同伴。",
-                    choices: [
-                        { text: "再見", action: "removeDialogue()" },
-                    ]
-                },
+                // 偷竊
+                    "偷竊成功": {
+                        text: "你迅速將商品放進背包，沒有人看見。",
+                        choices: [
+                            { text: "（繼續）", next: "", action: "removeDialogue()" },
+                        ]
+                    },
+                    "偷竊失敗": {
+                        text: "正當你將商品放進背包時，店家大喊「小偷！」<br><br>守衛以最快的速度衝進了店裡。",
+                        choices: [
+                            { text: "（繼續）", next: "守衛抵達" },
+                        ]
+                    },
+                    "守衛抵達": {
+                        npc: "守衛",
+                        text: "在城裡犯罪是要付出代價的，放下武器，跟我們走！",
+                        choices: [
+                            { text: "投降", next: "", action: "arrested()" },
+                            { text: "抵抗", next: "", action: "battle(2, '守衛', 2, 'town.html')" },
+                        ]
+                    },
+                    "被守衛攔下": {
+                        npc: "守衛",
+                        text: "找到你了，罪犯！",
+                        choices: [
+                            { text: "投降", next: "", action: "arrested()" },
+                            { text: "抵抗", next: "", action: "battle(2, '守衛', '', 'town.html')" },
+                        ]
+                    },
+                    "偷竊失敗_雷納德在": {
+                        text: "正當你將商品放進背包時，雷納德阻止了你。<br><br>他將商品還回去，並為你的行為向店家道歉，對方看在雷納德的面子上才沒有追究。",
+                        choices: [
+                            { text: "（繼續）", next: "雷納德失望" },
+                        ]
+                    },
+                    "雷納德失望": {
+                        npc: "雷納德",
+                        text: "你在做什麼？竟然偷東西，你太讓我失望了……",
+                        choices: [
+                            { text: "我很抱歉", next: "向雷納德道歉" },
+                            { text: "別多管閒事", next: "叫雷納德別管", action: "removeCompanion('雷納德')"},
+                        ]
+                    },
+                    "向雷納德道歉": {
+                        npc: "雷納德",
+                        text: "知錯能改就好，下次別再做這種事了。",
+                        choices: [
+                            { text: "好的", action: "removeDialogue()" },
+                        ]
+                    },
+                    "叫雷納德別管": {
+                        npc: "雷納德",
+                        text: "這樣啊……好吧，我不會再管你了。<br><br>我要去尋找更適合我的同伴。",
+                        choices: [
+                            { text: "再見", action: "removeDialogue()" },
+                        ]
+                    },
 
-
+                // 拍賣
+                    "拍賣": {
+                        npc: "拍賣會",
+                        text: "你可以在這拍賣物品或競標，隔天再來查看結果。",
+                        choices: [
+                            { text: "上架拍賣", next: "", action: "(showPlayerItems('sellAtAuction'), removeDialogue())" },
+                            { text: "查看拍賣品", next: "", action: "(showShop('auction'), removeDialogue())" },
+                            { text: "離開", next: "", action: "removeDialogue()" },
+                        ]
+                    },
             },
         };
 
@@ -172,18 +185,17 @@
             }
         }
 
-        // 顯示可販賣的物品
-        function loadPlayerItem() {
+        // 顯示主角物品
+        function showPlayerItems(usage) {
             // 顯示說明
-            document.getElementById("text").textContent = texts.sellItem;
+            if (usage === "sellAtAuction") {
+                document.getElementById("text").textContent = texts[usage](threshold);
+            } else {
+                document.getElementById("text").textContent = texts[usage];
+            }
 
             // 讀取主角的物品
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-
-            // 如果沒有物品，顯示沒有物品可賣的訊息
-            if (playerItems.length === 0) {
-               document.getElementById("text").textContent = texts.nothingToSell;
-            }
 
             // 統計物品數量
             let count = {};
@@ -196,15 +208,22 @@
             itemList.innerHTML = "";
 
             Object.keys(count).forEach(itemId => {
-                let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
+                //let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
+                let item = findItemData(itemId); // 從資料庫查找物品
+                if (!item) return;
+
+                // 如果是上架拍賣，排除價格未達門檻的物品
+                if (usage === "sellAtAuction" && item.price < threshold) return;
 
                 // 排除 specialItem 類型的物品和同伴專屬物品
-                if (item && item.type !== "specialItem" && !item.owner) {
+                if (item.type === "specialItem" || item.owner) return;
+
+                if (item) {
                     let itemDiv = document.createElement("div");
                     itemDiv.classList.add("item", "background");
 
                     // 顯示物品資料
-                    itemDiv.innerHTML = showItemHTML(item, count[itemId], "sell");
+                    itemDiv.innerHTML = showItemHTML(item, count[itemId], usage);
 
                     // 點擊物品時，顯示或隱藏描述
                     let itemElement = itemDiv.querySelector(".column-container");
@@ -217,6 +236,12 @@
                     itemList.appendChild(itemDiv);
                 }
             });
+
+            // 如果沒有物品，顯示沒有物品可賣的訊息
+            if (itemList.innerHTML === "") {
+               document.getElementById("text").textContent = texts.nothingToSell;
+               return;
+            }
         }
 
         // 賣出
@@ -282,8 +307,79 @@
             localStorage.setItem("playerItems", JSON.stringify(playerItems));
             localStorage.setItem("playerMoney", playerMoney);
 
-            // 重新顯示物品列表
-            loadPlayerItem();
+            // 重新顯示可販賣物品
+            showPlayerItems('sell');
+        }
+
+        // 拍賣品價格門檻
+        const threshold = 35;
+
+        // 上架拍賣
+        function listForAuction(itemId) {
+            // 讀取主角所有的物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            let item = findItemData(itemId); // 從資料庫查找物品
+
+            // 讀取拍賣品
+            let auctionItems = JSON.parse(localStorage.getItem("auctionItems")) || [];
+    
+            // 讓玩家輸入起標價
+            let input = prompt("設定起標價", item.price);
+
+            // 如果玩家按「取消」，則直接結束函式
+            if (input === null) return;
+
+            startingPrice = parseInt(input);
+
+            // 驗證輸入是否有效
+            if (isNaN(startingPrice) || startingPrice <= 0) {
+                alert("請輸入有效的價格");
+                return;
+            }
+
+            // 移除物品
+            let index = playerItems.indexOf(itemId);
+            if (index !== -1) {
+                playerItems.splice(index, 1); // 移除一個該物品
+            }
+
+            // 將物品加入拍賣品
+            item.startingPrice = startingPrice; // 設定起標價
+            item.seller = "player"; // 設定賣方為主角
+            auctionItems.push(item);
+
+            // 更新
+            localStorage.setItem("playerItems", JSON.stringify(playerItems));
+            localStorage.setItem("auctionItems", JSON.stringify(auctionItems));
+
+            // 重新顯示可拍賣物品
+            showPlayerItems('sellAtAuction');
+        }
+
+        // 取消拍賣
+        function delistFromAuction(itemId) {
+            // 讀取主角所有的物品
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+            // 讀取拍賣品
+            let auctionItems = JSON.parse(localStorage.getItem("auctionItems")) || [];
+            let item = auctionItems.find(i => i.id === itemId);
+
+            // 從拍賣品中移除物品
+            let index = auctionItems.indexOf(item);
+            if (index !== -1) {
+                auctionItems.splice(index, 1); // 移除一個該物品
+            }
+
+            // 將物品加入主角物品
+            playerItems.push(itemId);
+
+            // 更新
+            localStorage.setItem("playerItems", JSON.stringify(playerItems));
+            localStorage.setItem("auctionItems", JSON.stringify(auctionItems));
+
+            // 重新顯示拍賣品列表
+            showShop('auction');
         }
 
         // 檢查是否被通緝中

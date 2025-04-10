@@ -3,9 +3,8 @@
     color: #ccc; /* 文字顏色 */
     font-family: Arial, sans-serif;
     margin: 0;
-    padding: 20px;
-    padding-top: 50px;
-    height: 100vh;
+    padding: 50px 20px;            
+    min-height: 100vh;
     background-size: cover;
     background-position: center;
     background-attachment: fixed; /* 背景不捲動 */
@@ -176,8 +175,13 @@
     }
 
     hr {
-        border: 1px solid #666;
+        border: 1px solid rgba(255, 255, 255, 0.5);
         margin: 30px 0;
+    }
+
+    .light-hr {
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        margin: 10px 0;
     }
 
 
@@ -265,6 +269,7 @@
         font-size: 0.8em;
         color: white;
         background-color: #444;
+        box-shadow: 2px 2px 3px rgba(0,0,0,0.5);
         padding: 10px 15px;
         border-radius: 15px;
         opacity: 0;
@@ -272,8 +277,8 @@
         transition: opacity 0.5s, transform 0.5s;
         transform: translateY(-20px);
         display: flex;
-        justify-content: space-between;
-        align-items: center;
+        justify-content: space-between; /* 水平置中，要配合 display: flex */
+        align-items: center; /* 垂直置中，要配合 display: flex */
     }
     .toast.show {
         opacity: 1;
@@ -297,9 +302,9 @@
         height: 75px;
         padding: 5px;
         margin: 5px auto;
-        display: flex;           /* 啟用彈性盒模型 */
-        justify-content: center; /* 水平居中 */
-        align-items: center;     /* 垂直居中 */
+        display: flex;
+        justify-content: space-between; /* 水平置中，要配合 display: flex */
+        align-items: center; /* 垂直置中，要配合 display: flex */
     }
     .avatar span {
         text-align: center;

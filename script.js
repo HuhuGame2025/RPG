@@ -1180,18 +1180,30 @@
         // 單個商品 showShop(null, 'weapon01');        
         // 多個商品 showShop(null, ['weapon01', 'armor03', 'supply05']);
     function showShop(shopType, itemIds) {
-        let itemData = [];
-
-        // 依商店篩選物品，並顯示商店說明
-        if (shopType) {
-            itemData = itemDatabase.filter(i => i.shop === shopType); 
+        // 顯示商店說明（如果有）
+        if (texts && texts[shopType] && document.getElementById("text")) {
             document.getElementById("text").textContent = texts[shopType];
-        } else { // 沒有商店，只顯示指定商品
+        }
+
+        // 篩選商品
+        let itemData = [];
+        
+        if (shopType === "auction") {
+            // 如果是拍賣會
+            let auctionItems = JSON.parse(localStorage.getItem("auctionItems")) || [];
+            itemData = auctionItems;
+            
+        } else if (shopType) {
+            // 如果是商店，依商店類型篩選物品
+            itemData = itemDatabase.filter(i => i.shop === shopType); 
+        } else { 
+            // 如果沒有商店，只顯示指定商品
             if (!Array.isArray(itemIds)) {
                 itemIds = [itemIds]; // 如果只輸入單一字串，轉成陣列
             }
             itemData = itemDatabase.filter(i => itemIds.includes(i.id));
         }
+        console.log(itemData);
 
         // 顯示金錢
         const playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
@@ -1202,7 +1214,7 @@
             moneyDiv = document.createElement("div");
             moneyDiv.innerHTML = `
                 <p class="small">🪙 $<span id="playerMoney">${playerMoney}</span></p>
-            `
+            `;
             container.appendChild(moneyDiv);
         }
 
@@ -1223,8 +1235,8 @@
             itemDiv.classList.add("item", "background");
             
             // 顯示物品資料
-            if (shopType === "tavern") {
-                itemDiv.innerHTML = showItemHTML(item, null, "tavern");
+            if (shopType === "tavern" || shopType === "auction") {
+                itemDiv.innerHTML = showItemHTML(item, null, shopType);
             } else {
                 itemDiv.innerHTML = showItemHTML(item, null, "shop");
             }
@@ -1248,6 +1260,8 @@
             let itemPrice;
             if (usage === "shop" || usage === "tavern") {
                 itemPrice = "$" + item.price * 2; // 顯示商店價格（2倍）
+            } else if (usage === "auction") {
+                itemPrice = "$" + item.startingPrice; // 顯示起標價
             } else if (item.price) {
                 itemPrice = "$" + item.price; // 顯示賣出價格
             } else {
@@ -1268,10 +1282,13 @@
                         ${item.name}${count ? ` × ${count}` : "" }
                     </span>
 
+                    ${usage === "auction" ? `
+                        <span class="column-small small note">起標價</span>
+                    ` : "" }
                     ${usage !== "equip" ? `
                         <span class="column-small">${itemPrice}</span>
                     ` : "" }
-                
+
                     ${usage === "equip" ? `
                         <button class="small-button" onclick="(equip(memberId, '${item.id}'), showCharacterSheet())">
                             <span class="small">選擇</span>
@@ -1281,23 +1298,25 @@
                         <button class="small-button" onclick="sellItem('${item.id}')">
                             <spam class="small">賣出</span>
                         </button>` : "" }
+
                 </div>
 
                 <!-- 隱藏的物品描述、按鈕 -->
                 <div class="hided" style="display: none;">
+                    <hr class="light-hr">
                     <p class="small note">
                         ${item.description}
-                        ${item.needStr ? `<br>裝備者需要力量 ${item.needStr} 以上，否則會承受敏捷減值。` : ""}
+                        ${item.needStr ? `<br><span class="warn">需要力量 ${item.needStr}，否則會承受敏捷減值。</span>` : ""}
                     </p>
-                    <p class="small note">
-                        ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
-                        ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
-                        ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
-                        ${item.dex && !item.needStr ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
-                        ${item.heal ? `恢復 ${item.heal} HP` : ""}
+                    <p>
+                        ${item.str ? `<span class="small">⚔️ 力量</span> ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
+                        ${item.cha ? `<span class="small">✨ 魅力</span> ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
+                        ${item.arm ? `<span class="small">🛡️ 護甲</span> ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
+                        ${item.dex && !item.needStr ? `<span class="small">🏃 敏捷</span> ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
+                        ${item.heal ? `<span class="small">❤️‍🩹 恢復 HP</span> ${item.heal}` : ""}
                     </p>
-                    <p class="small note">
-                        ${item.addStatus ? `有 ${item.addChance*100}% 機率造成【${item.addStatus}】，目標${status.description}<br>` : ""}
+                    <p  class="small note">
+                        ${item.addStatus ? `${status.icon} ${item.addChance*100}% 機率造成【${item.addStatus}】，目標${status.description}` : ""}
                     </p>
 
                     ${usage === "inventory" ? `
@@ -1328,6 +1347,22 @@
                         </div>
                     ` : "" }
 
+                    ${usage === "sellAtAuction" ? `
+                        <div class="row-buttons">
+                            <button onclick="listForAuction('${item.id}')" class="small-button">
+                                <spam class="small">上架拍賣</span>
+                            </button>
+                        </div>
+                    ` : "" }
+
+                    ${usage === "auction" && item.seller === "player" ? `
+                        <div class="row-buttons">
+                            <button onclick="delistFromAuction('${item.id}')" class="small-button">
+                                <span class="small">取消拍賣</span>
+                            </button>
+                        </div>
+                    ` : "" }
+
                     ${usage === "tavern" ? `
                         <div class="row-buttons">
                             <button onclick="buyItem('${item.id}')" class="small-button">
@@ -1341,18 +1376,18 @@
             // 只顯示物品描述（用於查看角色身上的裝備）
             return `
                 <p class="small note">
-                    ${item.description ? `${item.description}<br>` : ""}
+                    ${item.description}
+                    ${item.needStr ? `<br><span class="warn">需要力量 ${item.needStr}，否則會承受敏捷減值。</span>` : ""}
                 </p>
-                <p class="small note">
-                    ${item.str ? `力量 ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
-                    ${item.cha ? `魅力 ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
-                    ${item.arm ? `護甲 ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
-                    ${item.dex && !item.needStr ? `敏捷 ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
-                    ${statusData[item.category] ? `[${item.category}] 造成${statusData[item.category].name}的機率 ${item.str * statusData[item.category].multiplier * 5}%<br>` : ""}
-                    ${item.heal ? `恢復 ${item.heal} HP` : ""}
+                <p>
+                    ${item.str ? `<span class="small">⚔️ 力量</span> ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
+                    ${item.cha ? `<span class="small">✨ 魅力</span> ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
+                    ${item.arm ? `<span class="small">🛡️ 護甲</span> ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
+                    ${item.dex && !item.needStr ? `<span class="small">🏃 敏捷</span> ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
+                    ${item.heal ? `<span class="small">❤️‍🩹 恢復 HP</span> ${item.heal}` : ""}
                 </p>
-                <p class="small note">
-                    ${item.needStr ? `裝備需求：力量 ${item.needStr} <br>（如果力量不足，會承受敏捷減值）` : ""}
+                <p  class="small note">
+                    ${item.addStatus ? `${status.icon} ${item.addChance*100}% 機率造成【${item.addStatus}】，目標${status.description}` : ""}
                 </p>
             `;
         }
@@ -1374,9 +1409,7 @@
             let input = prompt(`資金有 $${playerMoney}，要購買幾份？`, "1");
 
             // 如果玩家按「取消」，則直接結束函式
-            if (input === null) {
-                return;
-            }
+            if (input === null) return;
 
             buyAmount = parseInt(input);
 

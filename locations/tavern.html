@@ -8,6 +8,17 @@
     <style>
         body {
         }
+
+        .table {
+            background-color: rgba(0, 0, 0, 0.6);
+            border-radius: 5px;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);
+            min-height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
     </style>
 </head>
 <body>
@@ -458,8 +469,7 @@
                     .join(" ");
 
                 // 顯示桌上的餐點
-                document.getElementById("table").classList.add("background");
-                //document.getElementById("table").style.background = "#2E0F00"; // 桌子顏色
+                document.getElementById("table").classList.add("table");
                 document.getElementById("table").innerHTML = `
                     <div class="column-container">
                         ${teamMembers.length > 0 ? `<p class="column center">
@@ -473,7 +483,7 @@
                     </div>
 
                     <p class="center">
-                        <span style="font-size: 1.7em;">${mealDisplay}</span>
+                        ${mealDisplay ? `<span style="font-size: 1.7em;">${mealDisplay}</span>` : "" }
                         ${beerDisplay ? `${beerDisplay}` : "" }
                         ${!mealDisplay && !beerDisplay ? `<br>` : "" }
                     </p>

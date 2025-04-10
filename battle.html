@@ -564,7 +564,7 @@
                         showMember(singleAttacker);
 
                         // 塔爾穆克添加情緒
-                        if (isCompanion("塔爾穆克")) getEmotion("塔爾穆克", "kill");
+                        if (singleAttacker.name === "塔爾穆克") getEmotion("塔爾穆克", "kill");
                     }
                     // 清除目標
                     localStorage.removeItem("selectedTarget");
