@@ -137,36 +137,19 @@
         // 顯示對話 UI
         document.getElementById("dialogue").style.display = "block";
         const dialogueContainer = document.getElementById("dialogue");
-        if (dialogue.npc && dialogue.choice) { // 如果有指定NPC也有選項
-            // 對話的格式
-            dialogueContainer.innerHTML = `
-                <br>
+        dialogueContainer.innerHTML = `
+            <br>
+            ${dialogue.npc ? `
                 <h4><span id="npc-name"></span>：</h4>
-                <div class="dialogue-text"><span id="npc-text"></span></div>
-                <br><br>
-                <h4>${playerName}：</h4>
-                <div id="choices" class="menu"></div>
-            `;
-        
-        } else if (dialogue.npc) { // 如果只有指定NPC，沒選項
-            // 對話的格式
-            dialogueContainer.innerHTML = `
-                <br>
-                <h4><span id="npc-name"></span>：</h4>
-                <div class="dialogue-text"><span id="npc-text"></span></div>
-                <br>
-                <div id="choices" class="menu"></div>
-            `;
-        
-        } else {
-            // 事件的格式
-            dialogueContainer.innerHTML = `
-                <br>
-                <div class="dialogue-text"><span id="npc-text"></span></div>
-                <br>
-                <div id="choices" class="menu"></div>
-            `;
-        }
+            ` : "" }
+            <div class="dialogue-text"><span id="npc-text"></span></div>
+            <br>
+            ${dialogue.npc && dialogue.choices ? `
+                <br><h4>${playerName}：</h4>
+            ` : "" }
+            <div id="choices" class="menu"></div>
+            <div id="addition"></div>
+        `;
 
         // 如果有指定 price，儲存以備下次使用
         if (price) {
@@ -247,7 +230,7 @@
     // 清除對話
     function removeDialogue() {
         // 清除交談資料
-        localStorage.removeItem("npcId"); // 清除戰鬥中指定的交談對象
+        //localStorage.removeItem("npcId"); // 清除戰鬥中指定的交談對象
         localStorage.removeItem("persuadeResult");
         localStorage.removeItem("intimidateResult");
 
@@ -543,7 +526,7 @@
         { name: "塔爾穆克", type: "傭兵", description: "身材魁武的獸人狂戰士，背著一把巨大的戰斧，眼神充滿怒火。", cost: 150, con: 18, str: 18, dex: 10, wis: 10, cha: 7, weaponId: "npcWeapon02", armorId: "npcArmor02" },
         { name: "賽恩", type: "傭兵", description: "蒙面的刺客，整張臉隱藏在面罩下，沉默寡言，散發著一絲危險氣息。", cost: 120, con: 13, str: 13, dex: 18, wis: 14, cha: 10, weaponId: "npcWeapon03", armorId: "npcArmor03" },
         { name: "艾德蒙", type: "傭兵", description: "看起來像個小混混，不太正經，喜歡自吹自擂，給人感覺不怎麼可靠。", cost: 100, con: 12, str: 12, dex: 12, wis: 8, cha: 8, weaponId: "npcWeapon04", armorId: "npcArmor04" },
-        { name: "諾伊爾", type: "傭兵", description: "初出茅廬的高等精靈少年，一臉純真，但比起協助你，他看起來更需要協助。", cost: 90, con: 9, str: 9, dex: 16, wis: 16, cha: 18, weaponId: "npcWeapon05", armorId: "npcArmor05" }
+        { name: "諾伊爾", type: "傭兵", description: "初出茅廬的高等精靈少年，一臉純真，比起協助你，他看起來更需要協助。", cost: 90, con: 9, str: 9, dex: 16, wis: 16, cha: 18, weaponId: "npcWeapon05", armorId: "npcArmor05" }
     ];
 
     // 讀取隊伍資料
@@ -1069,7 +1052,7 @@
             for (let i = 0; i < count; i++) {
                 let index = playerItems.indexOf(itemId);
                 if (index !== -1) {
-                    playerItems.splice(index, 1); // 移除該物品
+                    playerItems.splice(index, 1); // 移除第一個該物品
                 } else {
                     break; // 沒有該物品就停止移除
                 }
@@ -1187,13 +1170,7 @@
 
         // 篩選商品
         let itemData = [];
-        
-        if (shopType === "auction") {
-            // 如果是拍賣會
-            let auctionItems = JSON.parse(localStorage.getItem("auctionItems")) || [];
-            itemData = auctionItems;
-            
-        } else if (shopType) {
+        if (shopType) {
             // 如果是商店，依商店類型篩選物品
             itemData = itemDatabase.filter(i => i.shop === shopType); 
         } else { 
@@ -1207,10 +1184,10 @@
 
         // 顯示金錢
         const playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
-        let container = document.getElementById("dialogue");  // 插入到對話區域
+        let container = document.getElementById("addition");  // 插入到對話區域
 
         let moneyDiv = document.getElementById("playerMoney");
-        if (!moneyDiv) { // 如果沒有欄位就建立
+        if (!moneyDiv) { // 如果沒有欄位就建立（用於對話中）
             moneyDiv = document.createElement("div");
             moneyDiv.innerHTML = `
                 <p class="small">🪙 $<span id="playerMoney">${playerMoney}</span></p>
@@ -1220,7 +1197,7 @@
 
         // 檢查並建立 item-list 容器
         let itemList = document.getElementById("item-list");
-        if (!itemList) { // 如果沒有容器就建立
+        if (!itemList) { // 如果沒有容器就建立（用於對話中）
             itemList = document.createElement("div");
             itemList.id = "item-list";
             container.appendChild(itemList);
@@ -1231,12 +1208,11 @@
 
         itemData.forEach(item => {
             let itemDiv = document.createElement("div");
-            let buyPrice = item.price * 2; // 顯示 2 倍價格
             itemDiv.classList.add("item", "background");
             
             // 顯示物品資料
-            if (shopType === "tavern" || shopType === "auction") {
-                itemDiv.innerHTML = showItemHTML(item, null, shopType);
+            if (shopType === "tavern") {
+                itemDiv.innerHTML = showItemHTML(item, null, "tavern");
             } else {
                 itemDiv.innerHTML = showItemHTML(item, null, "shop");
             }
@@ -1261,7 +1237,9 @@
             if (usage === "shop" || usage === "tavern") {
                 itemPrice = "$" + item.price * 2; // 顯示商店價格（2倍）
             } else if (usage === "auction") {
-                itemPrice = "$" + item.startingPrice; // 顯示起標價
+                itemPrice = "$" + item.startingPrice; // 拍賣中、流標，顯示起標價
+            } else if (usage === "sold") {
+                itemPrice = "$" + item.finalPrice; // 成交，顯示成交價
             } else if (item.price) {
                 itemPrice = "$" + item.price; // 顯示賣出價格
             } else {
@@ -1284,6 +1262,9 @@
 
                     ${usage === "auction" ? `
                         <span class="column-small small note">起標價</span>
+                    ` : "" }
+                    ${usage === "sold" ? `
+                        <span class="column-small small note">成交價</span>
                     ` : "" }
                     ${usage !== "equip" ? `
                         <span class="column-small">${itemPrice}</span>
@@ -1341,7 +1322,7 @@
                             <button onclick="buyItem('${item.id}')" class="small-button">
                                 <span class="small">購買</span>
                             </button>
-                            <button onclick="stealItem('${item.id}')" class="small-button">
+                            <button onclick="stealItem('${item.id}')" class="small-button" style="flex: 0 0 60px;">
                                 <span class="small warn">偷竊</span>
                             </button>
                         </div>
@@ -1357,8 +1338,16 @@
 
                     ${usage === "auction" && item.seller === "player" ? `
                         <div class="row-buttons">
-                            <button onclick="delistFromAuction('${item.id}')" class="small-button">
-                                <span class="small">取消拍賣</span>
+                            <button onclick="delistFromAuction('${item.id}', 'auction')" class="small-button">
+                                <span class="small">下架</span>
+                            </button>
+                        </div>
+                    ` : "" }
+
+                    ${usage === "sold" ? `
+                        <div class="row-buttons">
+                            <button onclick="delistFromAuction('${item.id}', 'sold')" class="small-button">
+                                <span class="small">收款</span>
                             </button>
                         </div>
                     ` : "" }
@@ -1822,10 +1811,10 @@
         localStorage.removeItem("drinkingResults");
         localStorage.removeItem("drinkingEnd");
 
-        // 重置雷納德
+        // 重置雷納德路過
         turnSwitch("雷納德路過", false);
 
-        // 重置冷卻中傭兵
+        // 重置離隊後冷卻中的傭兵
         localStorage.removeItem("cooldownMerc");
 
         // 抽天氣
@@ -1842,6 +1831,39 @@
         let randomIndex = Math.floor(Math.random() * weathers.length);
         let selectedWeather = weathers[randomIndex];
         localStorage.setItem("weather", JSON.stringify(selectedWeather));
+
+        // 如果有上架拍賣品，產生拍賣結果
+        let auctionItems = JSON.parse(localStorage.getItem("auctionItems")) || [];
+        if (auctionItems.length > 0) {
+            let soldItems = JSON.parse(localStorage.getItem("soldItems")) || [];
+
+            // 決定每件拍賣品是否成交
+            auctionItems.forEach(item => {
+                // 買方預算範圍
+                const min = Math.min(item.price, item.startingPrice); // 最小值為物品售價或起標價，看哪個比較低
+                const max = Math.floor(item.price * 2); // 最大值為售價的 2 倍
+
+                // 隨機決定買方預算
+                const buyerBudget = Math.floor(Math.random() * (max - min + 1)) + min;
+
+                // 如果預算達到起標價以上，成交
+                if (buyerBudget >= item.startingPrice) {
+                    // 加入成交商品
+                    soldItems.push({ ...item, finalPrice: buyerBudget });
+
+                    // 從拍賣品中移除
+                    let index = auctionItems.indexOf(item);
+                    if (index !== -1) {
+                        auctionItems.splice(index, 1); // 移除第一個該物品
+                    }
+                }
+            });
+
+            // 儲存
+            localStorage.setItem("soldItems", JSON.stringify(soldItems));
+            localStorage.setItem("auctionItems", JSON.stringify(auctionItems));
+        }
+
     }
 
 // 程式相關
@@ -1885,4 +1907,51 @@
         link.click();
         document.body.removeChild(link);
       }
+    }
+
+    // 匯出遊戲資料
+    function backupLocalStorage() {
+        // 取得 localStorage 中的所有資料
+        const data = {};
+
+        for (let i = 0; i < localStorage.length; i++) {
+            const key = localStorage.key(i); // 取得每一個鍵
+            const value = localStorage.getItem(key); // 取得該鍵對應的值
+            data[key] = value; // 存入備份對象
+        }
+
+        // 將資料轉換成 JSON 字串
+        const jsonData = JSON.stringify(data);
+
+        // 創建一個 Blob 對象，並將 JSON 字串轉換為 Blob
+        const blob = new Blob([jsonData], { type: 'application/json' });
+
+        // 創建一個下載連結
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(blob);
+        link.download = 'localStorage-backup.json'; // 設定下載的檔案名稱
+
+        // 模擬點擊下載連結，觸發下載
+        link.click();
+    }
+
+    // 讀取遊戲資料
+    function restoreLocalStorage(file) {
+        const reader = new FileReader();
+    
+        reader.onload = function(event) {
+            const data = JSON.parse(event.target.result); // 解析 JSON 資料
+        
+            // 將資料儲回 localStorage
+            for (const key in data) {
+                if (data.hasOwnProperty(key)) {
+                    localStorage.setItem(key, data[key]);
+                }
+            }
+
+            alert('讀取成功');
+        };
+
+        // 讀取檔案
+        reader.readAsText(file);
     }

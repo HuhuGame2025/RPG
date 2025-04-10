@@ -83,7 +83,7 @@
             <p id="team-action" class="center"></p>
             <div class="menu">
                 <div class="row-buttons item background" id="team-btn">
-                    <button onclick="selectAttacker('team')">⚔️ <span class="small">聯手攻擊</span></button>
+                    <button onclick="selectAttacker('team', 'attack')">⚔️ <span class="small">聯手攻擊</span></button>
                     <button onclick="escape('team')">🏃 <span class="small">一起逃跑</span></button>
                 </div>
                 <button onclick="endRound()">結束回合</button>
@@ -355,9 +355,9 @@
                         ${isAvailable ? `
                             <div class="row-buttons ${member.id}-btn">
                                 ${isPlayer ? `
-                                    <button onclick="talk()">💬<br><span class="small">交談</span></button>
+                                    <button onclick="selectAttacker('player', 'talk')">💬<br><span class="small">交談</span></button>
                                 ` : "" }
-                                <button onclick="selectAttacker('${member.id}')">⚔️<br><span class="small">攻擊</span></button>
+                                <button onclick="selectAttacker('${member.id}', 'attack')">⚔️<br><span class="small">攻擊</span></button>
                                 <button onclick="useItem('${member.id}')">💰<br><span class="small">物品</span></button>
                                 ${isFront ? `
                                     <button onclick="move('${member.id}')">👣<br><span class="small">後退</span></button>
@@ -453,9 +453,10 @@
         let selectedAttacker = null; // 記錄攻擊者
 
         // 選擇攻擊者（角色或同伴）
-        function selectAttacker(attackerId) {
+        function selectAttacker(attackerId, action) {
             // 將選擇的角色設為攻擊者
             selectedAttacker = attackerId;
+            selectedAction = action;
             document.getElementById("team-note").textContent = ""; // 清除提示
             document.getElementById("enemy-note").textContent = texts.noTarget; // 顯示提示
             //checkAndExecuteFight();
@@ -474,22 +475,27 @@
             //document.getElementById("enemy-infor").innerHTML = "";
 
             // 如果已經選擇攻擊者
-            if (selectedAttacker) {
+            if (selectedAttacker && selectedAction === "attack") {
                 // 將選擇的敵人設為目標（儲存目標以防頁面刷新）
-                localStorage.setItem("selectedTarget", targetId);
+                //localStorage.setItem("selectedTarget", targetId);
                 document.getElementById("enemy-note").textContent = ""; // 清除提示
-                checkAndExecuteFight();
+                fight(selectedAttacker, targetId);
+                selectedAttacker = null; // 重置攻擊者
+            } else if (selectedAttacker && selectedAction === "talk") {
+                document.getElementById("enemy-note").textContent = ""; // 清除提示
+                talk(targetId);
+                selectedAttacker = null; // 重置攻擊者
             }
         }
 
         // 檢查是否已選擇攻擊者和目標，然後執行攻擊
-        function checkAndExecuteFight() {
-            const selectedTarget = localStorage.getItem("selectedTarget");
-            if (selectedAttacker && selectedTarget) {
-                fight(selectedAttacker, selectedTarget);
-                selectedAttacker = null; // 重置攻擊者
-            }
-        }
+        //function checkAndExecuteFight() {
+        //    const selectedTarget = localStorage.getItem("selectedTarget");
+        //    if (selectedAttacker && selectedTarget) {
+        //        fight(selectedAttacker, selectedTarget);
+        //        selectedAttacker = null; // 重置攻擊者
+        //    }
+        //}
 
         // 攻擊邏輯
         function fight(attackerId, targetId) {
@@ -814,17 +820,17 @@
         }
 
         // 交談
-        function talk() {
+        function talk(targetId) {
             // 讀取所有敵人的資料
             let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
             let enemyType = enemies.length > 0 ? enemies[0].type : ""; // 取第一個敵人的類型
-            const selectedTarget = localStorage.getItem("selectedTarget");
+            //const selectedTarget = localStorage.getItem("selectedTarget");
 
             // 檢查敵人類型是不是智慧
             if (enemyType.includes("智慧")) {
-                if (selectedTarget) {
+                //if (selectedTarget) {
                     // 如果已選擇目標，就進入交談
-                    localStorage.setItem("npcId", selectedTarget); // 儲存交談對象
+                    localStorage.setItem("npcId", targetId); // 儲存交談對象
 
                     // 隱藏主角的攻擊、逃跑按鈕
                     document.querySelectorAll("player-btn button").forEach(button => {
@@ -835,13 +841,13 @@
                     
                     window.location.href = 'battleTalk.html'; // 跳轉到交談頁面
 
-                } else {
+                //} else {
                     // 如果還沒選擇目標，就顯示提示
-                    document.getElementById("note").textContent = texts.noTarget;
-                }
+                    //document.getElementById("enemy-note").textContent = texts.noTarget;
+                //}
             } else {
                 // 如果不是智慧，就顯示無法對話的提示
-                document.getElementById("note").textContent = texts.cannotTalk;
+                document.getElementById("enemy-note").textContent = texts.cannotTalk;
             }
         }
 

@@ -12,6 +12,11 @@
         
         input {
             font-size: 1em;
+            color: #ccc;
+            background: #111;
+            border: none;
+            border-radius: 15px;
+            padding: 10px 15px;
         }
     </style>
 </head>
@@ -25,13 +30,18 @@
     <!-- 通知框 -->
    <div id="toast-container"></div>
 
-    <div class="main-content">
+    <div id="main" class="main-content">
         <br>
 
          <!-- 選單 -->
-        <div class="menu">
-            <button onclick="aboutBattle()">戰鬥說明</button>
+        <div id="menu" class="menu">
+            <button onclick="backupLocalStorage()">匯出遊戲資料</button>
+            <button onclick="showFileInput()">讀取遊戲資料</button>
+            <input type="file" id="fileInput" onchange="handleFile(event)" style="display: none;">
+            <br>
+            <button onclick="showDialogue('start')">遊戲說明</button>
             <button onclick="preference()">偏好設定</button>
+            <br>
             <a href="../title.html"><button>回首頁</button></a>
         </div>
 
@@ -42,52 +52,129 @@
         <button class="top-button" onclick="goTop()"></button>
     </div>
 
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content"></div>
+
     <script src="../script.js"></script>
     <script>
     
         // 頁面載入時
         window.onload = function() {
-
+            localStorage.setItem("npcName", "說明");
         };
-        
-        // 戰鬥說明
-        function aboutBattle() {
-            document.getElementById("text").innerHTML = `
-                <h1>戰鬥說明</h1>
-                <hr>
-                <p>影響戰鬥的屬性有體質、力量、敏捷。</p>
-                <p>【體質】<br>角色的最大生命值等於體質的 3 倍。</p>
-                <p>【力量】<br>角色的攻擊造成的傷害等於力量。</p>
-                <p>【敏捷】<br>角色的敏捷越高，攻擊的命中率和逃跑的成功率越高。</p>
-                <hr>
-                <p>在戰鬥中，角色每回合都能選擇攻擊或逃跑。</p>
-                <p>【攻擊】<br>攻擊的命中率等於角色「敏捷」除以「角色敏捷 + 敵人敏捷」。<br>命中時造成等同於角色「力量」的傷害。</p>
-                <p>【逃跑】<br>逃跑的成功率等於角色「敏捷」除以「角色敏捷 + 敵人敏捷」。</p>
-                <hr>
-                <p>當隊伍中有 2 人以上還沒行動時，就可以使用聯手攻擊、一起逃跑。</p>
-                <p>【聯手攻擊】<br>採計所有攻擊者的敏捷，因此能大幅提高命中率，並造成等同所有攻擊者力量的傷害。</p>
-                <p>【一起逃跑】<br>採計敏捷最低成員的敏捷，因此只要該成員逃跑失敗，所有人都會一起失敗。</p>
-                <br>
-             `;
+
+        // 對話資料庫
+        const dialogueData = {
+            "說明": {
+                "start": {
+                    text: "",
+                    choices: [
+                        { text: "角色屬性", next: "角色屬性" },
+                        { text: "戰鬥規則", next: "戰鬥規則" },
+                        { text: "返回", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "角色屬性": {
+                    text: `<h4>角色屬性</h4>
+                        <div class="item bottomborder">
+                            <p>🫀 體質</p>
+                            <p>最大 HP 等於體質 × 3。</p>
+                        </div>
+                        <div class="item bottomborder">
+                            <p>⚔️ 力量</p>
+                            <p>角色攻擊造成的傷害等於力量。</p>
+                        </div>
+                        <div class="item bottomborder">
+                            <p>🏃 敏捷</p>
+                            <p>與命中、迴避、逃跑、潛行相關，每 1 點敏捷增加 2.5% 成功率。</p>
+                        </div>
+                        <div class="item bottomborder">
+                            <p>👁️ 感知</p>
+                            <p>發現敵人、避免被偷襲的能力。</p>
+                        </div>
+                        <div class="item bottomborder">
+                            <p>✨ 魅力</p>
+                            <p>在對話中說服對方的能力。</p>
+                        </div>
+                        <div class="item bottomborder">
+                            <p>🛡️ 護甲</p>
+                            <p>能抵銷敵人攻擊造成的傷害。</p>
+                        </div>
+                    `,   
+                    choices: [
+                        { text: "返回", next: "start" },
+                    ]
+                },
+                "戰鬥規則": {
+                    text: `
+                        <h4>戰鬥規則</h4>
+                        <p>採用回合制戰鬥，敵我隊伍輪流行動。</p>
+                        <div class="item bottomborder">
+                            <p>⚔️ 攻擊</p>
+                            <p>擲骰 1D20 + 角色敏捷/2，若能超過 10 + 目標敏捷/2，攻擊就會命中。</p>
+                            <p>傷害 = 角色力量 - 目標護甲</p>
+                        </div>
+                        <div class="item bottomborder">
+                            <p>👣 前進／後退</p>
+                            <p>角色可移動到前排或後排，直到進行其他動作。敵人會優先攻擊前排成員。</p>
+                        </div>
+                        <div class="item bottomborder">
+                            <p>🏃 逃跑</p>
+                            <p>擲骰 1D20 + 角色敏捷/2，若能超過 10 + 目標敏捷/2，就能逃離戰鬥。</p>
+                        </div>
+                        <div class="item bottomborder">
+                            <p>⚔️ 聯手攻擊</p>
+                            <p>尚未行動的我方成員同時攻擊，以「成員敏捷總和」計算命中率，命中後造成「成員力量總和」的傷害，比各自攻擊更有優勢。</p>
+                        </div>
+                        <div class="item bottomborder">
+                            <p>🏃 一起逃跑</p>
+                            <p>尚未行動的我方成員一起逃跑，以成員中「敏捷最低者」計算成功率，該成員失敗就會一起失敗，比各自逃跑更困難。</p>
+                        </div>
+                        <div class="item bottomborder">
+                            <p>💬 交談</p>
+                            <p>面對智慧生物時，可以透過威嚇、說服、收買來結束戰鬥。</p>
+                            <p>威嚇：只剩一個敵人時，我方最高力量大於敵人 HP（有能力一擊殺死敵人）就能成功。</p>
+                            <p>說服：擲骰 1D20 + 角色魅力/2，若能超過 10 + 目標感知/2，就能成功。</p>
+                            <p>收買：支付金錢就能成功。</p>
+                        </div>
+                    `,   
+                    choices: [
+                        { text: "返回", next: "start" },
+                    ]
+                },
+            },
         }
 
+
+        function showFileInput() {
+            document.getElementById("fileInput").style.display = "block";
+        }
+
+        // 讀取遊戲資料
+        function handleFile(event) {
+            const file = event.target.files[0];
+            if (file) {
+                restoreLocalStorage(file);
+            }
+        }
+        
         // 偏好設定
         function preference() {
+            document.getElementById("menu").style.display = "none";
+
             document.getElementById("text").innerHTML = `
-                <h1>偏好設定</h1>
-                <hr>
-                <h3>性別代名詞</h3>
-                <p class="note">會改變所有角色的性別。</p>
+                <h4>性別代名詞</h4>
+                <p class="note small">會改變所有角色的性別。</p>
                 <div class="column-container">
                     <button id="he-button" class="column center">他</button>
                     <button id="she-button" class="column center">她</button>
                 </div>
-                <hr>
-                <h3>自訂NPC名字</h3>
-                <div id="npc-name-settings" class="note"></div>
-                <div class="column-container">
-                    <button id="save-names" class="column center">儲存</button>
-                    <button id="reset-default" class="column center">恢復預設</button>
+                <br><br>
+                <h4>自訂NPC名字</h4>
+                <div id="npc-name-settings"></div>
+                <div class="menu">
+                    <button id="save-names">儲存</button>
+                    <button id="reset-default">恢復預設</button>
                 </div>
                 <br>
             `;
@@ -119,8 +206,8 @@
             npcList.forEach(npc => {
                 const storedName = localStorage.getItem(npc.key) || "";
                 npcContainer.innerHTML += `
-                    <div class="item">
-                        <p class="small"><label>${npc.label}：</label></p>
+                    <div class="item bottomborder">
+                        <label class="note small">${npc.label}：</label>
                         <p><input type="text" id="${npc.key}" value="${storedName}" placeholder="${npc.defaultName}"></p>
                     </div>
                 `;

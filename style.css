@@ -116,7 +116,7 @@
         margin: 5px 0;
         padding: 5px;
         font-size: 1em;
-        background: rgba(0,0,0,0);
+        background: rgba(50, 50, 50, 0.3);
         border-radius: 0;
     }
     .row-buttons button:not(:last-child) {
@@ -277,7 +277,7 @@
         transition: opacity 0.5s, transform 0.5s;
         transform: translateY(-20px);
         display: flex;
-        justify-content: space-between; /* 水平置中，要配合 display: flex */
+        justify-content: space-between;
         align-items: center; /* 垂直置中，要配合 display: flex */
     }
     .toast.show {
@@ -303,7 +303,7 @@
         padding: 5px;
         margin: 5px auto;
         display: flex;
-        justify-content: space-between; /* 水平置中，要配合 display: flex */
+        justify-content: center; /* 水平置中，要配合 display: flex */
         align-items: center; /* 垂直置中，要配合 display: flex */
     }
     .avatar span {

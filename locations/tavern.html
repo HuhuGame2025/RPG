@@ -14,9 +14,14 @@
             border-radius: 5px;
             box-shadow: 0 0 5px rgba(255, 255, 255, 0.4);
             min-height: 100px;
+            vertical-align: middle;
+
+            /* Flex 垂直水平置中 */
             display: flex;
-            align-items: center;
             justify-content: center;
+
+            /* 讓內部能換行或疊上下排 */
+            flex-direction: column;
         }
 
     </style>
@@ -35,7 +40,7 @@
             <h1>酒館</h1>
         </div>
 
-        <p id="text">你走進了酒館，這裡是認識其他冒險者的好地方。你可以雇用他們成為傭兵，直到當前的任務完成為止。</p>
+        <p id="text">酒館是認識其他冒險者的好地方，你可以雇用他們成為傭兵，直到當前的任務完成為止。</p>
         <p id="money" class="small">🪙 $<span id="playerMoney"></span></p>
     
         <!-- 商品列表 -->

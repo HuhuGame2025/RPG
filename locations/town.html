@@ -22,7 +22,6 @@
         <div class="header">
             <h1 id="townName">城鎮</h1>
         </div>
-        <p id="text">這裡是一座熱鬧的城鎮。</p>
 
         <!-- 地點選單 -->
         <div class="location-menu">
@@ -33,6 +32,8 @@
             <a href="arena.html"><button>⚔<br>競技場</button></a>
             <a href="station.html"><button>🛞<br>驛站</button></a>
         </div>
+
+        <p id="text"></p>
 
         <!-- 選單 -->
         <div class="menu">
@@ -74,6 +75,8 @@
         // 顯示文本
         const texts = {
             //tavernClose: "酒館今天已經打烊了，明天再去吧。",
+            "晨曦鎮": "這是一座熱鬧的城鎮，往來的旅行者和商人絡繹不絕。",
+            "鐵石鎮": "這座古老的小鎮散發著衰頹的氛圍，街上人煙稀少。",
         };
 
         // 顯示城鎮名稱
@@ -81,6 +84,7 @@
             // 讀取主角位置
             const playerPos = JSON.parse(localStorage.getItem("playerPos"));
             document.getElementById("townName").textContent = playerPos.name;
+            document.getElementById("text").textContent = texts[playerPos.name];
         }
 
         // 離開城鎮

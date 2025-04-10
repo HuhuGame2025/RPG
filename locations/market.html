@@ -31,7 +31,7 @@
             <button onclick="showShop('grocery')">🫙<br>雜貨店</button>
             <button onclick="showShop('clothes')">🧥<br>服飾店</button>
             <button onclick="showPlayerItems('sell')">♻️<br>舊貨商</button>
-            <button onclick="showDialogue('拍賣', threshold)">🪙<br>拍賣會</button>
+            <button onclick="showDialogue('拍賣', threshold)">🪙<br>拍賣場</button>
         </div>
 
         <p id="text">你來到了商店街，在這裡可以採購各種物品，也有人會收購你的戰利品。</p>
@@ -136,12 +136,23 @@
 
                 // 拍賣
                     "拍賣": {
-                        npc: "拍賣會",
-                        text: "你可以在這拍賣物品或競標，隔天再來查看結果。",
+                        text: "這裡是拍賣場，你可以將物品上架拍賣，隔天再來查看結果。",
                         choices: [
-                            { text: "上架拍賣", next: "", action: "(showPlayerItems('sellAtAuction'), removeDialogue())" },
-                            { text: "查看拍賣品", next: "", action: "(showShop('auction'), removeDialogue())" },
+                            { text: "上架拍賣", next: "上架拍賣", action: "showPlayerItems('sellAtAuction')" },
+                            { text: "查看拍賣品", next: "查看拍賣品", action: "showAuctionItems()" },
                             { text: "離開", next: "", action: "removeDialogue()" },
+                        ]
+                    },
+                    "上架拍賣": {
+                        text: "參加拍賣的物品至少需有 ${price} 的價值。",
+                        choices: [
+                            { text: "離開", next: "拍賣" },
+                        ]
+                    },
+                    "查看拍賣品": {
+                        text: "你上架的拍賣品。",
+                        choices: [
+                            { text: "離開", next: "拍賣" },
                         ]
                     },
             },
@@ -204,7 +215,13 @@
             });
 
             // 顯示物品列表
-            let itemList = document.getElementById("item-list");            
+            let itemList;
+            if (usage === "sell") {
+                itemList = document.getElementById("item-list");
+            } else {
+                itemList = document.getElementById("addition"); // 在對話中
+            }
+            
             itemList.innerHTML = "";
 
             Object.keys(count).forEach(itemId => {
@@ -312,9 +329,76 @@
         }
 
         // 拍賣品價格門檻
-        const threshold = 35;
+        const threshold = 50;
 
-        // 上架拍賣
+        // 顯示拍賣品
+        function showAuctionItems() {
+            const auctionItems = JSON.parse(localStorage.getItem("auctionItems")) || [];
+            const soldItems = JSON.parse(localStorage.getItem("soldItems")) || [];
+            const playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+
+            let container = document.getElementById("addition");  // 插入到對話區域
+            container.innerHTML = "";
+
+            // 列表結構
+            let menu = document.createElement("div");
+            menu.innerHTML = `
+                <p class="small">🪙 $${playerMoney}</p>
+                ${soldItems.length > 0 ? `
+                    <hr>
+                    <span>成交商品</span>
+                    <div id="soldItems-list"></div>
+                ` : "" }
+                ${auctionItems.length > 0 ? `
+                    <hr>
+                    <span>拍賣中商品</span>
+                    <div id="auctionItems-list"></div>
+                ` : "" }
+            `;
+            container.appendChild(menu);
+
+            // 顯示成交商品
+            let soldList = document.getElementById("soldItems-list");
+            soldItems.forEach(item => {
+                let itemDiv = document.createElement("div");
+                itemDiv.classList.add("item", "background");
+            
+                // 顯示物品資料
+                itemDiv.innerHTML = showItemHTML(item, null, "sold");
+
+                // 點擊物品時，顯示或隱藏詳細資訊
+                let itemElement = itemDiv.querySelector(".column-container");
+                let hidedElement = itemDiv.querySelector(".hided");
+
+                itemElement.addEventListener("click", () => {
+                    hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
+                });
+
+                soldList.appendChild(itemDiv);
+            });
+
+            // 顯示拍賣中商品
+            let auctionList = document.getElementById("auctionItems-list");
+            auctionItems.forEach(item => {
+                let itemDiv = document.createElement("div");
+                itemDiv.classList.add("item", "background");
+            
+                // 顯示物品資料
+                itemDiv.innerHTML = showItemHTML(item, null, "auction");
+
+                // 點擊物品時，顯示或隱藏詳細資訊
+                let itemElement = itemDiv.querySelector(".column-container");
+                let hidedElement = itemDiv.querySelector(".hided");
+
+                itemElement.addEventListener("click", () => {
+                    hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
+                });
+
+                auctionList.appendChild(itemDiv);
+            });
+        }
+
+        // 上架拍賣品
         function listForAuction(itemId) {
             // 讀取主角所有的物品
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
@@ -356,30 +440,36 @@
             showPlayerItems('sellAtAuction');
         }
 
-        // 取消拍賣
-        function delistFromAuction(itemId) {
-            // 讀取主角所有的物品
-            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-
+        // 下架拍賣品
+        function delistFromAuction(itemId, type) {
             // 讀取拍賣品
             let auctionItems = JSON.parse(localStorage.getItem("auctionItems")) || [];
-            let item = auctionItems.find(i => i.id === itemId);
-
-            // 從拍賣品中移除物品
-            let index = auctionItems.indexOf(item);
-            if (index !== -1) {
-                auctionItems.splice(index, 1); // 移除一個該物品
+            let soldItems = JSON.parse(localStorage.getItem("soldItems")) || [];
+            
+            let array;
+            if (type === "auction") { 
+                // 如果是拍賣中商品
+                let item = auctionItems.find(i => i.id === itemId);
+                let index = auctionItems.indexOf(item);
+                if (index !== -1) {
+                    auctionItems.splice(index, 1); // 移除第一個該物品
+                }
+                getItem(itemId); // 取回物品
+            } else if (type === "sold") { 
+                // 如果是成交商品
+                let item = soldItems.find(i => i.id === itemId);
+                let index = soldItems.indexOf(item);
+                if (index !== -1) {
+                    soldItems.splice(index, 1); // 移除第一個該物品
+                }
+                getItem("$" + item.finalPrice); // 獲得成交金額
             }
 
-            // 將物品加入主角物品
-            playerItems.push(itemId);
-
-            // 更新
-            localStorage.setItem("playerItems", JSON.stringify(playerItems));
             localStorage.setItem("auctionItems", JSON.stringify(auctionItems));
+            localStorage.setItem("soldItems", JSON.stringify(soldItems));
 
-            // 重新顯示拍賣品列表
-            showShop('auction');
+            // 重新顯示拍賣品
+            showAuctionItems('auction');
         }
 
         // 檢查是否被通緝中
