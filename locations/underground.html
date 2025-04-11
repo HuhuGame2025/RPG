@@ -53,7 +53,7 @@
             loadPartyData(); // 讀取隊伍資料
             loadEvent(); // 讀取進度
 
-            npcPreferences(); // NPC偏好設定
+            preferences(); // 偏好設定
             showButtonBar(); // 顯示按鈕列
             loadBackground("underground"); // 讀取背景
         };
@@ -300,23 +300,23 @@
                     text: "沃特遞給你高腳杯和一根針，然後轉過身去，給你一點空間。",
                     choices: [
                         { text: "刺破手指", next: "倒血", action: "addPlayerHP(-5)" },
-                        { text: "倒入血葡萄酒", next: "倒酒", condition: "isItem('bloodWine')", action: "loseItem('bloodWine')" },
+                        { text: "倒入血葡萄酒", next: "倒酒", condition: "hasItem('bloodWine')", action: "loseItem('bloodWine')" },
                     ]
                 },
                 "倒血": {
                     text: "你用針刺破手指，讓你的血流進杯子裡，盛滿一杯。",
                     choices: [
                         { text: "交給沃特", next: "交給沃特" },
-                        { text: "混入綠血", next: "混入綠血", condition: "isItem('specialItem15')", action: "loseItem('specialItem15')" },
-                        { text: "混入幽靈菇", next: "混入幽靈菇", condition: "isItem('specialItem16')", action: "loseItem('specialItem15')" },
+                        { text: "混入綠血", next: "混入綠血", condition: "hasItem('specialItem15')", action: "loseItem('specialItem15')" },
+                        { text: "混入幽靈菇", next: "混入幽靈菇", condition: "hasItem('specialItem16')", action: "loseItem('specialItem15')" },
                     ]
                 },
                 "倒酒": {
                     text: "趁沃特背對著你，你將血葡萄酒倒入杯中，希望他分辨不出來。",
                     choices: [
                         { text: "交給沃特", next: "交給沃特" },
-                        { text: "混入綠血", next: "混入綠血", condition: "isItem('specialItem15')", action: "loseItem('specialItem15')" },
-                        { text: "混入幽靈菇", next: "混入幽靈菇", condition: "isItem('specialItem16')", action: "loseItem('specialItem15')" },
+                        { text: "混入綠血", next: "混入綠血", condition: "hasItem('specialItem15')", action: "loseItem('specialItem15')" },
+                        { text: "混入幽靈菇", next: "混入幽靈菇", condition: "hasItem('specialItem16')", action: "loseItem('specialItem15')" },
                     ]
                 },
                 "混入綠血": {

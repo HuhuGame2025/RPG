@@ -179,7 +179,7 @@
                 <br>
                 <div class="menu">
                     <!-- 潛行開關 -->
-                    <button class="small-button" style="padding: 5px;" onclick="stealth()">
+                    <button class="small-button background" style="padding: 5px;" onclick="stealth()">
                         <input type="checkbox" id="stealthToggle">
                         <span class="small">潛行模式</span>
                         <span id="stealth-chance" class="note small"></span>
@@ -207,14 +207,17 @@
 
         </div>
 
-
-        <!-- 情況敘述 -->
-        <p id="situation"></p>
+        <!-- 敘述 -->
+        <p id="situation-text"></p>
+        <p id="location-text"></p>
 
         <!-- 選單 -->
         <div class="menu">
-            <div id="button-container"></div>
+            <div id="situation-menu"></div>
+            <div id="location-menu"></div>
         </div>
+        
+
     </div>
 
     <!-- 對話區域 -->
@@ -230,7 +233,7 @@
             showWeather(); // 顯示天氣
             loadStealth(); // 更新潛行開關
 
-            npcPreferences(); // NPC偏好設定
+            preferences(); // 偏好設定
             showButtonBar(); // 顯示按鈕列
             loadBackground(); // 讀取背景
         };
@@ -238,7 +241,7 @@
         // 8x5 地圖 (x=0~7,y=0~4)
         const mapData = [
             ["🌾", "🏘️", "🌾", "🌲", " 🪨 ", "🌲", "🌲", "🌲"],
-            ["🌾", "", "", "", "🌲", "🌲", "🛖", "🌲"],
+            ["🌲", "🌾", "", "", "🌲", "🌲", "🛖", "🌲"],
             ["🌲", "🌲", "🌲", "", "🌲", "🪨", "🐟", "🌲"],
             ["🪨", "🐟", "🛖", "", "", "🌾", "🪨", "🌲"],
             ["🌲", "🏰", "🌲", "🌲", "🐟", "🏘️", "🌲", "🌲"],
@@ -284,6 +287,7 @@
             castle: "眼前是一座陰森的古堡，看起來荒廢已久，成群的蝙蝠盤據在此。",
             castleCompleted: "眼前的是一座陰森的古堡，你已經探索過了。",
             nearLake: "你走向湛藍的湖泊，平靜的湖面之下深不可測，湖邊有小船出租。",
+            cabin: "這裡有一間破舊的小屋，看起來很久沒有人居住了。",
         };
 
         // 對話資料庫
@@ -1093,7 +1097,7 @@
                 localStorage.setItem("playerPos", JSON.stringify(playerPos));
                 renderMap();
 
-                // 找到距離最近的城鎮，儲存城鎮座標
+                // 計算距離最近的城鎮
                 let shortestDistance = Infinity; // 設定初始值為無限大
                 locations.forEach(town => {
                     // 計算距離
@@ -1103,41 +1107,43 @@
                         townPos = town; // 更新最近城鎮
                     }
                 });
-                localStorage.setItem("townPos", JSON.stringify(townPos));
+                localStorage.setItem("townPos", JSON.stringify(townPos)); // 儲存最近城鎮
                 
-                // 當角色抵達某個格子時，變更背景圖，觸發遭遇
-                if (mapData[newY][newX] === "" || mapData[newY][newX] === icons.farm) {
+                // 當角色抵達野外格子時，觸發遭遇
+                const locationIcon = mapData[playerPos.y][playerPos.x];
+                if (locationIcon === "") {
                     // 草原
                     localStorage.setItem("playerTerrain", "草原");
                     loadBackground("field"); // 讀取背景
                     window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
-                    return;
-
-                } else if (mapData[newY][newX] === icons.forest) {
+                } else if (locationIcon === icons.farm) {
+                    // 農田
+                    localStorage.setItem("playerTerrain", "農田");
+                    loadBackground("field"); // 讀取背景
+                    window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
+                } else if (locationIcon === icons.forest) {
                     // 森林
                     localStorage.setItem("playerTerrain", "森林");
                     loadBackground("forest"); // 讀取背景
                     window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
-                    return;
-
-                } else if (mapData[newY][newX] === icons.cave) {
+                } else if (locationIcon === icons.cave || locationIcon === icons.thieves) {
                     // 洞穴
                     localStorage.setItem("playerTerrain", "洞穴");
                     loadBackground("cave"); // 讀取背景
                     window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
-                    return;
+                } else {
+                    // 抵達安全區，清除之前的情況（解除被跟蹤）
+                    localStorage.removeItem("situation");
+                    showSituation(); // 顯示情況
                 }
-
-                localStorage.removeItem("situation"); // 如果在安全區，清除之前的情況
-                showSituation(); // 顯示情況
             
             // 走向湖
             } else if (mapData[newY][newX] === icons.lake) {
                 loadBackground("lake"); // 讀取背景
-                document.getElementById("situation").textContent = texts.nearLake;
+                document.getElementById("situation-text").textContent = texts.nearLake;
 
                 // 顯示按鈕
-                document.getElementById("button-container").innerHTML = `
+                document.getElementById("menu").innerHTML = `
                     <button id="situation-btn">🛶 租船（$5）</button>
                 `;
                 document.getElementById("situation-btn").addEventListener("click", function () {
@@ -1166,215 +1172,273 @@
             }
         }
 
-        // 顯示遭遇的情況
+        // 顯示情況
         function showSituation() {
             // 讀取情況，預設第 1 種
             let situation = parseInt(localStorage.getItem("situation")) || 1;
             console.log("情況：", situation);
-            const locationIcon = mapData[playerPos.y][playerPos.x];
-            const helpVictim = localStorage.getItem("helpVictim");
-            //situation = 8; // 測試用
-
-            // 清空按鈕
-            document.getElementById("button-container").innerHTML = "";
             
-            // 如果「幫助平民」後回到地圖
-            if (helpVictim === "true") { 
-                document.getElementById("situation").textContent = texts.helpVictim;
+            //situation = 8; // 測試用
+            
+            // 如果幫助平民後回到地圖
+            if (isTrue("幫助平民")) { 
+                document.getElementById("situation-text").textContent = texts.helpVictim;
                 let playerFame = parseInt(localStorage.getItem("playerFame"));
                 playerFame ++ ; // 名聲上升
                 localStorage.setItem("playerFame", playerFame);
-                localStorage.removeItem("helpVictim"); // 清除「幫助平民」開關
-
-            // 位於城鎮
-            } else if (locationIcon === icons.town) {
-                loadBackground("town"); // 讀取背景
-                const townPos = JSON.parse(localStorage.getItem("townPos")); // 讀取最近的城鎮位置
-                localStorage.setItem("playerPos", JSON.stringify(townPos)); // 更新主角的位置
-
-                document.getElementById("situation").textContent = texts.town(townPos.name);
-
-                // 顯示按鈕
-                document.getElementById("button-container").innerHTML = `
-                    <button id="situation-btn">🏘️ 進入城鎮</button>
-                `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
-                    // 檢查是否被通緝中
-                    const wantedLevel = parseInt(localStorage.getItem("wantedLevel")) || 0;
-                    if (wantedLevel > 0) {
-                        localStorage.setItem("npcName", "守衛");
-                        showDialogue("被守衛攔下");
-                    } else {
-                        window.location.href = 'locations/town.html'; // 跳轉到城鎮
-                    }
-                });
-
-            // 位於小屋
-            } else if (locationIcon === icons.cabin) {
-                loadBackground("cabin"); // 讀取背景
-            
-            // 位於盜賊巢穴
-            } else if (locationIcon === icons.thieves) {
-                let event = "盜賊巢穴";
-
-                // 檢查是否已完成事件
-                const completedEvents = JSON.parse(localStorage.getItem("completedEvents")) || [];
-                let isCompleted = completedEvents.find(d => d === event);
-                if (isCompleted) {
-                    // 顯示探索過的訊息
-                    document.getElementById("situation").textContent = texts.thievesCompleted;
-                    return;
-                }
-
-                // 檢查是否已在事件中
-                const inEvent = localStorage.getItem("inEvent");
-                if (inEvent === event) {
-                    localStorage.setItem("npcName", event);
-                    showDialogue(); // 從上次的進度繼續
-                    return;
-                }
-                
-                // 顯示抵達的訊息
-                document.getElementById("situation").textContent = texts.thieves;
-
-                // 顯示按鈕
-                document.getElementById("button-container").innerHTML = `
-                    <button id="situation-btn">進入洞穴</button>
-                `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
-                    localStorage.setItem("inEvent", event); // 儲存事件
-                    localStorage.setItem("npcName", event); // 用對話系統執行事件
-                    showDialogue("start"); // 從頭開始
-                });
-            
-            // 位於古堡
-            } else if (locationIcon === icons.castle) {
-                let event = "古堡";
-                loadBackground("castle"); // 讀取背景
-
-                // 檢查是否已完成事件
-                const completedEvents = JSON.parse(localStorage.getItem("completedEvents")) || [];
-                let isCompleted = completedEvents.find(d => d === event);
-                if (isCompleted) {
-                    // 顯示探索過的訊息
-                    document.getElementById("situation").textContent = texts.castleCompleted;
-                    return;
-                }
-
-                // 檢查是否已在事件中
-                const inEvent = localStorage.getItem("inEvent");
-                if (inEvent === event) {
-                    localStorage.setItem("npcName", event);
-                    showDialogue(); // 從上次的進度繼續
-                    return;
-                }
-
-                // 顯示抵達的訊息
-                document.getElementById("situation").textContent = texts.castle;
-
-                // 顯示按鈕
-                document.getElementById("button-container").innerHTML = `
-                    <button id="situation-btn">進入古堡</button>
-                `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
-                    localStorage.setItem("inEvent", event); // 儲存事件
-                    localStorage.setItem("npcName", event); // 用對話系統執行事件
-                    showDialogue("start"); // 從頭開始
-                });
-            
-            // 平安無事
-            } else if (situation === 1) {
-                document.getElementById("situation").textContent = "";
-
-            // 發現無防備的敵人
-            } else if (situation === 4) {
-                //讀取發現的成員
-                const awaredMembers = JSON.parse(localStorage.getItem("awaredMembers")) || [];
-                const memberName = awaredMembers.join("、");
-
-                // 讀取敵人
-                const enemyCount = parseInt(localStorage.getItem("enemyCount"));
-                const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-
-                // 判斷量詞
-                let unitWord;
-                if (enemies[0].type.includes("類人")) {
-                    unitWord = "個";
-                } else {
-                    unitWord = "隻";
-                }
-
-                document.getElementById("situation").textContent = texts.chance(memberName, enemyCount, unitWord, enemies[0].name);
-
-                // 按鈕
-                document.getElementById("button-container").innerHTML = `
-                    <button id="situation-btn">⚔️ 偷襲</button>
-                `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
-                    window.location.href = 'battle.html';
-                });
-
-            // 被跟蹤
-            } else if (situation === 5) {
-                // 讀取發現的成員
-                const awaredMembers = JSON.parse(localStorage.getItem("awaredMembers")) || [];
-                const memberName = awaredMembers.join("、");
-
-                document.getElementById("situation").textContent = texts.followed(memberName);
-
-                // 按鈕
-                document.getElementById("button-container").innerHTML = `
-                    <button id="situation-btn">⚔️ 應戰</button>
-                `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
-                    window.location.href = 'battle.html';
-                });
-            
-            // 巡邏隊
-            } else if (situation === 6) {
-                document.getElementById("situation").textContent = texts.guards;
-
-                // 按鈕
-                document.getElementById("button-container").innerHTML = `
-                  <button onclick="fastTravel()">跟著巡邏隊回城</button>`;
-
-            // 被襲擊的路人
-            } else if (situation === 7) {
-                const enemyCount = parseInt(localStorage.getItem("enemyCount"));
-                const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-
-                // 判斷量詞
-                let unitWord;
-                if (enemies[0].type.includes("類人")) {
-                    unitWord = "個";
-                } else {
-                    unitWord = "隻";
-                }
-
-                document.getElementById("situation").textContent = texts.victim(enemyCount, unitWord, enemies[0].name);
-
-                // 按鈕
-                document.getElementById("button-container").innerHTML = `
-                    <button id="situation-btn">⚔️ 幫助平民</button>
-                `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
-                    localStorage.setItem("helpVictim", "true");
-                    window.location.href = 'battle.html';
-                });
-                
-            // 哥布林商人
-            } else if (situation === 8) {
-                document.getElementById("situation").textContent = texts.merchant;
-
-                // 按鈕
-                document.getElementById("button-container").innerHTML = `
-                    <button id="situation-btn">交談</button>
-                `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
-                    localStorage.setItem("npcName", "拉茲");
-                    showDialogue("start");
-                });
+                turnSwitch("幫助平民", false); // 清除幫助平民
             }
+            
+            // 判斷情況
+                document.getElementById("situation-text").textContent = ""; // 清空訊息
+                document.getElementById("situation-menu").innerHTML = ""; // 清空按鈕
+
+                // 發現無防備的敵人
+                if (situation === 4) {
+                    //讀取發現的成員
+                    const awaredMembers = JSON.parse(localStorage.getItem("awaredMembers")) || [];
+                    const memberName = awaredMembers.join("、");
+
+                    // 讀取敵人
+                    const enemyCount = parseInt(localStorage.getItem("enemyCount"));
+                    const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+
+                    // 判斷量詞
+                    let unitWord;
+                    if (enemies[0].type.includes("類人")) {
+                        unitWord = "個";
+                    } else {
+                        unitWord = "隻";
+                    }
+
+                    document.getElementById("situation-text").textContent = texts.chance(memberName, enemyCount, unitWord, enemies[0].name);
+
+                    // 按鈕
+                    document.getElementById("situation-menu").innerHTML = `
+                        <button id="situation-btn">⚔️ 偷襲</button>
+                    `;
+                    document.getElementById("situation-btn").addEventListener("click", function () {
+                        window.location.href = 'battle.html';
+                    });
+
+                // 被跟蹤
+                } else if (situation === 5) {
+                    // 讀取發現的成員
+                    const awaredMembers = JSON.parse(localStorage.getItem("awaredMembers")) || [];
+                    const memberName = awaredMembers.join("、");
+
+                    document.getElementById("situation-text").textContent = texts.followed(memberName);
+
+                    // 按鈕
+                    document.getElementById("situation-menu").innerHTML = `
+                        <button id="situation-btn">⚔️ 應戰</button>
+                    `;
+                    document.getElementById("situation-btn").addEventListener("click", function () {
+                        window.location.href = 'battle.html';
+                    });
+            
+                // 巡邏隊
+                } else if (situation === 6) {
+                    document.getElementById("situation-text").textContent = texts.guards;
+
+                    // 按鈕
+                    document.getElementById("situation-menu").innerHTML = `
+                        <button onclick="fastTravel()">跟著巡邏隊回城</button>
+                    `;
+
+                // 被襲擊的路人
+                } else if (situation === 7) {
+                    const enemyCount = parseInt(localStorage.getItem("enemyCount"));
+                    const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+
+                    // 判斷量詞
+                    let unitWord;
+                    if (enemies[0].type.includes("類人")) {
+                        unitWord = "個";
+                    } else {
+                        unitWord = "隻";
+                    }
+
+                    document.getElementById("situation-text").textContent = texts.victim(enemyCount, unitWord, enemies[0].name);
+
+                    // 按鈕
+                    document.getElementById("situation-menu").innerHTML = `
+                        <button id="situation-btn">⚔️ 幫助平民</button>
+                    `;
+                    document.getElementById("situation-btn").addEventListener("click", function () {
+                        turnSwitch("幫助平民");
+                        window.location.href = 'battle.html';
+                    });
+                
+                // 哥布林商人
+                } else if (situation === 8) {
+                    document.getElementById("situation-text").textContent = texts.merchant;
+
+                    // 按鈕
+                    document.getElementById("situation-menu").innerHTML = `
+                        <button id="situation-btn">交談</button>
+                    `;
+                    document.getElementById("situation-btn").addEventListener("click", function () {
+                        localStorage.setItem("npcName", "拉茲");
+                        showDialogue("start");
+                    });
+                }
+
+            // 判斷地點
+                document.getElementById("location-text").textContent = ""; // 清空訊息
+                document.getElementById("location-menu").innerHTML = ""; // 清空按鈕
+
+                const locationIcon = mapData[playerPos.y][playerPos.x];
+                
+                // 讀取採集次數
+                let harvestCounts = JSON.parse(localStorage.getItem("harvestCounts")) || [
+                    [0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0],
+                    [0,0,0,0,0,0,0,0]
+                ];
+                let harvest = harvestCounts[playerPos.y][playerPos.x]; // 採集次數
+                console.log("採集次數: ", harvest);
+
+                // 位於城鎮
+                if (locationIcon === icons.town) {
+                    // 判斷城鎮
+                    const townPos = JSON.parse(localStorage.getItem("townPos")); // 讀取最近的城鎮位置
+                    localStorage.setItem("playerPos", JSON.stringify(townPos)); // 更新主角的位置
+                    
+                    loadBackground(townPos.id); // 讀取背景
+                    document.getElementById("location-text").textContent = texts.town(townPos.name); // 顯示描述
+
+                    // 顯示按鈕
+                    document.getElementById("location-menu").innerHTML = `
+                        <button id="location-btn">🏘️ 進入城鎮</button>
+                    `;
+                    document.getElementById("location-btn").addEventListener("click", function () {
+                        // 檢查是否被通緝中
+                        const wantedLevel = parseInt(localStorage.getItem("wantedLevel")) || 0;
+                        if (wantedLevel > 0) {
+                            localStorage.setItem("npcName", "守衛");
+                            showDialogue("被守衛攔下");
+                        } else {
+                            goTo("locations/town"); // 跳轉到城鎮
+                        }
+                    });
+
+                // 位於小屋
+                } else if (locationIcon === icons.cabin) {
+                    loadBackground("cabin"); // 讀取背景
+                    document.getElementById("location-text").textContent = texts.cabin;
+
+                    // 顯示按鈕
+                    document.getElementById("location-menu").innerHTML = `
+                        <button id="location-btn">🛖 進入小屋</button>
+                    `;
+                    document.getElementById("location-btn").addEventListener("click", function () {
+                        goTo("locations/cabin"); // 跳轉到小屋
+                    });
+
+                // 位於盜賊巢穴
+                } else if (locationIcon === icons.thieves) {
+                    loadBackground("cave"); // 讀取背景
+                
+                    let event = "盜賊巢穴";
+
+                    // 檢查是否已完成事件
+                    const completedEvents = JSON.parse(localStorage.getItem("completedEvents")) || [];
+                    let isCompleted = completedEvents.find(d => d === event);
+                    if (isCompleted) {
+                        // 顯示探索過的訊息
+                        document.getElementById("location-text").textContent = texts.thievesCompleted;
+                        return;
+                    }
+
+                    // 檢查是否已在事件中
+                    const inEvent = localStorage.getItem("inEvent");
+                    if (inEvent === event) {
+                        localStorage.setItem("npcName", event);
+                        showDialogue(); // 從上次的進度繼續
+                        return;
+                    }
+                
+                    // 顯示抵達的訊息
+                    document.getElementById("location-text").textContent = texts.thieves;
+
+                    // 顯示按鈕
+                    document.getElementById("location-menu").innerHTML = `
+                        <button id="location-btn">進入洞穴</button>
+                    `;
+                    document.getElementById("location-btn").addEventListener("click", function () {
+                        localStorage.setItem("inEvent", event); // 儲存事件
+                        localStorage.setItem("npcName", event); // 用對話系統執行事件
+                        showDialogue("start"); // 從頭開始
+                    });
+            
+                // 位於古堡
+                } else if (locationIcon === icons.castle) {
+                    let event = "古堡";
+                    loadBackground("castle"); // 讀取背景
+
+                    // 檢查是否已完成事件
+                    const completedEvents = JSON.parse(localStorage.getItem("completedEvents")) || [];
+                    let isCompleted = completedEvents.find(d => d === event);
+                    if (isCompleted) {
+                        // 顯示探索過的訊息
+                        document.getElementById("location-text").textContent = texts.castleCompleted;
+                        return;
+                    }
+
+                    // 檢查是否已在事件中
+                    const inEvent = localStorage.getItem("inEvent");
+                    if (inEvent === event) {
+                        localStorage.setItem("npcName", event);
+                        showDialogue(); // 從上次的進度繼續
+                        return;
+                    }
+
+                    // 顯示抵達的訊息
+                    document.getElementById("location-text").textContent = texts.castle;
+
+                    // 顯示按鈕
+                    document.getElementById("location-menu").innerHTML = `
+                        <button id="location-btn">進入古堡</button>
+                    `;
+                    document.getElementById("location-btn").addEventListener("click", function () {
+                        localStorage.setItem("inEvent", event); // 儲存事件
+                        localStorage.setItem("npcName", event); // 用對話系統執行事件
+                        showDialogue("start"); // 從頭開始
+                    });
+                
+                // 位於森林
+                } else if (locationIcon === icons.forest) {
+                    if (harvest === 1) return; // 只能採集1次
+
+                    // 顯示按鈕
+                    document.getElementById("location-menu").innerHTML = `
+                        <button id="location-btn">🪵 收集木頭</button>
+                    `;
+                    document.getElementById("location-btn").addEventListener("click", function () {
+                        getItem("wood");
+                        harvestCounts[playerPos.y][playerPos.x]++; // 記錄採集次數（寫 harvest 沒有用）
+                        localStorage.setItem("harvestCounts", JSON.stringify(harvestCounts));
+                        window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
+                    });
+
+                // 位於農田
+                } else if (locationIcon === icons.farm) {
+                    if (harvest === 1) return; // 只能採集1次
+
+                    // 顯示按鈕
+                    document.getElementById("location-menu").innerHTML = `
+                        <button id="location-btn">🥔 採收馬鈴薯</button>
+                    `;
+                    document.getElementById("location-btn").addEventListener("click", function () {
+                        getItem("potato");
+                        harvestCounts[playerPos.y][playerPos.x]++; // 記錄採集次數（寫 harvest 沒有用）
+                        localStorage.setItem("harvestCounts", JSON.stringify(harvestCounts));
+                        window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
+                    });
+                }                
         }
 
         // 顯示天氣

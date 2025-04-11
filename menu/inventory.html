@@ -58,7 +58,7 @@
         window.onload = function() {
             loadPartyData();
             showItem(); // 顯示所有物品
-            npcPreferences(); // NPC偏好設定
+            preferences(); // 偏好設定
             
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
             console.log("物品", playerItems);

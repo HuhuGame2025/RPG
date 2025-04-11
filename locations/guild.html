@@ -61,7 +61,7 @@
             getDialogueNpc(); // 判斷交談對象
             checkMissions(); // 檢查任務是否完成
 
-            npcPreferences(); // NPC偏好設定
+            preferences(); // 偏好設定
             showButtonBar(); // 顯示按鈕列
             loadBackground("guild"); // 讀取背景
         };
@@ -154,7 +154,7 @@
                         },
                         "背叛吸血鬼": {
                             npc: "speaker",
-                            text: "原來你自願和我同行，全是虛情假意，你的心比吸血鬼的血更加冰冷……",
+                            text: "原來你自願和我同行，全是虛情假意，你的心比吸血鬼的心臟更加冰冷……",
                             choices: [
                                 { text: "（繼續）", next: "提交：懸賞逃犯" },
                             ]
@@ -199,7 +199,7 @@
                     "有失物": {
                         text: "成堆無人認領的背包，屬於無名的冒險者們。<br><br>你認出其中一個背包是你的，裡面的錢和物品都完好如初。<br><br>但你需要支付 $100 的保管費才能領回。",
                         choices: [
-                            { text: "支付 $100", next: "", condition: "isItem('$100')", action: "(loseItem('$100'), itemsBack(), removeDialogue())" },
+                            { text: "支付 $100", next: "", condition: "hasItem('$100')", action: "(loseItem('$100'), itemsBack(), removeDialogue())" },
                             { text: "離開", next: "", action: "removeDialogue()" },
                         ]
                     },
@@ -357,14 +357,14 @@
                         },
                         "背叛吸血鬼": {
                             npc: "speaker",
-                            text: "原來你自願和我同行，全是虛情假意，你的心比吸血鬼的血更加冰冷……",
+                            text: "原來你自願和我同行，全是虛情假意，你的心比吸血鬼的心臟更加冰冷……",
                             choices: [
                                 { text: "（繼續）", next: "提交：懸賞逃犯" },
                             ]
                         },
                     "提交：狩獵哥布林": {
                         npc: "npc",
-                        text: "這哥布林看起來還不錯，大概能賣個好價錢，不過公會只會出 ${price} 跟你買。<br><br>好了，關進那邊的籠子吧。",
+                        text: "抓到哥布林了？嗯，這大概能填補一點勞動力，一個 ${price} 。<br><br>不必有罪惡感，他們在野外的命運只會更慘。",
                         choices: [
                             { text: "收下", next: "", action: "checkMissions()" },
                         ]
@@ -388,7 +388,7 @@
                     "有失物": {
                         text: "成堆無人認領的背包，屬於無名的冒險者們。<br><br>你認出其中一個背包是你的，裡面的錢和物品都完好如初。<br><br>但你需要支付 $100 的保管費才能領回。",
                         choices: [
-                            { text: "支付 $100", next: "", condition: "isItem('$100')", action: "(loseItem('$100'), itemsBack(), removeDialogue())" },
+                            { text: "支付 $100", next: "", condition: "hasItem('$100')", action: "(loseItem('$100'), itemsBack(), removeDialogue())" },
                             { text: "離開", next: "", action: "removeDialogue()" },
                         ]
                     },
@@ -513,11 +513,12 @@
 
         // 檢查任務是否完成
         function checkMissions() {
+            removeDialogue();
+
             const playerPos = JSON.parse(localStorage.getItem("playerPos"));
-            let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
-            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
             let package, packageDamaged, price;
 
             // 檢查並更新任務狀態
@@ -532,8 +533,8 @@
                         getItem("$" + price);
 
                         // 從物品中移除已送達的包裹
-                        newPlayerItems = playerItems.filter(i => i !== "package01");
-                        localStorage.setItem("playerItems", JSON.stringify(newPlayerItems));
+                        playerItems = playerItems.filter(i => i !== "package01");
+                        localStorage.setItem("playerItems", JSON.stringify(playerItems));
 
                         showDialogue("提交：送貨成功", price);
                         return;
@@ -547,8 +548,8 @@
                         getItem("$" - price);
 
                         // 從物品中移除損壞的包裹
-                        newPlayerItems = playerItems.filter(i => i !== "package01_damaged");
-                        localStorage.setItem("playerItems", JSON.stringify(newPlayerItems));
+                        playerItems = playerItems.filter(i => i !== "package01_damaged");
+                        localStorage.setItem("playerItems", JSON.stringify(playerItems));
                         
                         showDialogue("提交：送貨失敗", price);
                         return;
@@ -563,10 +564,11 @@
                     if (packageCount > 0) {
                         // 送達，增加金錢，乘上包裹數量
                         price = mission.price * packageCount;
-                        playerMoney += price;
+                        getItem("$" + price);
 
                         // 從物品中移除已送達的包裹
                         playerItems = playerItems.filter(i => i !== "package02");
+                        localStorage.setItem("playerItems", JSON.stringify(playerItems));
 
                         showDialogue("提交：送貨成功", price);
                         return;
@@ -577,17 +579,16 @@
                     if (damagedCount > 0) {
                         // 包裹損壞，扣除雙倍金錢，乘上損壞包裹數量
                         price = mission.price * 2 * damagedCount;
-                        playerMoney -= price;
+                        getItem("$" - price);
 
                         // 從物品中移除損壞的包裹
                         playerItems = playerItems.filter(i => i !== "package02_damaged");
+                        localStorage.setItem("playerItems", JSON.stringify(playerItems));
 
                         showDialogue("提交：送貨失敗", price);
                         return;
                     }
 
-                    localStorage.setItem("playerMoney", playerMoney.toString());
-                    localStorage.setItem("playerItems", JSON.stringify(playerItems));
                     takenMissions = takenMissions.filter((m) => m.id !== mission.id); // 清除任務
                     localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
                     
@@ -643,7 +644,6 @@
                     }
 
                 }
-                removeDialogue();
             });
 
             // 檢查是否陪雷納德見夥伴
@@ -653,7 +653,6 @@
             if (isTrue('陪雷納德見夥伴2') && !isTrue('陪雷納德見夥伴3') && playerPos.id === "town02") {
                 showDialogue("陪雷納德見夥伴2");
             }
-
 
             //console.log(takenMissions);
             localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
@@ -669,45 +668,18 @@
             let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
             let completedMissions = JSON.parse(localStorage.getItem("completedMissions")) || [];
 
+            // 篩選要顯示的任務
+            let filteredMissions = missions.filter(mission => 
+                mission.type === type && // 篩選類型
+                mission.startPos.includes(playerPos.id) && // 篩選地點
+                !completedMissions.includes(mission.id) // 排除已完成的任務
+            );
+
             // 顯示列表
             const menu = document.getElementById("list");
             menu.innerHTML = "";
 
-            // 根據類型、地點篩選要顯示的任務，不顯示已完成的
-            let filteredMissions = missions.filter(mission => 
-                mission.type === type &&
-                mission.startPos.includes(playerPos.id) &&
-                !completedMissions.includes(mission.id) // 排除已完成的任務
-            );
-
             filteredMissions.forEach(mission => {
-                let missionDiv = document.createElement("div");
-                missionDiv.classList.add("mission");
-
-                // 檢查任務是否已經承接
-                let isTaken = takenMissions.some(taken => taken.id === mission.id);
-        
-                // 更新任務的完成狀態
-                let takenMission = takenMissions.find(taken => taken.id === mission.id);
-                if (takenMission) {
-                    mission.status = takenMission.status;
-                }
-
-                let buttonText = "";
-                let buttonAction = "";
-
-                // 根據任務狀態顯示對應的按鈕
-                    if (mission.status === "success" || mission.status === "fail") {
-                        buttonText = "提交結果";
-                        buttonAction = `reportMission('${mission.id}')`;
-                    } else if (isTaken) {
-                        buttonText = "進行中";
-                        buttonAction = "";
-                    } else {
-                        buttonText = "承接";
-                        buttonAction = `takeMission('${mission.id}')`;
-                    }
-                    //console.log(`任務 ${mission.id} | 狀態: ${mission.status}`);
 
                 let extraInfo = "";
 
@@ -728,8 +700,14 @@
                     localStorage.setItem("wantedList", JSON.stringify(wantedList));
 
                     // 插入逃犯名單
-                    extraInfo = `<br><br>${wantedList.map(name => `👤 ${name}`).join("<br>")}`;
+                    extraInfo = `<br><br>${wantedList.map(name => `
+                        👤 ${name}
+                    `).join("<br>")}`;
                 }
+
+                // 任務欄位
+                let missionDiv = document.createElement("div");
+                missionDiv.classList.add("mission");
 
                 missionDiv.innerHTML = `
                     <hr>
@@ -738,22 +716,40 @@
                         ${mission.description}
                         ${extraInfo}
                         <p>報酬： $${mission.price}</p>
-                        <div class="menu">
-                            ${buttonText ? 
-                                (buttonText === "進行中" ? 
-                                    `<p class="note center">${buttonText}</p>` : 
-                                    `<button onclick="${buttonAction}">${buttonText}</button>`) 
-                                : ''}
-                        </div>
+                        <div id="${mission.id}-btn" class="menu"></div>
                     </div>
                 `;
                 menu.appendChild(missionDiv);
 
-                // 送貨任務
+                // 檢查任務是否已經承接
+                let isTaken = takenMissions.some(taken => taken.id === mission.id);
+        
+                // 讀取任務的完成狀態
+                let takenMission = takenMissions.find(taken => taken.id === mission.id);
+                if (takenMission) {
+                    mission.status = takenMission.status;
+                }
+
+                // 根據任務狀態顯示對應的按鈕
+                    let button = document.getElementById(`${mission.id}-btn`);
+                    if (mission.status === "success" || mission.status === "fail") {
+                        button.innerHTML = `
+                            <button onclick="reportMission('${mission.id}')">提交結果</button>
+                        `;
+                    } else if (isTaken) {
+                        button.innerHTML = `
+                            <p class="note center">進行中</p>
+                        `;
+                    } else {
+                        button.innerHTML = `
+                            <button onclick="takeMission('${mission.id}')">承接</button>
+                        `;
+                    }
+                    //console.log(`任務 ${mission.id} | 狀態: ${mission.status}`);
+
+                // 如果是送貨任務，顯示包裹列表
                 if ((mission.id === "task01" || mission.id === "task02") && isTaken) {
-                    // 如果已承接，顯示包裹列表
-                    let packageMenu = showPackageMenu(mission.id); 
-                    missionDiv.appendChild(packageMenu);
+                    showPackageMenu(mission.id);
                 }
             });
             //console.log(takenMissions);
@@ -761,54 +757,70 @@
 
         // 承接任務
         function takeMission(missionId) {
-            let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
-
             // 找到這個任務的資料
             let mission = missions.find(m => m.id === missionId);
+                
+            // 添加任務資料
+            let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
+            let takenMission = {
+                id: mission.id,
+                type: mission.type,
+                name: mission.name,
+                description: mission.description,
+                price: mission.price,
+            };
+            takenMissions.push(takenMission);
+            localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
 
-            if (mission && !takenMissions.some(t => t.id === missionId)) {
-                // 添加任務資料
-                let takenMission = {
-                    id: mission.id,
-                    type: mission.type,  // 保存任務類型
-                    name: mission.name,
-                    description: mission.description,
-                    price: mission.price,
-                };
+            // 改變按鈕
+            let button = event.target;
+                button.outerHTML = `<p class="note center">進行中</p>`; // 替換按鈕
 
-                takenMissions.push(takenMission);
-                localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
-
-                // 改變按鈕
-                let button = event.target;
-                button.outerHTML = `<p class="note">進行中</p>`; // 替換按鈕
+            // 如果是送貨任務，隨機決定包裹數量
+            if ((mission.id === "task01" || mission.id === "task02")) {
+                let packageCount = Math.floor(Math.random() * 4) + 1; // 隨機 1~4 個按鈕
+                localStorage.setItem("packageCount", packageCount);
             }
 
-            // 重新顯示對應類型的任務列表
-            showMissionList(mission.type);
+            checkMissions();
+            showMissionList(mission.type); // 重新顯示任務列表
         }
 
         // 提交任務
         function reportMission(missionId) {
             let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
             let completedMissions = JSON.parse(localStorage.getItem("completedMissions")) || [];
-            let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
     
-            // 找到這個兼職的資料
+            // 找到這個任務的資料
             let mission = missions.find(m => m.id === missionId);
-    
+
+            // 如果是委託，儲存到已完成的任務
+            if (mission.type === "quest") {
+                completedMissions.push(mission);
+                localStorage.setItem("completedMissions", JSON.stringify(completedMissions));
+            }
+
+            getItem("$" + mission.price); // 獲得報酬
+            takenMissions = takenMissions.filter((m) => m.id !== mission.id); // 清除任務
+            localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
+
+            mission.status = ""; // 清除任務狀態
+            checkMissions();
+            showMissionList(mission.type); // 更新任務列表
+
             // 懸賞逃犯
             if (missionId === "task03") { 
                 // 如果隊伍中有逃犯，列出選單
                 let wantedList = JSON.parse(localStorage.getItem("wantedList")) || [];
                 let prisoners = teamMembers.filter(member => wantedList.includes(member.name));
                 if (prisoners) {
-                    let menu = document.createElement("div");
-                    menu.classList.add("menu");
                     document.getElementById("main").style.display = "none"; // 隱藏其他內容
                     document.getElementById("list").innerHTML = ""; // 清除任務列表
+
+                    let menu = document.createElement("div");
+                    menu.classList.add("menu");
 
                     // 顯示要交出誰的訊息
                     let message = document.createElement("p");
@@ -824,17 +836,11 @@
                             // 如果不是俘虜，需要再次確認
                             if (companion.type !== "俘虜") {
                                 let confirmMessage = `${companion.name}是你的${companion.type}，確定要把他交出去嗎？`;
-                                if (!confirm(confirmMessage)) {
-                                    return;
-                                }
+                                if (!confirm(confirmMessage)) return;
                             }
 
                             removeCompanion(companion.id); // 移除選擇的同伴
                             document.body.removeChild(menu);  // 清除選單
-                            playerMoney += mission.price; // 獲得報酬
-                            localStorage.setItem("playerMoney", playerMoney);
-                            takenMissions = takenMissions.filter((m) => m.id !== mission.id); // 清除任務
-                            localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
 
                             // 顯示對話
                             if (companion.type !== "俘虜") {
@@ -862,7 +868,6 @@
                     cancelButton.onclick = function () {
                         document.body.removeChild(menu); // 清除選單
                         document.getElementById("main").style.display = "block"; // 顯示其他內容
-                        return;
                     };
 
                     menu.appendChild(cancelButton);
@@ -875,9 +880,10 @@
                 let prisoners = teamMembers.filter(m => m.name.includes("哥布林"));
                 if (prisoners.length > 0) {
                     // 如果隊伍中有哥布林，列出選單
+                    document.getElementById("main").style.display = "none"; // 隱藏其他內容
+                    
                     let menu = document.createElement("div");
                     menu.classList.add("menu");
-                    document.getElementById("main").style.display = "none"; // 隱藏其他內容
 
                     // 顯示要交出誰的訊息
                     let message = document.createElement("p");
@@ -885,32 +891,25 @@
                     menu.appendChild(message);
 
                     // 為每個哥布林建立一個按鈕
-                    prisoners.forEach((companion, index) => {
+                    prisoners.forEach(companion => {
                         let button = document.createElement("button");
-                        let prisonerName = companion.name;
-                        button.textContent = prisonerName;
+                        button.textContent = companion.name;
 
                         button.onclick = function () {
                             // 如果不是俘虜，需要再次確認
                             if (companion.type !== "俘虜") {
-                                let confirmMessage = `${prisonerName}是你的${companion.type}，確定要把他交出去嗎？`;
-                                if (!confirm(confirmMessage)) {
-                                    return;
-                                }
+                                let confirmMessage = `${companion.name}是你的${companion.type}，確定要把他交出去嗎？`;
+                                if (!confirm(confirmMessage)) return;
                             }
 
                             removeCompanion(companion.id); // 移除選擇的同伴
                             document.body.removeChild(menu);  // 清除選單
-                            playerMoney += mission.price; // 獲得報酬
-                            localStorage.setItem("playerMoney", playerMoney);
-                            takenMissions = takenMissions.filter((m) => m.id !== mission.id); // 清除任務
-                            localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
 
                             // 顯示對話
                             if (companion.type !== "俘虜") {
-                                showDialogue("背叛哥布林", mission.price, prisonerName);
+                                showDialogue("背叛哥布林", mission.price, companion.name);
                             } else {
-                                showDialogue("提交：狩獵哥布林", mission.price, prisonerName);
+                                showDialogue("提交：狩獵哥布林", mission.price, companion.name);
                             }
                         };
 
@@ -924,7 +923,6 @@
                     cancelButton.onclick = function () {
                         document.body.removeChild(menu); // 清除選單
                         document.getElementById("main").style.display = "block"; // 顯示其他內容
-                        return;
                     };
 
                     menu.appendChild(cancelButton);
@@ -934,90 +932,103 @@
 
             // 收集種子
             } else if (mission.id === "task05") {
-                // 計算種子數量
-                const seedCount = playerItems.filter(i => i === "manEaterSeed").length;
-                price = mission.price * 0.1 * seedCount;
-                playerMoney += price; // 獲得報酬
-                localStorage.setItem("playerMoney", playerMoney.toString());
-
+                const seedCount = playerItems.filter(i => i === "manEaterSeed").length; // 計算種子數量
+                price = mission.price * 0.1 * seedCount - mission.price; // 扣掉前面給的報酬
+                getItem("$" + price); // 獲得剩餘報酬
                 loseItem("manEaterSeed", seedCount); // 移除物品
-
-                takenMissions = takenMissions.filter((m) => m.id !== mission.id); // 清除任務
-                localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
-
                 showDialogue("提交：收集種子", price);
 
             // 失竊的紅寶石
             } else if (missionId === "quest01") { 
                 // 確認是否交出紅寶石
                 let confirmMessage = "一旦交出紅寶石就再也拿不回來了，確定要交出去嗎？";
-                    if (!confirm(confirmMessage)) {
-                    return;
-                }
+                if (!confirm(confirmMessage)) return;
 
                 addPlayerFame(5); // 名聲上升
-                playerMoney += mission.price; // 獲得報酬
-                localStorage.setItem("playerMoney", playerMoney.toString());
-
                 loseItem("devilGem01"); // 移除物品
                 loseItem("devilGem02"); // 移除物品
-                
-                akenMissions = takenMissions.filter((m) => m.id !== mission.id); // 清除任務
-                localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
-
-                completedMissions.push(mission); // 儲存完成的任務
-                localStorage.setItem("completedMissions", JSON.stringify(completedMissions));
-                
                 showDialogue("提交：失竊的紅寶石", mission.price);
 
             // 吸血鬼擄走的孩子
             } else if (missionId === "quest02") { 
                 // 沒有報酬也沒有名聲
-                akenMissions = takenMissions.filter((m) => m.id !== mission.id); // 清除任務
-                localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
-
-                completedMissions.push(mission); // 儲存完成的任務
-                localStorage.setItem("completedMissions", JSON.stringify(completedMissions));
-                
                 showDialogue("提交：吸血鬼擄走的孩子", mission.price);
 
             } else if (missionId === "quest03") { 
                 // 奴隸的復仇
-                text = "你完成了任務，獲得了報酬 ${quest.price}。";
+                // 你完成了任務，獲得了報酬 ${quest.price}。
             } else if (missionId === "quest04") {
                 // 協尋丈夫
-                text = "你帶回了狼人丈夫，獲得了報酬 ${quest.price}。";
+                // 你帶回了狼人丈夫，獲得了報酬 ${quest.price}。
             }
         }
 
         // 顯示包裹列表
         function showPackageMenu(missionId) {
-            let menu = document.createElement("div");
-            menu.classList.add("menu");
+            // 找到這個任務的資料
+            let mission = missions.find(m => m.id === missionId);
+            const price = mission.price * 2; // 賠償金
 
-            let packageCount = Math.floor(Math.random() * 4) + 1; // 隨機 1~4 個按鈕
+            // 根據任務判斷包裹id
+            const itemId = missionId.replace("task", "package");
+
+            // 讀取攜帶的包裹數量
+            const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            const takenCount = playerItems.filter(i => i === itemId).length;
+            const damagedCount = playerItems.filter(i => i === `${itemId}_damaged`).length;
+
+            // 讀取包裹數量
+            let packageCount = parseInt(localStorage.getItem("packageCount"));
+            packageCount -= (takenCount + damagedCount); // 減去攜帶的數量
+
+            // 創建包裹列表
+            const menu = document.getElementById(`${missionId}-btn`);
+            menu.innerHTML = "";
+            let buttonDiv = document.createElement("div");
+
+            // 領取包裹的按鈕
             for (let i = 0; i < packageCount; i++) {
                 let button = document.createElement("button"); // 創建按鈕
                 button.textContent = "📦 領取包裹";
-
                 button.onclick = function () {
-                    let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+                    getItem(itemId); // 獲得包裹
+                    showPackageMenu(missionId);
+                };
+                buttonDiv.appendChild(button);
+            }
 
-                    // 根據任務獲得包裹
-                    if (missionId === "task01") {
-                        playerItems.push("package01");
-                    } else if (missionId === "task02"){
-                        playerItems.push("package02");
+            // 退還包裹的按鈕
+            for (let i = 0; i < takenCount; i++) {
+                let button = document.createElement("button"); // 創建按鈕
+                button.textContent = "退還包裹";
+                button.onclick = function () {
+                    loseItem(itemId); // 失去包裹
+                    showPackageMenu(missionId);
+                };
+                buttonDiv.appendChild(button);
+            }
+
+            // 賠償的按鈕
+            for (let i = 0; i < damagedCount; i++) {
+                let button = document.createElement("button"); // 創建按鈕
+                button.textContent = `退還破損包裹（賠償 $${price}）`;
+                button.onclick = function () {
+                    // 檢查資金
+                    if (hasItem("$" + price)) {
+                        loseItem("$" + price);
+                        loadPartyData();
+                    } else {
+                        alert("金錢不足");
+                        return;
                     }
 
-                    localStorage.setItem("playerItems", JSON.stringify(playerItems));
-                    button.remove(); // 清除這個按鈕
+                    loseItem(`${itemId}_damaged`); // 失去包裹
+                    showPackageMenu(missionId);
                 };
-
-                menu.appendChild(button);
+                buttonDiv.appendChild(button);
             }
-            
-            return menu; // 回傳包裹列表
+
+            menu.appendChild(buttonDiv);
         }
 
         // 失物招領

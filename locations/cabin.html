@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>旅館</title>
+    <title>小屋</title>
     <link rel="stylesheet" href="../style.css">
     <style>
         body {
@@ -21,19 +21,17 @@
     <!-- 主要內容區域 -->
     <div id= "main" class="main-content">
         <div class="header">    
-            <button class="exit-button" onclick="goTo('locations/town')">〈 離開</button>
-            <h1>旅館</h1>
+            <button class="exit-button" onclick="goTo('map')">〈 離開</button>
+            <h1>小屋</h1>
         </div>
 
-        <p>這間舒適的旅館是旅人的避風港，在這休息一晚能讓人重振精神。</p>
-        <p class="small">🪙 $<span id="playerMoney"></span></p>
+        <p>屋裡沒什麼能用了，只剩一個爐子。如果有火和足夠的食物，就可以在這裡休息一晚。</p>
 
         <!-- 同伴列表 -->
         <div id="companion-list"></div>
 
         <!-- 選單 -->
-        <div class="menu">
-            <button onclick="stay()">🛌 住宿（$20）</button>
+        <div id="menu" class="menu">
         </div>
     </div>
 
@@ -50,13 +48,13 @@
     <script>
         // 畫面載入時
         window.onload = function() {
-            loadPartyData(); // 讀取隊伍資料
+            checkFire(); // 檢查是否有火
             showTeamHealth(); // 顯示隊伍健康程度
             loadEvent(); // 讀取進度
 
             preferences(); // 偏好設定
             showButtonBar(); // 顯示按鈕列
-            loadBackground("inn"); // 讀取背景
+            loadBackground("cabinInterior"); // 讀取背景
         };
         
         // 對話資料庫
@@ -283,15 +281,59 @@
             seedGrown: "夜裡，一個奇怪的聲響從你的背包裡傳來，食人花種子發芽了，兇猛的食人花幼苗對你發動攻擊。",
         };
 
-        // 住宿
-        function stay() {
-            // 檢查資金
-            let cost = 20; // 住宿費
-            if (hasItem("$" + cost)) {
-                loseItem("$" + cost);
-                loadPartyData();
+        // 生火
+        function light() {
+            // 檢查木頭
+            if (hasItem("wood", 2)) {
+                loseItem("wood", 2);
             } else {
-                alert("金錢不足");
+                alert("木頭不足");
+                return;
+            }
+
+            turnSwitch("小屋生火");
+            checkFire();
+        }
+
+        const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+        const count = teamMembers.length;
+
+        // 檢查是否有火
+        function checkFire() {
+            if (isTrue("小屋生火")) {
+                // 已經有火
+                document.getElementById("menu").innerHTML = `
+                    <button onclick="longRest()">
+                        🛌 過夜
+                        <span class="note small">（食物 × ${count}）</span>
+                    </button>
+                `;
+            } else {
+                // 沒有火
+                document.getElementById("menu").innerHTML = `
+                    <button onclick="light()">
+                        🔥 生火
+                        <span class="note small">（木頭 × 2）</span>
+                    </button>
+                `;
+            }
+        }
+
+        // 過夜
+        function longRest() {
+            // 檢查食物
+            if (hasItem("potato", count)) {
+                // 讀取主角物品中的食物
+                const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+                const food = itemDatabase.filter(item =>
+                    item.type === "loot" && playerItems.includes(item.id)
+                );
+
+                // 顯示食物清單
+
+                loseItem("potato", count); // 之後要改成多種食物
+            } else {
+                alert("食物不足");
                 return;
             }
 
@@ -299,6 +341,7 @@
             resetHP(); // 完全恢復
             checkAccident(); // 檢查是否有突發事件
             showTeamHealth(); // 顯示隊伍健康程度
+            checkFire();
         }
 
         // 檢查是否有突發事件（只會發生一件，按照優先順序寫）

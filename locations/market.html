@@ -57,9 +57,10 @@
             wantedCheck(); // 檢查是否被通緝中
             loadPartyData();
 
-            npcPreferences(); // NPC偏好設定
+            preferences(); // 偏好設定
             showButtonBar(); // 顯示按鈕列
-            loadBackground("town"); // 讀取背景            
+            const playerPos = JSON.parse(localStorage.getItem("playerPos")); // 讀取主角位置
+            loadBackground(playerPos.id); // 讀取背景
         };
 
         // 顯示文本
@@ -301,7 +302,8 @@
             }         
 
             // 計算賣出金額
-            let item = itemDatabase.find(i => i.id === itemId);
+            //let item = itemDatabase.find(i => i.id === itemId);
+            let item = findItemData(itemId); // 從資料庫查找物品
             if (!item) {
                 alert("物品不存在");
                 return;

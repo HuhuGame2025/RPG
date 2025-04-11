@@ -137,7 +137,7 @@
             getSituation(); // 讀取並執行遇敵方式
             turnSwitch("inBattle"); // 標記為戰鬥中
 
-            npcPreferences(); // NPC偏好設定
+            preferences(); // 偏好設定
             showButtonBar(); // 顯示按鈕列
             loadBackground(); // 讀取背景
         };
@@ -200,8 +200,8 @@
             endAction(); // 每次載入時跑一次，以防有東西還原
         }
 
-        // 顯示戰場圖像
-        function generateBattlefield() {
+        // 顯示戰鬥圖像
+        function generateAvatar() {
             const presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
             const frontMembers = JSON.parse(localStorage.getItem("frontMembers")) || [];
             const availableMembers = JSON.parse(localStorage.getItem("availableMembers")) || [];
@@ -230,7 +230,7 @@
                 // 按下
                 characterDiv.addEventListener("click", () => {
                     document.getElementById("enemy-infor").innerHTML = ""; // 先清空欄位
-                    localStorage.removeItem(`${enemy.id}-action-text`); // 清空戰鬥訊息
+                    //localStorage.removeItem(`${enemy.id}-action-text`); // 清空戰鬥訊息
 
                     showEnemy(enemy); // 顯示欄位
                 });
@@ -266,7 +266,8 @@
                 // 按下
                 characterDiv.addEventListener("click", () => {
                     selectedAttacker = null // 取消攻擊者
-                    document.getElementById("member-infor").innerHTML = ""; // 先清空欄位
+                    document.getElementById("member-infor").innerHTML = ""; // 清空欄位
+                    document.getElementById("enemy-infor").innerHTML = ""; // 清空欄位
                     showMember(member); // 顯示欄位
                 });
 
@@ -344,9 +345,10 @@
                             <div class="column">
                                 <h4>${weaponIcon} ${member.name}</h4>
                             </div>
-                            <div class="column center">
+                            <div class="column right">
                                 <h4 class="hp">${member.HP} / ${member.MaxHP}</h4>
                             </div>
+                            <button id="${member.id}-close-btn" class="small-button" style="background: none;">×</button>
                         </div>
 
                         <p id="${member.id}-status"></p>
@@ -389,6 +391,12 @@
                     `;
                     statusList.appendChild(statusDiv);
                 });
+
+                // 關閉按鈕
+                const closeButton = document.getElementById(`${member.id}-close-btn`);
+                closeButton.addEventListener("click", () => {
+                    document.getElementById(`${member.id}`).style.display = "none";
+                });
         }
 
         // 顯示敵方欄位
@@ -396,7 +404,7 @@
             let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
 
             const menu = document.getElementById("enemy-infor");
-
+            
             // 創建敵人的資料
                 const characterDiv = document.createElement("div");
                 characterDiv.innerHTML = `
@@ -405,9 +413,10 @@
                             <div class="column">
                                 <h4>${enemy.adj}${enemy.name}</span></h4>
                             </div>
-                            <div class="column center">
+                            <div class="column right">
                                 <h4 class="hp">${enemy.HP} / ${enemy.MaxHP}</h4>
                             </div>
+                            <button id="${enemy.id}-close-btn" class="small-button" style="background: none;">×</button>
                         </div>
 
                         <p id="${enemy.id}-status"></p>
@@ -442,6 +451,12 @@
                     console.log(status.icon);
                 });
 
+                // 關閉按鈕
+                const closeButton = document.getElementById(`${enemy.id}-close-btn`);
+                closeButton.addEventListener("click", () => {
+                    document.getElementById(`${enemy.id}`).style.display = "none";
+                });
+
                 // 如果已選為目標，加上 selected class，並隱藏按紐
                 //const selectedTarget = localStorage.getItem("selectedTarget");
                 //if (selectedTarget === enemy.id) {
@@ -459,6 +474,7 @@
             selectedAction = action;
             document.getElementById("team-note").textContent = ""; // 清除提示
             document.getElementById("enemy-note").textContent = texts.noTarget; // 顯示提示
+            document.getElementById("enemy-infor").innerHTML = ""; // 清空敵人欄位
             //checkAndExecuteFight();
         }
 
@@ -815,7 +831,7 @@
 
             localStorage.setItem("frontMembers", JSON.stringify(frontMembers));
             console.log("前排成員：", frontMembers);
-            generateBattlefield();
+            generateAvatar();
             showMember(member);
         }
 
@@ -1138,7 +1154,7 @@
             if (presentMembers.length === 0) { // 檢查上場成員是否 0 人
                 if (escapeMember.length === 0) { // 檢查逃跑成員是否 0 人
                     // 全員死亡
-                    generateBattlefield(); // 更新顯示戰場
+                    generateAvatar(); // 更新顯示圖像
                     defeated();
                 } else {
                     // 全員逃走
@@ -1191,7 +1207,7 @@
             // 移除死亡的敵人
             enemies = enemies.filter(enemy => enemy.HP > 0); // 只保留HP大於0的敵人
             localStorage.setItem("enemies", JSON.stringify(enemies)); // 更新localStorage中的敵人資料
-            generateBattlefield(); // 更新顯示戰場
+            generateAvatar(); // 更新顯示圖像
         }
 
         // 回合結束
@@ -1430,7 +1446,7 @@
                     }
                 }
 
-            generateBattlefield(); // 更新顯示戰場
+            generateAvatar(); // 更新顯示圖像
 
             window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
         }
@@ -1584,7 +1600,7 @@
                 localStorage.removeItem("inEvent"); // 清除事件
             }
                 
-            localStorage.removeItem("helpVictim"); // 清除「幫助平民」開關
+            turnSwitch("幫助平民", false); // 清除幫助平民
 
             // 隨機決定重生的情況
             let respawn;
@@ -1634,7 +1650,7 @@
             localStorage.setItem("presentMembers", JSON.stringify(presentMembers));
             localStorage.setItem("availableMembers", JSON.stringify(availableMembers));
 
-            generateBattlefield(); // 更新顯示戰場
+            generateAvatar(); // 更新顯示圖像
         }
 
         // 附加狀態

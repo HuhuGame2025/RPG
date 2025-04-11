@@ -44,7 +44,7 @@
         window.onload = function() {
             loadPartyData(); // 讀取隊伍資料
             showTeamMenu(); // 顯示隊伍選單
-            npcPreferences(); // NPC偏好設定
+            preferences(); // 偏好設定
 
             const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             console.log(teamMembers);

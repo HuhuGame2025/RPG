@@ -50,12 +50,9 @@
 
         // 畫面載入時
         window.onload = function() {
-            showTownName(); // 顯示城鎮名稱
-            localStorage.removeItem("situation"); // 重置遇敵方式（解除被跟蹤）
-
-            npcPreferences(); // NPC偏好設定
-            showButtonBar(); // 顯示按鈕列
-            loadBackground("town"); // 讀取背景
+            preferences(); // 偏好設定
+            showButtonBar(); // 顯示按鈕列           
+            showTownName(); // 顯示城鎮名稱與背景
         };
 
         // 對話資料庫
@@ -79,12 +76,12 @@
             "鐵石鎮": "這座古老的小鎮散發著衰頹的氛圍，街上人煙稀少。",
         };
 
-        // 顯示城鎮名稱
+        // 顯示城鎮名稱與背景
         function showTownName() {
-            // 讀取主角位置
-            const playerPos = JSON.parse(localStorage.getItem("playerPos"));
+            const playerPos = JSON.parse(localStorage.getItem("playerPos")); // 讀取主角位置
             document.getElementById("townName").textContent = playerPos.name;
             document.getElementById("text").textContent = texts[playerPos.name];
+            loadBackground(playerPos.id); // 讀取背景
         }
 
         // 離開城鎮

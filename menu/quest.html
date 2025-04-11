@@ -41,7 +41,7 @@
         // 頁面載入時
         window.onload = function() {
             getTakenMissions() // 讀取任務
-            npcPreferences(); // NPC偏好設定
+            preferences(); // 偏好設定
         };
 
         // 讀取已承接的任務
@@ -65,7 +65,7 @@
                         ${mission.description}
                         <p>報酬： $${mission.price}</p>
                         <div class="menu">
-                            <button onclick="quitMission('${mission.id}')">放棄</button>
+                            <button id="quit-btn" onclick="quitMission('${mission.id}')">放棄</button>
                         </div>
                     </div>
                 `;
@@ -84,6 +84,15 @@
 
         // 放棄任務
         function quitMission(missionId) {
+            // 如果是送貨任務，檢查是否帶著包裹
+            if ((missionId === "task01" || missionId === "task02")) {
+                const itemId = missionId.replace("task", "package");
+                if (hasItem(itemId) || hasItem(`${itemId}_damaged`)) {
+                    alert("退還包裹後才能放棄");
+                    return;
+                }
+            }
+
             // 先讓玩家確認是否要放棄
             const isConfirmed = confirm("確定放棄任務嗎？");
             if (!isConfirmed) {

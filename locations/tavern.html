@@ -55,7 +55,7 @@
        <!-- 選單 -->
         <div class="menu" id="button-container">
             <button id="orderButton" onclick="order()">坐下來點餐</button>
-            <button onclick="drinkingContest()">和在場的人拚酒量（$10）</button>
+            <button id="drinkingButton" onclick="drinkingContest()">和在場的人拚酒量（$10）</button>
         </div>
 
         <!-- 傭兵列表 -->
@@ -81,10 +81,15 @@
 
             // 檢查是否已經用過餐
             if (isTrue("酒館用餐")) {
-                document.getElementById("orderButton").style.display = "none"; // 隱藏點餐按鈕
+                document.getElementById("orderButton").style.display = "none"; // 隱藏按鈕
             }
 
-            npcPreferences(); // NPC偏好設定
+            // 檢查是否已經拚過酒
+            if (isTrue("拚酒結束")) {
+                document.getElementById("drinkingButton").style.display = "none"; // 隱藏按鈕
+            }
+
+            preferences(); // 偏好設定
             showButtonBar(); // 顯示按鈕列
             loadBackground("tavern"); // 讀取背景
         };
@@ -233,7 +238,6 @@
             drinkingWin: (prize) => `其他人都醉倒了，你撐到了最後，獲得所有的賭金 $${prize}！`,
             drinkingLose: (name, prize) => `你不勝酒力醉倒了……而撐到最後的人是${name}，拿走了 $${prize} 賭金。`,
             drinkingAllLose: "所有人都醉倒了，沒有人一個人撐到最後。",
-            drinkingEnd: "今天已經玩過了，明天再來吧。",
             drinkingNoOne: "酒館裡目前沒有人在。",
             sit: (requiredHeal, totalHeal) => `你找了一個空位坐下。<br>你需要補充 ${requiredHeal} 生命值，目前點的餐點能補充 ${totalHeal}。`,
             sitTogether: (requiredHeal, totalHeal) => `你和同伴一起坐下。<br>你們需要補充 ${requiredHeal} 生命值，目前點的餐點能補充 ${totalHeal}。`,
@@ -332,10 +336,14 @@
                 menu.appendChild(companionDiv);
             });
 
+            // 如果沒有人在，顯示無人的訊息
+            if (tavernCompanions.length === 0) {
+                document.getElementById("text").textContent = texts.drinkingNoOne;
+            }
+
             // 如果開始拚酒後離開或刷新頁面，視為拚酒結束
-            let drinkingStart = JSON.parse(localStorage.getItem("drinkingStart")) || false;
-            if (drinkingStart) {
-                localStorage.setItem("drinkingEnd", true);  // 拚酒結束，直到過夜後重置
+            if (isTrue("拚酒開始")) {
+                turnSwitch("拚酒結束");
             }
         }
 
@@ -619,32 +627,22 @@
 
         // 拚酒遊戲
         function drinkingContest() {
-            // 如果拚酒結束，顯示玩過了的提示
-            if (localStorage.getItem("drinkingEnd") === "true") {
-                document.getElementById("text").textContent = texts.drinkingEnd;
-                window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
-                return;
-            }
-
             // 如果酒館沒有人，也沒有同伴，就不能玩
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             if (tavernCompanions.length === 0 && teamMembers === 1) {
-                document.getElementById("text").textContent = texts.drinkingNoOne;
-                window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
                 return;
             }
 
             let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
-            let drinkingStart = JSON.parse(localStorage.getItem("drinkingStart")) || false;
 
             // 花費 $10 賭注，只有第一輪需要
             let bet = 10;
-            if (!drinkingStart) {
+            if (!isTrue("拚酒開始")) {
                 if (playerMoney >= bet) {
                     playerMoney -= bet;
                     document.getElementById('playerMoney').textContent = playerMoney;
                     localStorage.setItem("playerMoney", playerMoney);
-                    localStorage.setItem("drinkingStart", true);  // 設為開始拚酒
+                    turnSwitch("拚酒開始");  // 設為開始拚酒
                 } else {
                     alert("金錢不足");
                     return;
@@ -678,7 +676,7 @@
     
             // 顯示喝酒按鈕
             document.getElementById("button-container").innerHTML = `
-                <button id="drink-btn">🍺 喝一杯（$1）</button>
+                <button id="drink-btn">🍺 喝一杯（$2）</button>
             `;
 
             document.getElementById("drink-btn").addEventListener("click", function () {
@@ -772,7 +770,7 @@
     
                 if (you.status === "醉倒") {
                     // 如果主角醉倒
-                    localStorage.setItem("drinkingEnd", true);  // 拚酒結束，直到過夜後重置
+                    turnSwitch("拚酒結束"); // 拚酒結束，直到過夜後重置
                     
                     // 檢查還有沒有人醒著
                     let potentialWinners = others.filter(p => p.status !== "醉倒");
@@ -794,13 +792,13 @@
                         playerMoney += prize;
                         document.getElementById('playerMoney').textContent = playerMoney;
                         localStorage.setItem("playerMoney", playerMoney);
-                        localStorage.setItem("drinkingEnd", true);  // 拚酒結束，直到過夜後重置
+                        turnSwitch("拚酒結束"); // 拚酒結束，直到過夜後重置
                         document.getElementById("text").textContent = texts.drinkingWin(prize); // 顯示勝利訊息
                     }
                 }
         
                 // 如果拚酒結束，清除按鈕
-                if (localStorage.getItem("drinkingEnd") === "true") {
+                if (isTrue("拚酒結束")) {
                     document.getElementById("button-container").innerHTML = "";
                 }
 

@@ -40,7 +40,7 @@
             <input type="file" id="fileInput" onchange="handleFile(event)" style="display: none;">
             <br>
             <button onclick="showDialogue('start')">遊戲說明</button>
-            <button onclick="preference()">偏好設定</button>
+            <button onclick="adjustPreference()">偏好設定</button>
             <br>
             <a href="../title.html"><button>回首頁</button></a>
         </div>
@@ -61,6 +61,7 @@
         // 頁面載入時
         window.onload = function() {
             localStorage.setItem("npcName", "說明");
+            preferences("fontSize"); // 偏好設定（只改字體）
         };
 
         // 對話資料庫
@@ -158,18 +159,38 @@
             }
         }
         
-        // 偏好設定
-        function preference() {
+        // 調整偏好設定
+        function adjustPreference() {
+            // 讀取字體設定
+            const fontSize = localStorage.getItem("fontSize");
+            let size = "大"; // 預設為大
+
+            if (fontSize === "large") {
+                size = "大";
+            } else if (fontSize === "medium") {
+                size = "中";
+            } else if (fontSize === "small") {
+                size = "小";
+            }
+
             document.getElementById("menu").style.display = "none";
 
             document.getElementById("text").innerHTML = `
+                <h4>字體</h4>
+                <p class="note small">目前設定為：${size}</p>
+                <div class="column-container">
+                    <button id="large-button" class="column center">大</button>
+                    <button id="medium-button" class="column center">中</button>
+                    <button id="small-button" class="column center">小</button>
+                </div>
+                <hr>
                 <h4>性別代名詞</h4>
                 <p class="note small">會改變所有角色的性別。</p>
                 <div class="column-container">
                     <button id="he-button" class="column center">他</button>
                     <button id="she-button" class="column center">她</button>
                 </div>
-                <br><br>
+                <hr>                
                 <h4>自訂NPC名字</h4>
                 <div id="npc-name-settings"></div>
                 <div class="menu">
@@ -179,7 +200,24 @@
                 <br>
             `;
 
-            // 設定性別按鈕
+            // 字體按鈕
+            document.getElementById("large-button").onclick = () => {
+                localStorage.setItem("fontSize", "large"); // 設定為大
+                preferences("fontSize"); // 偏好設定（只改字體）
+                adjustPreference();
+            };
+            document.getElementById("medium-button").onclick = () => {
+                localStorage.setItem("fontSize", "medium"); // 設定為中
+                preferences("fontSize"); // 偏好設定（只改字體）
+                adjustPreference();
+            };
+            document.getElementById("small-button").onclick = () => {
+                localStorage.setItem("fontSize", "small"); // 設定為小
+                preferences("fontSize"); // 偏好設定（只改字體）
+                adjustPreference();
+            };
+
+            // 性別按鈕
             document.getElementById("he-button").onclick = () => {
                 localStorage.setItem("npcGender", "he");
                 alert("已設定為「他」");
