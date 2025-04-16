@@ -8,14 +8,9 @@
     <style>
         body {
             background-color: #000 !important; /* 背景顏色 */
+            padding: 20px;
         }
 
-        input{
-            font-size: 20px;
-            margin: 5px 0;
-            padding: 5px 10px;
-            border-radius: 5px;
-        }
     </style>
 </head>
 <body>
@@ -28,58 +23,36 @@
             <button class="exit-button" onclick="goBack()">〈 返回</button>
             <h1>創建角色</h1>
         </div>
-        <br>
 
         <!-- 角色名稱 -->
-        <div class="container">
-            <label for="name">角色名稱：</label>
-            <input type="text" id="name" placeholder="輸入角色名稱" required>
-        </div>
+        <h3><label for="name">𒄬 名字</label><h3>
+        <p class="center">
+            <input type="text" id="name" class="nameInput center" placeholder="輸入角色名字" required>
+        </p>
+        <br><br>
+
+
+        <!-- 屬性 -->
+        <h3>𒄬 屬性</h3>
+        <div id="attribute"></div>
+
+        <!-- 顯示剩餘點數 -->
+        <p class="center">
+            <span class="note small">剩餘點數：</span>
+            <span id="remainingPoints">0</span>
+        </p>
         <br>
 
-        <!-- 屬性調整區域 -->
-        <div class="stat-container">
-            <label for="con">🫀 體質：</label>
-            <button onclick="adjustStat('con', -1)">-</button>
-            <span id="con" class="stat-value">10</span>
-            <button onclick="adjustStat('con', 1)">+</button>
-            <span class="note" id="con-description"></span> <!-- 顯示描述 -->
-        </div>
+        <!-- 背景 -->
+        <h3>𒄬 背景</h3>
+        <p>在你流亡到這片森林之前，你原本的身分是：</p>
+        <div id="background"></div>
+        <br>
 
-        <div class="stat-container">
-            <label for="str">⚔️ 力量：</label>
-            <button onclick="adjustStat('str', -1)">-</button>
-            <span id="str" class="stat-value">10</span>
-            <button onclick="adjustStat('str', 1)">+</button>
-            <span class="note" id="str-description"></span> <!-- 顯示描述 -->
-        </div>
+        <!-- 個性 -->
+        <h3>𒄬 個性</h3>
+        <div id="attribute"></div>
 
-        <div class="stat-container">
-            <label for="dex">🏃 敏捷：</label>
-            <button onclick="adjustStat('dex', -1)">-</button>
-            <span id="dex" class="stat-value">10</span>
-            <button onclick="adjustStat('dex', 1)">+</button>
-            <span class="note" id="dex-description"></span> <!-- 顯示描述 -->
-        </div>
-
-        <div class="stat-container">
-            <label for="wis">👁️ 感知：</label>
-            <button onclick="adjustStat('wis', -1)">-</button>
-            <span id="wis" class="stat-value">10</span>
-            <button onclick="adjustStat('wis', 1)">+</button>
-            <span class="note" id="wis-description"></span> <!-- 顯示描述 -->
-        </div>
-
-        <div class="stat-container">
-            <label for="cha">✨ 魅力：</label>
-            <button onclick="adjustStat('cha', -1)">-</button>
-            <span id="cha" class="stat-value">10</span>
-            <button onclick="adjustStat('cha', 1)">+</button>
-            <span class="note" id="cha-description"></span> <!-- 顯示描述 -->
-        </div>
-
-        <!-- 顯示剩餘可分配點數 -->
-        <p>剩餘可分配點數：<span id="remainingPoints">0</span></p>
 
         <!-- 創建角色按鈕 -->
         <div class="menu">
@@ -90,101 +63,236 @@
 
     <script src="script.js"></script>
     <script>
-        // 當前的屬性值
-        let stats = {
-            str: 10,
-            dex: 10,
-            con: 10,
-            wis: 10,
-            cha: 10,
+
+        // 畫面載入時
+        window.onload = function() {
+            showBackground();
+            showAttribute();
         };
 
-        // 剩餘可分配點數
-        let remainingPoints = 0;
 
-        // 設定最大和最小值
-        const MIN_STAT = 5;
-        const MAX_STAT = 15;
-        const TOTAL_MAX = 50;
+        // 屬性
+        let attributes = [
+            { id: "con", name: "🫀 體質", value: 10, note: "影響 HP 上限"},
+            { id: "str", name: "⚔️ 力量", value: 10, note: "影響攻擊力" },
+            { id: "dex", name: "🏃 敏捷", value: 10, note: "影響命中、迴避" },
+            { id: "wis", name: "👁️ 感知", value: 10, note: "偵查環境的能力" },
+            { id: "cha", name: "✨ 魅力", value: 10, note: "說服他人的能力" },
+        ];
 
-        // 設定屬性描述函數
-        function showStatDescription(stat, value) {
-            let description = "";
-            switch (stat) {
+        let remainingPoints = 0; // 剩餘點數
+        const MIN_ATTR = 5; // 屬性最小值
+        const MAX_ATTR = 15; // 屬性最大值
+        const TOTAL_MAX = 50; // 屬性總和上限
+
+        playerBackground = null; 
+
+        // 顯示屬性
+        function showAttribute() {
+            const menu = document.getElementById("attribute");
+            menu.innerHTML = "";
+
+            attributes.forEach(attribute => {
+                let attributeDiv = document.createElement("div");
+                attributeDiv.innerHTML = `
+                    <div class="item">
+                        <div class="column-container">
+                            <p class="column">${attribute.name}</p>
+                            <div class="column" style="display: flex;">
+                                <button onclick="adjustAttribute('${attribute.id}', -1)" class="small-button">-</button>
+                                <span id="${attribute.id}" class="column-small center">10</span>
+                                <button onclick="adjustAttribute('${attribute.id}', 1)" class="small-button">+</button>
+                            </div> 
+                        </div>
+                        <p class="column-container">
+                            <span class="column note small">${attribute.note}</span>
+                            <span id="${attribute.id}-level" class="column center note small"></span>
+                        </p>
+                    </div>
+                `;
+                menu.appendChild(attributeDiv);
+
+                // 顯示屬性等級
+                document.getElementById(`${attribute.id}-level`).textContent = showAttributeLevel(attribute.id, attribute.value);
+            });
+        }
+
+        // 顯示屬性等級
+        function showAttributeLevel(attributeId, value) {
+            let level = "";
+            switch (attributeId) {
                 case "con":
                     if (value < 8) {
-                        description = "弱不禁風";
+                        level = "弱不禁風";
                     } else if (value <= 12) {
-                        description = "中等";
+                        level = "中等";
                     } else {
-                        description = "身強體壯";
+                        level = "身強體壯";
                     }
                     break;
                 case "str":
                     if (value < 8) {
-                        description = "軟弱無力";
+                        level = "軟弱無力";
                     } else if (value <= 12) {
-                        description = "普通";
+                        level = "普通";
                     } else {
-                        description = "孔武有力";
+                        level = "孔武有力";
                     }
                     break;
                 case "dex":
                     if (value < 8) {
-                        description = "動作笨拙";
+                        level = "動作笨拙";
                     } else if (value <= 12) {
-                        description = "正常";
+                        level = "正常";
                     } else {
-                        description = "身手矯捷";
+                        level = "身手矯捷";
                     }
                     break;
                 case "wis":
                     if (value < 8) {
-                        description = "少一根筋";
+                        level = "少一根筋";
                     } else if (value <= 12) {
-                        description = "一般";
+                        level = "一般";
                     } else {
-                        description = "明察秋毫";
+                        level = "明察秋毫";
                     }
                     break;
                 case "cha":
                     if (value < 8) {
-                        description = "惹人厭惡";
+                        level = "惹人厭惡";
                     } else if (value <= 12) {
-                        description = "平凡";
+                        level = "平凡";
                     } else {
-                        description = "令人著迷";
+                        level = "令人著迷";
                     }
                     break;
             }
-            return description;
+            return level;
         }
 
-        // 調整屬性值的函數
-        function adjustStat(stat, delta) {
-            // 檢查新值是否符合限制
-            const newValue = stats[stat] + delta;
+        // 調整屬性
+        function adjustAttribute(attributeId, delta) {
+            let attribute = attributes.find(attr => attr.id === attributeId);
+
+            // 計算新值
+            const newValue = attribute.value + delta;
 
             // 計算總和
-            const total = stats.str + stats.dex + stats.con + stats.wis + stats.cha;
+            const total = attributes.reduce((sum, attr) => sum + attr.value, 0);
 
-            // 檢查新值是否在範圍內，且總和不超過30
-            if (newValue >= MIN_STAT && newValue <= MAX_STAT && total + delta <= TOTAL_MAX) {
-                stats[stat] = newValue;
-                document.getElementById(stat).textContent = newValue;
-                document.getElementById(stat + "-description").textContent = showStatDescription(stat, newValue);
+            // 檢查新值是否在範圍內，且總和不超過上限
+            if (newValue >= MIN_ATTR && newValue <= MAX_ATTR && total + delta <= TOTAL_MAX) {
+                attribute.value = newValue;
+                document.getElementById(`${attribute.id}`).textContent = newValue;
+                document.getElementById(`${attribute.id}-level`).textContent = showAttributeLevel(attribute.id, newValue);
                 remainingPoints -= delta;
                 document.getElementById("remainingPoints").textContent = remainingPoints;
             }
         }
 
-        // 創建角色的函數
+         // 背景
+        const backgrounds = [
+            { id: "peasant", name: "平民", money: 100, description: `你是未經訓練的普通人，各項屬性都是人類中的平均值。<br>開局難度：中等`},
+            { id: "soldier", name: "士兵", con: 2, str: 2, dex: 2, wis: 2, money: 150, weaponId: "sword01", armorId: "armor01", description: `你受過嚴格的戰鬥訓練，準備充足，比一般人更能適應這個危險的地區。<br>開局難度：非常簡單` },
+            { id: "noble", name: "貴族", con: -1, str: -1, dex: -1, cha: 2, fame: 5, armorId: "fineClothes01", money: 500, description: `你來自顯赫的家族，雖然已經失去了地位，但過去的名聲和積蓄仍能成為你的助力。<br>開局難度：簡單` },
+            { id: "barbarian", name: "野蠻人", con: 1, str: 1, dex: 1, wis: 3, cha: -3, weaponId: "dagger01", armorId: "lootClothes01", money: 0, description: `你在山林裡長大，有自己的生存之道，不跟文明社會來往，也不需要金錢。<br>開局難度：簡單` },
+            { id: "criminal", name: "通緝犯", dex: 2, wis: 2, fame: -5, wantedLevel: 1, money: 0, description: `你被通緝了，如果引起守衛注意後果將不堪設想。<br>開局難度：困難` },
+        ];
+
+        // 顯示背景
+        function showBackground() {
+            const menu = document.getElementById("background");
+            menu.innerHTML = "";
+
+            backgrounds.forEach(background => {
+                // 如果已經選擇背景，只顯示選擇的那一個
+                if (playerBackground && background.id !== playerBackground.id) {
+                    return;
+                }
+
+                // 找到裝備的資料
+                let weaponName, armorName;
+                const emojiRegex = /[\p{Emoji}\p{Emoji_Presentation}\p{Emoji_Modifier}\p{Emoji_Modifier_Base}\p{Emoji_Component}]/gu; // 用正則表達式來匹配所有 emoji 字符
+                if (background.weaponId) weaponName = findItemData(background.weaponId).name.replace(emojiRegex, "").replace(/\s+/g, ""); // 去除 emoji 和空白
+                if (background.armorId) armorName = findItemData(background.armorId).name.replace(emojiRegex, "").replace(/\s+/g, ""); // 去除 emoji 和空白
+                let equipment = [weaponName, armorName].filter(Boolean).join("、"); // 過去掉 undefined
+
+                let backgroundDiv = document.createElement("div");
+                backgroundDiv.innerHTML = `
+                    <div class="item">
+                        <p class="center">${background.name}</p>
+                        <div class="hided">
+                            <p class="note small">${background.description}</p>
+                            <p class="small">
+                                ${background.con > 0 ? `體質 +${background.con}　` : "" }
+                                ${background.str > 0 ? `力量 +${background.str}　` : "" }
+                                ${background.dex > 0 ? `敏捷 +${background.dex}　` : "" }
+                                ${background.wis > 0 ? `感知 +${background.wis}　` : "" }
+                                ${background.cha > 0 ? `魅力 +${background.cha}　` : "" }
+                                ${background.fame > 0 ? `名聲 +${background.fame}　` : "" }
+                            </p>
+                            <p class="warn small">
+                                ${background.con < 0 ? `體質 ${background.con}　` : "" }
+                                ${background.str < 0 ? `力量 ${background.str}　` : "" }
+                                ${background.dex < 0 ? `敏捷 ${background.dex}　` : "" }
+                                ${background.wis < 0 ? `感知 ${background.wis}　` : "" }
+                                ${background.cha < 0 ? `魅力 ${background.cha}　` : "" }
+                                ${background.fame < 0 ? `名聲 ${background.fame}　` : "" }
+                                ${background.wantedLevel > 0 ? `通緝等級 ${background.wantedLevel}` : "" }
+                            </p>
+                            ${background.money > 0 ? `
+                                <p class="small">起始資金： $${background.money}</p>
+                            ` : `
+                                <p class="warn small">起始資金： $${background.money}
+                            ` }
+                            <p class="small">${equipment ? `起始裝備：${equipment}`: ""}</p>
+                            <div class="row-buttons">
+                                ${playerBackground ? `
+                                    <button onclick="chooseBackground()">
+                                        <span class="small">重新選擇</span>
+                                    </button>
+                                ` : `
+                                    <button onclick="chooseBackground('${background.id}')">
+                                        <span class="small">選擇</span>
+                                    </button>
+                                ` }
+                            </div>
+                        </div>
+                    </div>
+                `;
+                menu.appendChild(backgroundDiv);
+            });
+        }
+
+        // 選擇背景
+        function chooseBackground(backgroundId) {
+            if (backgroundId) {
+                // 找到這個背景的資料
+                playerBackground = backgrounds.find(bg => bg.id === backgroundId);
+            } else {
+                playerBackground = null;  // 清除
+            }
+            showBackground(); // 重新顯示
+        }
+
+        // 個性
+        const personality = [
+            { id: "", name: "", description: ""},
+        ];
+
+        // 顯示個性
+        function showPersonality() {
+
+        }
+
+        // 創建角色
         function createCharacter() {
-            // 取得玩家的輸入資料
+            // 取得角色名字
             const name = document.getElementById("name").value;
 
-            // 確認角色資料是否填寫
+            // 確認名字是否填寫
             if (name === "") {
+                goTop();
                 alert("請輸入角色名稱");
                 return;
             }
@@ -192,35 +300,64 @@
             // 清除舊的遊戲資料
             localStorage.clear();
 
-            // 儲存角色資料至 localStorage
-            localStorage.setItem("playerName", name);
-            localStorage.setItem("PlayerType", "冒險者");
-            localStorage.setItem("playerCon", stats.con);
-            localStorage.setItem("playerStr", stats.str);
-            localStorage.setItem("playerDex", stats.dex);
-            localStorage.setItem("playerWis", stats.wis);
-            localStorage.setItem("playerCha", stats.cha);
-            localStorage.setItem("playerMaxHP", stats.con * 3);
-            localStorage.setItem("playerMoney", 1000); // 起始資金
-            localStorage.setItem("playerFame", 0); // 名聲
-            localStorage.setItem("wantedLevel", 0); // 通緝等級
+            // 如果沒選角色背景，預設為平民
+            if (!playerBackground) playerBackground = backgrounds[0];
             
+            // 儲存主角資料
+            const playerData = {
+                name: name,
+                id: "player",
+                type: "冒險者",
+                con: { basic: attributes.find(attr => attr.id === "con").value + (playerBackground.con || 0) },
+                str: { basic: attributes.find(attr => attr.id === "str").value + (playerBackground.str || 0) },
+                dex: { basic: attributes.find(attr => attr.id === "dex").value + (playerBackground.dex || 0) },
+                wis: { basic: attributes.find(attr => attr.id === "wis").value + (playerBackground.wis || 0) },
+                cha: { basic: attributes.find(attr => attr.id === "cha").value + (playerBackground.cha || 0) },
+                arm: { basic: 0 },
+                weapon: {},
+                armor: {},
+                MaxHP: attributes.find(attr => attr.id === "con").value * 3,
+                HP: attributes.find(attr => attr.id === "con").value * 3,
+                status: [], // 初始狀態
+                mood: 0,
+                emotion: [], // 初始狀態
+                description: `【${playerBackground.name}】${playerBackground.description}`,
+            };
+
+            // 加總屬性
+            ["str", "dex", "con", "wis", "cha", "arm"].forEach(attr => {
+                playerData[attr].total = Object.entries(playerData[attr])
+                    .filter(([key]) => key !== "total") // 過濾掉 "total"
+                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+            });
+
             // 將主角加入隊伍
-            playerToTeamMembers();
+            teamMembers = [];
+            teamMembers.push(playerData);
+            localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+
+            // 穿上初始裝備
+            if (playerBackground.weaponId) equip("player", playerBackground.weaponId); 
+            if (playerBackground.armorId) {
+                equip("player", playerBackground.armorId);
+            } else {
+                equip("player", "clothes01"); 
+            }
+
+            // 初始化資料
+            localStorage.setItem("playerMoney", playerBackground.money); // 起始資金
+            localStorage.setItem("playerFame", playerBackground.fame || 0); // 名聲
+            localStorage.setItem("wantedLevel", playerBackground.wantedLevel || 0); // 通緝等級
+
+            // 添加情緒
+            getEmotion("player", "fullHP", false); 
 
             // 新的一天（為了抽天氣）
             nextDay();
 
-            // 導向主遊戲頁面
-            window.location.href = "map.html"; // 假設這是遊戲主頁面的名稱
+            // 跳轉到地圖
+            window.location.href = "map.html";
         }
-
-        // 初始化頁面顯示描述
-        document.getElementById("con-description").textContent = showStatDescription("con", stats.con);
-        document.getElementById("str-description").textContent = showStatDescription("str", stats.str);
-        document.getElementById("dex-description").textContent = showStatDescription("dex", stats.dex);
-        document.getElementById("wis-description").textContent = showStatDescription("wis", stats.dex);
-        document.getElementById("cha-description").textContent = showStatDescription("cha", stats.dex);
 
     </script>
 </body>

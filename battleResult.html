@@ -18,7 +18,7 @@
    <div id="toast-container"></div>
 
     <!-- 主要內容區域 -->
-    <div class="main-content">
+    <div id="main" class="main-content">
         <h2 id="situation"></h2>
         <p id="battle-result"></p>
         <p id="loot-result"></p>
@@ -29,11 +29,21 @@
             <br>
             <button id="continue-btn" onclick="continueGame()">繼續</button>
         </div>
-
     </div>
+
+    <!-- 對話區域 -->
+    <div id="dialogue" class="main-content"></div>
 
     <script src="script.js"></script>
     <script>
+
+        // 畫面載入時
+        window.onload = function() {
+            showResult();
+            preferences(); // 偏好設定
+            showButtonBar(); // 顯示按鈕列
+            loadBackground(); // 讀取背景
+        };
 
         // 顯示文本
         const texts = {
@@ -49,13 +59,46 @@
             arrested: "你被逮捕了，所有隨身物品全都被沒收。",
         };
 
-        // 畫面載入時
-        window.onload = function() {
-            showResult();
-            preferences(); // 偏好設定
-            showButtonBar(); // 顯示按鈕列
-            loadBackground(); // 讀取背景
-        };
+        // 對話資料庫
+        let dialogueData = {
+            "艾德蒙": {
+                "艾德蒙第一次死": {
+                    text: "艾德蒙的屍體冰冷地躺在地上，你確認他已經沒有了呼吸和心跳……<br><br>忽然間，他的眼睛眨了一下。",
+                    choices: [
+                        { text: "確認是不是看錯", next: "仔細觀察" },
+                    ]
+                },
+                "仔細觀察": {
+                    npc: "npc",
+                    text: "幹嘛啦？盯著人家看……沒看過死人復活喔？",
+                    choices: [
+                        { text: "你沒有死？", next: "你沒有死" },
+                    ]
+                },
+                "你沒有死": {
+                    npc: "npc",
+                    text: "唉唷，爛命一條死死算了。亂講的啦，我最好是死得掉，不然就不叫不死族了。<br><br>重點是我盔甲這邊凹一個洞了，這樣他們下次就不給我抵押了，要怎麼辦？你要賠我啊？<br><br>沒有啦，不會叫你賠。但說真的，可以借我錢嗎？",
+                    choices: [
+                        { text: "你每次死亡都會復活？", next: "詢問" },
+                        { text: "不行", next: "不行" },
+                    ]
+                },
+                "詢問": {
+                    npc: "npc",
+                    text: "嗯，基本上是這樣，不用把藥水浪費在我身上，我躺一下就好了。<br><br>除非你真的很需要我，一秒鐘都離不開我，沒有我活不下去。",
+                    choices: [
+                        { text: "知道了", next: "", action: "(turnSwitch('艾德蒙第一次死'), continueGame())" },
+                    ]
+                },
+                "不行": {
+                    npc: "npc",
+                    text: "這個社會真是冷酷。",
+                    choices: [
+                        { text: "該走了", next: "", action: "(turnSwitch('艾德蒙第一次死'), continueGame())" },
+                    ]
+                },
+            },
+        }
 
         // 顯示結果
         function showResult() {
@@ -104,6 +147,10 @@
                 respawn(); // 重生
 
             } else if (battleResult === 7) {
+                // 交談後
+                continueGame();
+
+            } else if (battleResult === 8) {
                 // 成為奴隸的情況
                 document.getElementById("battle-result").textContent = texts.captured;
             }
@@ -158,11 +205,25 @@
             turnSwitch("inBattle", false); // 清除戰鬥中
             localStorage.removeItem("encounter"); // 清除指定遭遇
 
-            // 清空隊員的狀態
+            // 重置隊員狀態
             const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             teamMembers.forEach(member => {
                 member.status = [];
             });
+            localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+
+            // 艾德蒙滿血復活
+            let member = teamMembers.find(m => m.name === "艾德蒙");
+            if (member) {
+                if (member.HP === 0 && !isTrue("艾德蒙第一次死")) {
+                    localStorage.setItem("npcName", "艾德蒙");
+                    showDialogue("艾德蒙第一次死");
+                    return;
+                } else {
+                    member.HP = member.MaxHP;
+                    getEmotion(member.id, "fullHP");
+                }
+            }
             localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
 
             // 預設跳轉到地圖

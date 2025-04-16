@@ -9,6 +9,23 @@
         body {
         }
 
+        .table {
+            vertical-align: middle;
+
+            /* Flex 垂直水平置中 */
+            display: flex;
+            justify-content: center;
+
+            /* 讓內部能換行或疊上下排 */
+            flex-direction: column;
+        }
+
+        .fire {
+            font-size: 2em;
+            margin: auto;
+        }
+
+
     </style>
 </head>
 <body>
@@ -16,7 +33,7 @@
     <div id="buttonBar"></div>
 
     <!-- 通知框 -->
-   <div id="toast-container"></div>
+    <div id="toast-container"></div>
 
     <!-- 主要內容區域 -->
     <div id= "main" class="main-content">
@@ -25,31 +42,35 @@
             <h1>小屋</h1>
         </div>
 
-        <p>屋裡沒什麼能用了，只剩一個爐子。如果有火和足夠的食物，就可以在這裡休息一晚。</p>
+        <p id="text">屋裡沒什麼能用了，只剩一個爐子，可以在這裡烹飪食物或休息一晚。但夜晚的荒野很危險，小屋阻擋不了所有入侵者。</p>
 
         <!-- 同伴列表 -->
         <div id="companion-list"></div>
 
-        <!-- 選單 -->
-        <div id="menu" class="menu">
+        <!-- 物品列表 -->
+        <div id="item-list"></div>
+
+        <!-- 爐火區域 -->
+        <div class="column-container" style="gap: 0;">
+            <div id="seat-left" class="column center"></div>
+            <div id="table"></div>
+            <div id="seat-right" class="column center"></div>
         </div>
+
+        <!-- 選單 -->
+        <div id="menu" class="menu"></div>
+
     </div>
 
     <!-- 對話區域 -->
     <div id="dialogue" class="main-content"></div>
 
-    <!-- 突發事件 -->
-    <p id="text"></p>
-    <div class="menu">
-        <div id="button-container"></div>
-    </div>
-
     <script src="../script.js" defer></script>
     <script>
         // 畫面載入時
         window.onload = function() {
-            checkFire(); // 檢查是否有火
             showTeamHealth(); // 顯示隊伍健康程度
+            checkFire(); // 檢查是否有火
             loadEvent(); // 讀取進度
 
             preferences(); // 偏好設定
@@ -221,7 +242,7 @@
                 "start": {
                     text: "夜裡，你從熟睡中醒來，看見{npcName}趴在你的床邊，露出尖銳的獠牙。",
                     choices: [
-                        { text: "抵抗", next: "", action: "battle(2, 'npcName', 1, 'town/inn.html')" },
+                        { text: "抵抗", next: "", action: "battle(2, 'npcName', 1, 'locations/inn.html')" },
                         { text: "允許", next: "", action: "bloodSucked()" },
                     ]
                 },
@@ -274,74 +295,304 @@
                         ]
                     },
             },
+
+            "突發事件": {
+                "食人花種子": {
+                    text: "夜裡，一個奇怪的聲響從你的背包裡傳來，食人花種子發芽了，兇猛的食人花幼苗對你發動攻擊。",
+                    choices: [
+                        { text: "起身戰鬥", next: "", action: "seedBattle()" },
+                    ]
+                },
+                "小屋被襲擊": {
+                    npc: "speaker",
+                    text: "快醒來！敵人來了！",
+                    choices: [
+                        { text: "起身戰鬥", next: "", action: "(battle(2), exitEvent())" },
+                    ]
+                },
+            },
+
         };
 
         // 顯示文本
         const texts = {
-            seedGrown: "夜裡，一個奇怪的聲響從你的背包裡傳來，食人花種子發芽了，兇猛的食人花幼苗對你發動攻擊。",
+            cook: (requiredHeal, totalHeal) => `你需要補充 ${requiredHeal} 生命值，目前烹飪的食物能補充 ${totalHeal}。`,
+            cookTogether: (requiredHeal, totalHeal) => `你們需要補充 ${requiredHeal} 生命值，目前烹飪的食物能補充 ${totalHeal}。`,
+            eat: "你坐在爐火邊，享用了溫暖的一餐。",
+            eatTogether: "你們坐在爐火邊，享用了溫暖的一餐。",
+            chooseGuard: "如果派一人站哨，就能及時察覺入侵者並叫醒大家，但站哨者無法休息。要讓誰站哨嗎？",
+            safe: "這個晚上平安無事，你睡得很安穩。",
         };
-
-        // 生火
-        function light() {
-            // 檢查木頭
-            if (hasItem("wood", 2)) {
-                loseItem("wood", 2);
-            } else {
-                alert("木頭不足");
-                return;
-            }
-
-            turnSwitch("小屋生火");
-            checkFire();
-        }
 
         const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
         const count = teamMembers.length;
 
         // 檢查是否有火
         function checkFire() {
-            if (isTrue("小屋生火")) {
-                // 已經有火
+            // 沒有火
+            if (!isTrue("小屋生火")) {
                 document.getElementById("menu").innerHTML = `
-                    <button onclick="longRest()">
-                        🛌 過夜
-                        <span class="note small">（食物 × ${count}）</span>
+                    <button id="light-btn">
+                        🔥 生火<span class="note small">（木頭 × 1）</span>
                     </button>
                 `;
+                document.getElementById("light-btn").addEventListener("click", function () {
+                    // 檢查木頭
+                    if (hasItem("wood")) {
+                        loseItem("wood");
+                    } else {
+                        alert("木頭不足");
+                        return;
+                    }
+
+                    document.getElementById("menu").innerHTML = ""; // 清除按鈕
+                    turnSwitch("小屋生火");
+                    checkFire();
+                });
+
+            // 已經有火
             } else {
-                // 沒有火
                 document.getElementById("menu").innerHTML = `
-                    <button onclick="light()">
-                        🔥 生火
-                        <span class="note small">（木頭 × 2）</span>
-                    </button>
-                `;
+                    <button onclick="showTable()">🔥 烹飪食物</button>
+                    <button onclick="stay()">🛌 休息一晚</button>
+                `;                
             }
         }
 
-        // 過夜
-        function longRest() {
-            // 檢查食物
-            if (hasItem("potato", count)) {
-                // 讀取主角物品中的食物
-                const playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-                const food = itemDatabase.filter(item =>
-                    item.type === "loot" && playerItems.includes(item.id)
-                );
+        // 睡覺
+        function stay() {
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            //如果只有主角，直接過夜
+            if (teamMembers.length === 1) {
+                nextDay(); // 新的一天
+                resetHP(); // 完全恢復
+                checkAccident(); // 檢查是否有突發事件
+                showTeamHealth(); // 顯示隊伍健康程度
+                checkFire();
 
-                // 顯示食物清單
-
-                loseItem("potato", count); // 之後要改成多種食物
+            // 如果有同伴，可選擇一人站哨
             } else {
-                alert("食物不足");
-                return;
+                // 隱藏主要內容
+                document.getElementById("main").style.display = "none";
+
+                // 建立選擇同伴的 UI
+                let menu = document.createElement("div");
+                menu.classList.add("menu");
+
+                // 顯示提示
+                let message = document.createElement("p");
+                message.textContent = texts.chooseGuard;
+                menu.appendChild(message);
+
+                // 為每個成員建立一個按鈕
+                teamMembers.forEach(member => {
+                    let button = document.createElement("button");
+                    button.innerHTML = `
+                        <h4>${member.name}</h4>
+                        <h4 class="hp">${member.HP} / ${member.MaxHP}</h4>
+                    `;
+
+                    button.onclick = function () {
+                        // 紀錄站哨者
+                        localStorage.setItem("nightGuard", member.name);
+
+                        document.body.removeChild(menu); // 清除選單
+                        document.getElementById("main").style.display = "block"; // 顯示主要內容
+
+                        nextDay(); // 新的一天
+                        resetHP(); // 完全恢復
+                        checkAccident(); // 檢查是否有突發事件
+                        showTeamHealth(); // 顯示隊伍健康程度
+                        checkFire();
+                    };
+
+                    menu.appendChild(button);
+                });
+
+                // 不站哨按鈕
+                let cancelButton = document.createElement("button");
+                cancelButton.textContent = "所有人都去休息";
+    
+                cancelButton.onclick = function () {
+                    document.body.removeChild(menu); // 清除選單
+                    document.getElementById("main").style.display = "block"; // 顯示主要內容
+
+                    nextDay(); // 新的一天
+                    resetHP(); // 完全恢復
+                    checkAccident(); // 檢查是否有突發事件
+                    showTeamHealth(); // 顯示隊伍健康程度
+                    checkFire();
+                };
+
+                menu.appendChild(cancelButton);
+                document.body.appendChild(menu);
+            }
+        }
+
+        // 顯示烹飪區域
+        function showTable() {
+            document.getElementById("companion-list").innerHTML = ""; // 清空同伴列表
+
+            showPlayerItems("cook", "food"); // 顯示主角的食物
+
+            // 計算隊伍需要的治療量
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            let requiredHeal = 0;
+            teamMembers.forEach(member =>{
+                requiredHeal += member.MaxHP;
+                requiredHeal -= member.HP;
+            });
+
+            // 計算料理的總治療量
+            const orderedMeals = JSON.parse(localStorage.getItem("orderedMeals")) || [];
+            let totalHeal = orderedMeals.reduce((sum, meal) => sum + meal.heal, 0);
+
+            // 顯示訊息
+            if (teamMembers.length > 1) {
+                document.getElementById("text").innerHTML = texts.cookTogether(requiredHeal, totalHeal); // 和同伴坐下
+            } else {
+                document.getElementById("text").innerHTML = texts.cook(requiredHeal, totalHeal); // 獨自坐下
             }
 
-            nextDay(); // 新的一天
-            resetHP(); // 完全恢復
-            checkAccident(); // 檢查是否有突發事件
-            showTeamHealth(); // 顯示隊伍健康程度
-            checkFire();
+            // 有料理就顯示享用按鈕
+            if (orderedMeals.length > 0) {
+                document.getElementById("menu").innerHTML = `
+                    <button id="eat-btn">享用</button>
+                `;
+
+                // 享用
+                document.getElementById("eat-btn").addEventListener("click", function () {
+                    while (totalHeal > 0) {
+                        // 找出未補滿的隊員
+                        let unhealedMembers = teamMembers.filter(member => member.HP < member.MaxHP);
+                        if (unhealedMembers.length === 0) break; // 如果都補滿了，結束迴圈
+
+                        // 計算平均治療量（只對未補滿的隊員）
+                        let averageHeal = Math.floor(totalHeal / unhealedMembers.length);  // 四捨五入
+
+                        // 如果 `averageHeal` 小於 1，表示治療量不足以平分，直接給第一個未補滿的隊員
+                        if (averageHeal < 1) {
+                            unhealedMembers[0].HP = Math.min(unhealedMembers[0].HP + totalHeal, unhealedMembers[0].MaxHP);
+                            totalHeal = 0; // 治療量已經用完，結束迴圈
+                            break;
+                        }
+                    
+                        // 分配治療量
+                        unhealedMembers.forEach(member => {
+                            let healAmount = Math.min(averageHeal, member.MaxHP - member.HP); // 確保不會超過 MaxHP
+                            member.HP += healAmount;
+                            totalHeal -= healAmount; // 扣除已使用的治療量
+                        });
+                    }
+
+                    // 儲存
+                    localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+
+                    // 添加情緒
+                    teamMembers.forEach(member => {
+                        if (member.HP === member.MaxHP) {
+                            getEmotion(member.id, "fullHP"); // 添加滿血情緒
+                        }
+                    });
+
+                    // 顯示用餐訊息
+                    if (teamMembers.length > 1) {
+                        document.getElementById("text").textContent = texts.eatTogether; // 和同伴用餐
+                    } else {
+                        document.getElementById("text").textContent = texts.eat; // 獨自用餐
+                    }
+
+                    // 移除料理
+                    localStorage.removeItem("orderedMeals");
+
+                    // 清空隊伍和爐火區域
+                    document.getElementById("menu").innerHTML = "";
+                    document.getElementById("item-list").innerHTML = "";
+                    document.getElementById("seat-left").innerHTML = "";
+                    document.getElementById("seat-right").innerHTML = "";
+                    document.getElementById("table").innerHTML = "";
+
+                    showTeamHealth(); // 顯示隊伍健康程度
+                    checkFire();
+                });
+            }
+
+            // 顯示同伴（左排）
+            document.getElementById("seat-left").innerHTML = `
+                    <br>
+                    <div class="center">
+                        <h4 class="hp">${teamMembers[0].HP} / ${teamMembers[0].MaxHP}</h4>
+                        <div class="avatar background">
+                            <span class="small note">${teamMembers[0].name}</span>
+                        </div>
+                    </div>
+                    ${teamMembers[2] ? `<br><br><div class="center">
+                        <div class="avatar background">
+                            <span class="small note">${teamMembers[2].name}</span>
+                        </div>
+                        <h4 class="hp">${teamMembers[2].HP} / ${teamMembers[2].MaxHP}</h4>
+                    </div>` : ""}
+                    <br>
+            `;
+
+            // 顯示同伴（右排）
+            document.getElementById("seat-right").innerHTML = `
+                    <br>
+                    ${teamMembers[1] ? `<div class="center">
+                        <h4 class="hp">${teamMembers[1].HP} / ${teamMembers[1].MaxHP}</h4>
+                        <div class="avatar background">
+                            <span class="small note">${teamMembers[1].name}</span>
+                        </div>
+                    </div>` : ""}
+                    ${teamMembers[3] ? `<br><br><div class="center">
+                        <div class="avatar background">
+                            <span class="small note">${teamMembers[3].name}</span>
+                        </div>
+                        <h4 class="hp">${teamMembers[3].HP} / ${teamMembers[3].MaxHP}</h4>
+                    </div>` : ""}
+                    <br>
+            `;
+
+            // 顯示爐火區域和料理
+            document.getElementById("table").classList.add("table");
+            document.getElementById("table").innerHTML = `
+                <div class="column-container" style="gap: 0;">
+                    <div class="column">
+                        ${teamMembers.length > 0 && orderedMeals.length > 0 ? `
+                            <p style="font-size: 1.2em;">${Array.from(orderedMeals[0].name)[0]}</p>
+                        ` : "" }
+                        ${teamMembers.length > 2 && orderedMeals.length > 2 ? `
+                            <br><p style="font-size: 1.2em;">${Array.from(orderedMeals[2].name)[0]}</p>
+                        ` : "" }
+                    </div>
+                    <span class="fire">
+                        ${isTrue("小屋生火") ? `🔥` : "" }
+                    </span>
+                    <div class="column">
+                        ${teamMembers.length > 1 && orderedMeals.length > 1 ? `
+                            <p style="font-size: 1.2em;">${Array.from(orderedMeals[1].name)[0]}</p>
+                        ` : "" }
+                        ${teamMembers.length > 3 && orderedMeals.length > 3 ? `
+                            <br><p style="font-size: 1.2em;">${Array.from(orderedMeals[3].name)[0]}</p>
+                        ` : "" }
+                    </div>
+                </div>
+            `;
+        }
+
+        // 烹飪
+        function cook(itemId) {
+            loseItem(itemId); // 失去一個食材
+
+            // 找到食物的資料
+            let item = itemDatabase.find(i => i.id === itemId);
+
+            // 添加至料理
+            let orderedMeals = JSON.parse(localStorage.getItem("orderedMeals")) || [];
+            orderedMeals.push(item);
+            localStorage.setItem("orderedMeals", JSON.stringify(orderedMeals));
+
+            showTable(); // 更新
         }
 
         // 檢查是否有突發事件（只會發生一件，按照優先順序寫）
@@ -353,7 +604,7 @@
                 let nightWithSain = parseInt(localStorage.getItem("nightWithSain")) || 0;
             
                 // 賽恩首次襲擊
-                if (isCompanion("雷納德") && !isTrue('賽恩不再夜襲') && !isTrue('用血支付賽恩')) {
+                if (isCompanion("賽恩") && !isTrue('賽恩不再夜襲') && !isTrue('用血支付賽恩')) {
                     // 計算和賽恩過幾夜
                     if (nightWithSain < 3) { 
                         nightWithSain ++;
@@ -409,32 +660,40 @@
 
                 // 如果有種子長出來，進入指定的戰鬥
                 if (grownCount > 0) {
-                    // 隱藏主要內容
-                    document.getElementById("main").style.display = "none";
-
-                    // 顯示種子長出來的訊息
-                    document.getElementById("text").textContent = texts.seedGrown;
-
-                    // 顯示戰鬥按鈕
-                    document.getElementById("button-container").innerHTML = `
-                        <button id="fight-btn">⚔️ 戰鬥</button>
-                    `;
-                    document.getElementById("fight-btn").addEventListener("click", function () {
-                        let encounter = {
-                            situation: 2,
-                            enemyAdj: "",
-                            enemyName: "食人花幼苗",
-                            enemyCount: grownCount,
-                            destination: "town/inn.html",
-                        };
-                        localStorage.setItem("encounter", JSON.stringify(encounter)); // 儲存指定遭遇
-                        localStorage.setItem("backgroundStyle", "url('images/inn.jpg')"); // 儲存背景圖
-                        window.location.href = "../encounter.html"; // 跳轉到遭遇頁面
-                    });
+                    localStorage.setItem("npcName", "突發事件");
+                    showDialogue("食人花種子");
+                    return;
                 }
-                goTop();
-                return;
             }
+
+            // 檢查是否有敵人襲擊
+            let probability = 0.25;  // 襲擊機率
+            if (Math.random() <= probability) { 
+                // 被襲擊
+                const nightGuard = localStorage.getItem("nightGuard");
+                if (nightGuard) {
+                    // 如果有人站哨，進入一般戰鬥
+                    localStorage.removeItem("nightGuard");
+
+                    let event = "突發事件";
+                    localStorage.setItem("inEvent", event);
+                    localStorage.setItem("npcName", event);
+
+                    showDialogue("小屋被襲擊", null, nightGuard);
+                } else {
+                    // 如果無人站哨，被偷襲
+                    battle(3);
+                }
+            } else { 
+                // 安全
+                document.getElementById("text").textContent = texts.safe; // 顯示安全過夜的訊息
+            }
+        }
+
+        // 食人花種子戰鬥
+        function seedBattle() {
+            let grownCount = JSON.parse(localStorage.getItem("grownCount")) || [];
+            battle(2, '食人花幼苗', grownCount, 'locations/cabin.html');
         }
 
         // 被吸血

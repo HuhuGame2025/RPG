@@ -25,11 +25,12 @@
     <div id="main" class="main-content">
         <br>
         <div class="row-buttons">
-            <button onclick="showItem()"><span class="small">全部</span></button>
-            <button onclick="showItem('equipment')"><span class="small">🗡️</span></button>
-            <button onclick="showItem('supply')"><span class="small">🫙</span></button>
-            <button onclick="showItem('loot')"><span class="small">💰</span></button>
-            <button onclick="showItem('specialItem')"><span class="small">📜</span></button>
+            <button onclick="showPlayerItems('inventory')"><span class="small">全部</span></button>
+            <button onclick="showPlayerItems('inventory', 'weapon')"><span class="small">🗡️</span></button>
+            <button onclick="showPlayerItems('inventory', 'armor')"><span class="small">🛡️</span></button>
+            <button onclick="showPlayerItems('inventory', 'supply')"><span class="small">🫙</span></button>
+            <button onclick="showPlayerItems('inventory', 'loot')"><span class="small">💰</span></button>
+            <button onclick="showPlayerItems('inventory', 'specialItem')"><span class="small">📜</span></button>
         </div>
 
         <!-- 金幣 -->
@@ -57,7 +58,7 @@
         // 頁面載入時
         window.onload = function() {
             loadPartyData();
-            showItem(); // 顯示所有物品
+            showPlayerItems("inventory"); // 顯示主角物品列表
             preferences(); // 偏好設定
             
             let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
@@ -74,7 +75,7 @@
                         { text: "你是什麼？", next: "關於惡魔" },
                         { text: "你能給我什麼力量？", next: "關於力量" },
                         { text: "要怎麼獻祭？", next: "關於獻祭" },
-                        { text: "放回去", next: "", action: "(showItem(), removeDialogue())" },
+                        { text: "放回去", next: "", action: "(showPlayerItems('inventory'), removeDialogue())" },
                     ]
                 },
                 "關於惡魔": {
@@ -128,7 +129,7 @@
                     choices: [
                         { text: "召喚烈焰", next:"", action: "demonAttack()" },
                         { text: "治療傷口", next: "", action: "demonHeal()" },
-                        { text: "算了", next: "", action: "(showItem(), removeDialogue())" },
+                        { text: "算了", next: "", action: "(showPlayerItems(), removeDialogue())" },
                     ]
                 },
                 "use_非戰鬥中": {
@@ -136,14 +137,14 @@
                     text: "你想要我怎麼做？",
                     choices: [
                         { text: "治療傷口", next: "", action: "demonHeal()" },
-                        { text: "算了", next: "", action: "(showItem(), removeDialogue())" },
+                        { text: "算了", next: "", action: "(showPlayerItems(), removeDialogue())" },
                     ]
                 },
                     "靈魂不足": {
                         npc: "npc",
                         text: "想使用我的力量？先獻祭靈魂。",
                         choices: [
-                            { text: "好吧", next: "", action: "(showItem(), removeDialogue())" },
+                            { text: "好吧", next: "", action: "(showPlayerItems(), removeDialogue())" },
                         ]
                     },
             },
@@ -155,57 +156,6 @@
             chooseRubyUser: (count) =>  `能使用 ${count} 次魔法，要治療誰？`,
         }
 
-        // 顯示所有物品
-        function showItem(itemType) {
-            // 讀取玩家的物品
-            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-
-            // 統計物品數量
-            let count = {};
-            playerItems.forEach(item => {
-                count[item] = (count[item] || 0) + 1;
-            });
-
-            let itemData = [];
-
-            // 顯示物品列表
-            const itemList = document.getElementById("item-list");
-            itemList.innerHTML = "";
-
-            Object.keys(count).forEach(itemId => {
-                //let item = itemData.find(i => i.id === itemId); // 從資料庫查找物品
-                let item = findItemData(itemId); // 從資料庫查找物品
-
-                if (!item) {
-                    return;
-                }
-
-                // 根據選擇的分類篩選物品
-                if (itemType === "equipment" && item.type === "weapon" || itemType === "equipment" && item.type === "armor") {
-                    // 選equipment顯示武器和盔甲
-                } else if (itemType && item.type !== itemType) {
-                    return;
-                }
-
-                // 顯示物品
-                let itemDiv = document.createElement("div");
-                itemDiv.classList.add("item");
-
-                // 顯示物品資料
-                itemDiv.innerHTML = showItemHTML(item, count[itemId], "inventory");
-
-                // 點擊物品時，顯示或隱藏詳細資訊
-                let itemElement = itemDiv;
-                let hidedElement = itemDiv.querySelector(".hided");
-
-                itemElement.addEventListener("click", () => {
-                    hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
-                });
-
-                itemList.appendChild(itemDiv);
-
-            });
-        }
 
         // 使用物品
         function useItem(itemId) {
@@ -239,7 +189,6 @@
 
             // 建立選擇使用者的 UI
             let menu = document.createElement("div");
-            menu.id = "userMenu";
             menu.classList.add("menu");
 
             // 顯示「要讓誰使用」的提示（如果該物品還有）
@@ -333,9 +282,12 @@
     
             cancelButton.onclick = function () {
                 document.body.removeChild(menu); // 清除選單
-                showItem(); // 顯示物品列表
+
+                // 重新顯示列表
+                const currentList = JSON.parse(localStorage.getItem("currentList")) || [];
+                showPlayerItems(currentList[0], currentList[1], currentList[2]);
+
                 document.getElementById("main").style.display = "block"; // 顯示主要內容
-                return;
             };
 
             menu.appendChild(cancelButton);
@@ -414,8 +366,9 @@
             // 更新 `localStorage`
             localStorage.setItem("playerItems", JSON.stringify(playerItems));
 
-            // 重新顯示物品列表
-            showItem();
+            // 重新顯示列表
+            const currentList = JSON.parse(localStorage.getItem("currentList")) || [];
+            showPlayerItems(currentList[0], currentList[1], currentList[2]);
         }
 
         // 惡魔治療
@@ -430,7 +383,6 @@
 
             // 建立選擇使用者的 UI
             let menu = document.createElement("div");
-            menu.id = "userMenu";
             menu.classList.add("menu");
 
             // 顯示「要對誰使用」的提示
@@ -478,7 +430,10 @@
                     if (soulCount > 0) {
                         demonHeal(); // 重新顯示選單，方便連續使用
                     } else {
-                        showItem(); // 顯示物品列表
+                        // 重新顯示列表
+                        const currentList = JSON.parse(localStorage.getItem("currentList")) || [];
+                        showPlayerItems(currentList[0], currentList[1], currentList[2]);
+
                         document.getElementById("main").style.display = "block"; // 顯示主要內容
                     }
                 };
@@ -492,7 +447,11 @@
     
             cancelButton.onclick = function () {
                 document.body.removeChild(menu); // 清除選單
-                showItem(); // 顯示物品列表
+
+                // 重新顯示列表
+                const currentList = JSON.parse(localStorage.getItem("currentList")) || [];
+                showPlayerItems(currentList[0], currentList[1], currentList[2]);
+
                 document.getElementById("main").style.display = "block"; // 顯示主要內容
                 return;
             };

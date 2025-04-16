@@ -10,14 +10,6 @@
             background-color: #000 !important; /* 背景顏色 */
         }
         
-        input {
-            font-size: 1em;
-            color: #ccc;
-            background: #111;
-            border: none;
-            border-radius: 15px;
-            padding: 10px 15px;
-        }
     </style>
 </head>
 <body>
@@ -79,7 +71,7 @@
                     text: `<h4>角色屬性</h4>
                         <div class="item bottomborder">
                             <p>🫀 體質</p>
-                            <p>最大 HP 等於體質 × 3。</p>
+                            <p>角色 HP 上限等於體質 × 3。</p>
                         </div>
                         <div class="item bottomborder">
                             <p>⚔️ 力量</p>
@@ -91,7 +83,7 @@
                         </div>
                         <div class="item bottomborder">
                             <p>👁️ 感知</p>
-                            <p>發現敵人、避免被偷襲的能力。</p>
+                            <p>在探索中發現敵人、避免被偷襲的能力。</p>
                         </div>
                         <div class="item bottomborder">
                             <p>✨ 魅力</p>
@@ -109,7 +101,9 @@
                 "戰鬥規則": {
                     text: `
                         <h4>戰鬥規則</h4>
-                        <p>採用回合制戰鬥，敵我隊伍輪流行動。</p>
+                        <p>遊戲採用回合制戰鬥，敵我雙方輪流行動。</p>
+                        <p>1. 在我方回合中，每個角色能進行一個動作，行動順序可自由決定。</p>
+                        <p>2. 完成後按下「結束回合」，就會顯示敵方行動並進入下一輪。</p>
                         <div class="item bottomborder">
                             <p>⚔️ 攻擊</p>
                             <p>擲骰 1D20 + 角色敏捷/2，若能超過 10 + 目標敏捷/2，攻擊就會命中。</p>
@@ -117,7 +111,7 @@
                         </div>
                         <div class="item bottomborder">
                             <p>👣 前進／後退</p>
-                            <p>角色可移動到前排或後排，直到進行其他動作。敵人會優先攻擊前排成員。</p>
+                            <p>在進行動作前，角色可隨意移動到前排或後排。敵人會優先攻擊前排成員。</p>
                         </div>
                         <div class="item bottomborder">
                             <p>🏃 逃跑</p>
@@ -246,7 +240,7 @@
                 npcContainer.innerHTML += `
                     <div class="item bottomborder">
                         <label class="note small">${npc.label}：</label>
-                        <p><input type="text" id="${npc.key}" value="${storedName}" placeholder="${npc.defaultName}"></p>
+                        <p><input type="text" id="${npc.key}" class="nameInput" value="${storedName}" placeholder="${npc.defaultName}"></p>
                     </div>
                 `;
             });

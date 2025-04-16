@@ -224,36 +224,37 @@
 
         // 敵人資料庫
         const enemies = [
-            // 智慧（能交談，大雷雨不出門，有機會搶劫）,
-            // 類人（單位詞是「個」，有形容詞）,
-            { name: "盜賊", type: ["類人","智慧"], terrain: ["草原","森林","洞穴"], con: 10, str: 10, dex: 12, wis: 10, cha: 10, weaponId: "dagger01", armorId: "armor01", money: 20, loot: "clothes03", action: "專心數著搶來的錢", actionBattle: "亮出手中的匕首", description: "資質普通的人類盜賊，欺善怕惡，到處打劫旅行者。" },
-            { name: "哥布林", type: ["類人","智慧"], terrain: ["草原","森林"], con: 5, str: 6, dex: 14, wis: 12, cha: 5, weaponId: "stick01", money: 5, loot: "lootClothes01", action: "坐在地上摳著小腳", actionBattle: "胡亂揮舞棍棒", description: "瘦小的哥布林，身高只有成人的一半，個性懦弱，但奸詐狡猾。" },
-            { name: "獸人", type: ["類人","智慧"], terrain: ["草原","森林"], con: 16, str: 16, dex: 10, wis: 9, cha: 8, weaponId: "hammer01", armorId: "armor01_old", money: 15, loot: "clothes01", action: "在保養自己的武器", actionBattle: "舉起了沉重的戰錘", description: "身高 200 公分的獸人，是肌肉發達的戰鬥狂，仗著自身的武力傲視其他生物。" },
-            { name: "狼人", type: ["類人","智慧"], terrain: ["森林","洞穴"], con: 15, str: 22, dex: 13, wis: 7, cha: 6, money: 10, loot: "lootClothes03", action: "懶洋洋地趴在地上", actionBattle: "發出凶狠的咆哮聲", description: "充滿野性的原生狼人，常用四肢奔跑，能化身為人，但智力似乎和狼差不多。" },
-            { name: "食人妖", type: ["類人","智慧"], terrain: ["草原","森林","洞穴"], con: 30, str: 20, dex: 8, wis: 8, cha: 3, weaponId: "stick02", money: 12, loot: "lootClothes02", action: "在吃剩的骨頭旁邊打盹", actionBattle: "踏著笨重的步伐走來", description: "體型龐大的食人妖，約 3~4 公尺高，雖然遲鈍又笨重，但能輕易把人捏碎。" },
+            // 智慧（能交談，大雷雨不出門，有機會搶劫，單位詞是「個」，適用類人形容詞）,
+            // 類人（單位詞是「個」，適用類人形容詞）,
+            { name: "盜賊", type: ["類人","智慧"], terrain: ["草原","森林","洞穴"], con: 10, str: 10, dex: 12, wis: 10, cha: 10, weaponId: "dagger01", armorId: "armor01", money: 20, action: "專心數著搶來的錢", actionBattle: "亮出手中的匕首", description: "資質普通的人類盜賊，欺善怕惡，到處打劫旅行者。" },
+            { name: "哥布林", type: ["類人","智慧"], terrain: ["草原","森林"], con: 5, str: 6, dex: 14, wis: 12, cha: 5, weaponId: "stick01", money: 5, armorId: "lootClothes01", action: "坐在地上摳著小腳", actionBattle: "胡亂揮舞棍棒", description: "瘦小的哥布林，身高只有成人的一半，個性懦弱，但奸詐狡猾。" },
+            { name: "獸人", type: ["類人","智慧"], terrain: ["草原","森林"], con: 16, str: 16, dex: 10, wis: 9, cha: 8, weaponId: "hammer01", armorId: "armor01_old", money: 15, action: "在保養自己的武器", actionBattle: "舉起了沉重的戰錘", description: "身高 200 公分的獸人，是肌肉發達的戰鬥狂，仗著自身的武力傲視其他生物。" },
+            { name: "狼人", type: ["類人","智慧"], terrain: ["森林","洞穴"], con: 15, str: 22, dex: 13, wis: 7, cha: 6, armorId: "lootClothes03", money: 10, action: "懶洋洋地趴在地上", actionBattle: "發出凶狠的咆哮聲", description: "充滿野性的原生狼人，常用四肢奔跑，能化身為人，但智力似乎和狼差不多。" },
+            { name: "食人妖", type: ["類人","智慧"], terrain: ["森林","洞穴"], con: 30, str: 20, dex: 8, wis: 8, cha: 3, weaponId: "stick02", armorId: "lootClothes02", money: 12, action: "在吃剩的骨頭旁邊打盹", actionBattle: "踏著笨重的步伐走來", description: "體型龐大的食人妖，約 3~4 公尺高，雖然遲鈍又笨重，但能輕易把人捏碎。" },
             { name: "鼠人劍客", type: ["類人","智慧"], terrain: ["森林","洞穴"], con: 2, str: 4, dex: 15, wis: 10, cha: 10, weaponId: "sword03", armorId: "lootClothes04", money: 1, action: "用小小的雙手洗臉", actionBattle: "拔出腰間的迷你刺劍", description: "不到 30 公分高的鼠人，十分敏感、膽小，沒有能說話的發聲器官，只會吱吱叫。" },
-            { name: "蛙人獵手", type: "類人", terrain: "湖泊", con: 10, str: 12, dex: 16, wis: 10, cha: 5, weaponId: "spear01", action: "在水草間尋找獵物", actionBattle: "舉著長矛跳上了船" },
+            { name: "蛙人獵手", type: "類人", terrain: "湖泊", con: 10, str: 12, dex: 16, wis: 10, cha: 5, weaponId: "spear01", loot: "fish", action: "在水草間尋找獵物", actionBattle: "舉著長矛跳上了船" },
             // 野獸,
-            { name: "蠕蟲", type: "野獸", terrain: ["農田","森林"], con: 1, str: 1, dex: 3, loot: "wormLoot", action: "在地上捲成一球", actionBattle: "蠕動著長長的身體" },
+            { name: "蠕蟲", type: "野獸", terrain: "農田", con: 1, str: 1, dex: 3, loot: "wormLoot", action: "在地上捲成一球", actionBattle: "蠕動著長長的身體" },
             { name: "史萊姆", type: "野獸", terrain: "森林", con: 2, str: 4, dex: 5, loot: "slimeLoot", action: "看似一灘爛泥", actionBattle: "開始釋放腐蝕性黏液" },
-            { name: "食人魚", type: "野獸", terrain: "湖泊", con: 2, str: 12, dex: 12, loot: "piranhaLoot", action: "一群魚在水裡悠游", actionBattle: "鋸齒狀的利牙咬了上來" },
-            { name: "狐狸", type: "野獸", terrain: ["草原","農田","森林"], con: 3, str: 8, dex: 16, loot: ["fur","meat"], action: "正在舔自己的毛", actionBattle: "警戒地圍著你跑來跑去" },
-            { name: "稻草人", type: "野獸", terrain: "農田", con: 7, str: 10, dex: 8, loot: "clothes02", action: "佇立在田野間", actionBattle: "用腳下的木桿跳了過來" },
-            { name: "石化雞蛇", type: "野獸", terrain: "森林", con: 9, str: 9, dex: 14, addStatus: "石化", addChance: 0.2, loot: "cockatriceLoot", action: "在草叢中追著一隻蟲", actionBattle: "兩顆頭都凶狠地盯著你" },
+            { name: "食人魚", type: "野獸", terrain: "湖泊", con: 2, str: 9, dex: 12, loot: "fish", action: "一群魚在水裡悠游", actionBattle: "鋸齒狀的利牙咬了上來" },
+            { name: "毒蛇", type: "野獸", terrain: "洞穴", con: 3, str: 5, dex: 12, addStatus: "中毒", addChance: 0.5, loot: "snake", action: "窩在洞穴中睡覺", actionBattle: "發出警告的嘶嘶聲" },
+            { name: "狐狸", type: "野獸", terrain: ["草原","農田"], con: 3, str: 8, dex: 16, loot: ["fur","meat"], action: "正在舔自己的毛", actionBattle: "警戒地圍著你跑來跑去" },
+            { name: "稻草人", type: "野獸", terrain: "農田", con: 7, str: 10, dex: 8, loot: "clothes02", action: "佇立在田野間", actionBattle: "木桿從土裡跳了出來" },
+            { name: "石化雞蛇", type: "野獸", terrain: "森林", con: 9, str: 9, dex: 14, addStatus: "石化", addChance: 0.2, loot: ["cockatriceLoot","meat"], action: "在草叢中追著一隻蟲", actionBattle: "兩個頭都對著你吼叫" },
             { name: "火蜥蜴", type: "野獸", terrain: "草原", con: 10, str: 12, dex: 12, addStatus: "燃燒", addChance: 0.2, loot: ["lizardLoot","meat"], action: "正悠閒地曬太陽", actionBattle: "全身的鱗片冒出了火" },
             { name: "野豬", type: "野獸", terrain: ["草原","森林"], con: 12, str: 15, dex: 11, loot: ["fur","meat","tusk"], action: "鼻子貼著地面聞", actionBattle: "前腳刨地準備衝撞" },
             { name: "野狼", type: "野獸", terrain: ["草原","森林"], con: 12, str: 18, dex: 15, loot: ["fur","meat"], action: "趴在地上用後腳抓癢", actionBattle: "虎視眈眈地盯著你" },
-            { name: "巨大的觸手", type: "野獸", terrain: "湖泊", con: 18, str: 22, dex: 12, addStatus: "倒地", addChance: 0.2, loot: "tentacleLoot", action: "在水中捕魚", actionBattle: "伸出水面向你抓來" },
+            { name: "水怪觸手", type: "野獸", terrain: "湖泊", con: 18, str: 22, dex: 12, addStatus: "倒地", addChance: 0.2, loot: "tentacleLoot", action: "緩緩伸向悠游的魚群", actionBattle: "伸出水面準備抓住你" },
             { name: "巨型蜘蛛", type: "野獸", terrain: "洞穴", con: 20, str: 17, dex: 13, addStatus: "中毒", addChance: 0.3, loot: ["spiderLoot","silk"], action: "處於靜止狀態", actionBattle: "八條腿高速爬行過來" },
             // 飛行,
             { name: "小仙子", type: ["飛行","類人","智慧"], terrain: "森林", con: 1, str: 1, dex: 15, wis: 10, cha: 14, loot: "fairyDust", action: "在花叢中飛舞", actionBattle: "發出施展魔法的光芒", description: "只有手掌大小的仙子，長著透明的翅膀，十分調皮。" },
             { name: "蝙蝠", type: "飛行", terrain: "洞穴", con: 2, str: 3, dex: 16, loot: "batLoot", action: "倒掛著休息", actionBattle: "漫天飛舞" },
             { name: "石像鬼", type: ["飛行","不死"], terrain: "森林", con: 15, str: 20, dex: 12, loot: ["gargoyleLoot","gargoyleLoot"], action: "蹲在陰影下沉思", actionBattle: "張開惡魔般的翅膀" },
-            { name: "巨鷹", type: "飛行", terrain: ["草原","洞穴"], con: 25, str: 27, dex: 15, loot: ["meat","eagleLoot","eagleLoot","eagleLoot","eagleLoot","eagleLoot","eagleLoot"], action: "悠閒地伸展羽翼", actionBattle: "伸出巨大的鷹爪" },
+            { name: "巨鷹", type: "飛行", terrain: "草原", con: 25, str: 27, dex: 15, loot: ["meat","eagleLoot","eagleLoot","eagleLoot","eagleLoot","eagleLoot","eagleLoot"], action: "悠閒地伸展羽翼", actionBattle: "伸出巨大的鷹爪" },
             { name: "龍", type: ["飛行","龍"], terrain: "草原", con: 60, str: 50, dex: 14, addStatus: "燃燒", addChance: 0.5, loot: "dragonLoot", action: "似乎在沉眠中", actionBattle: "目光如炬地盯著你" },
             // 植物（我方攻擊、逃跑自動成功）,
             { name: "爬行藤蔓", type: "植物", terrain: "森林", con: 2, str: 5, dex: 14, loot: "vineLoot", action: "看似普通的藤蔓", actionBattle: "在你的腳邊纏繞過來" },
-            { name: "蘑菇怪", type: "植物", terrain: "森林", con: 4, str: 1, dex: 8, addStatus: "中毒", addChance: 0.5, loot: "mushroomLoot", action: "藏身在一片蘑菇之間", actionBattle: "歪著頭好奇地看你" },
+            { name: "蘑菇怪", type: "植物", terrain: "森林", con: 4, str: 1, dex: 8, addStatus: "中毒", addChance: 0.5, loot: "mushroomLoot", action: "藏身在一片蘑菇之間", actionBattle: "朝空中撒出有毒的孢子" },
             { name: "食人花", type: "植物", terrain: "森林", con: 14, str: 20, dex: 12, loot: "manEaterSeed", action: "靜靜地隨風搖曳", actionBattle: "張開了血盆大口" },
             { name: "樹人", type: "植物", terrain: "森林", con: 50, str: 25, dex: 6, addStatus: "倒地", addChance: 0.5, loot: ["treantLoot","wood","wood","wood"], action: "樹皮上浮現一張臉孔", actionBattle: "緩慢地揮動粗壯的樹枝" },
             // 不死（晴天不會出現）,
@@ -342,12 +343,12 @@
             // 如果有指定遭遇
             const encounter = JSON.parse(localStorage.getItem("encounter"));
             if (encounter) {
-                // 使用指定的敵人
-                selectedEnemy = enemies.find(e => encounter.enemyName === e.name); 
-            }
-            if (encounter && encounter.enemyCount) {
-                // 使用指定的數量
-                enemyCount = encounter.enemyCount; 
+                if (encounter.enemyName) { 
+                    selectedEnemy = enemies.find(e => encounter.enemyName === e.name); // 使用指定的敵人
+                }
+                if (encounter.enemyCount) { 
+                    enemyCount = encounter.enemyCount; // 使用指定的數量
+                }
             }
 
             // 建立敵人陣列（所有敵人都是相同種類）
@@ -367,13 +368,15 @@
 
                 // 如果有指定形容詞
                 const encounter = JSON.parse(localStorage.getItem("encounter"));
-                if (encounter && encounter.enemyAdj === "none") {
-                    adj = ""; // 不加形容詞
-                } else if (encounter && encounter.enemyAdj === encounter.enemyName) {
-                    adj = encounter.enemyName.replace(selectedEnemy.name, ""); // 從名字取出形容詞
-                } else if (encounter && encounter.enemyAdj) {
-                    adj = encounter.enemyAdj; // 使用指定的形容詞
-                }   
+                if (encounter && encounter.enemyAdj) {
+                    if (encounter.enemyAdj === "none") {
+                        adj = ""; // 不加形容詞
+                    } else if (encounter.enemyAdj === encounter.enemyName) {
+                        adj = encounter.enemyName.replace(selectedEnemy.name, ""); // 從名字取出形容詞
+                    } else {
+                        adj = encounter.enemyAdj; // 使用指定的形容詞
+                    }
+                }
 
                 // 取得敵人的裝備資料，如果沒有裝備就都是 0
                 const weapon = selectedEnemy.weaponId ? findItemData(selectedEnemy.weaponId) || { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 } : { str: 0, arm: 0, dex: 0, cha: 0, needStr: 0 };

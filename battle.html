@@ -939,6 +939,14 @@
                     let damage = Math.max(enemyStr - hurtMember.arm.total, 0); // 傷害 = 攻擊者的力量 - 目標的護甲
                     hurtMember.HP = Math.max(hurtMember.HP - damage, 0); // HP減少，不會低於0
 
+                    // 更新顯示 HP
+                    document.getElementById(`${hurtMember.id}-HP`).textContent = hurtMember.HP;
+
+                    // HP變為紅字（不移除之前的紅字，可以同時有多個紅字）
+                    let redHP = JSON.parse(localStorage.getItem("redHP")) || [];
+                    redHP.push(`${hurtMember.id}-HP`);
+                    localStorage.setItem("redHP", JSON.stringify(redHP));
+
                     // 判斷角色是否死亡
                     if (hurtMember.HP <= 0) {
                         // 角色死亡，顯示被擊殺訊息（在敵人的欄位）
@@ -948,14 +956,6 @@
                         // 角色活著，顯示被攻擊訊息（在敵人的欄位）
                         localStorage.setItem(`${enemy.id}-action-text`, texts.enemyWin(hurtMember.name, damage));
                         
-                        // 更新顯示 HP
-                        document.getElementById(`${hurtMember.id}-HP`).textContent = hurtMember.HP;
-
-                        // HP變為紅字（不移除之前的紅字，可以同時有多個紅字）
-                        let redHP = JSON.parse(localStorage.getItem("redHP")) || [];
-                        redHP.push(`${hurtMember.id}-HP`);
-                        localStorage.setItem("redHP", JSON.stringify(redHP));
-
                         // 附加狀態（來自敵人的能力或武器）
                         let statusName;
                         if (enemy.addStatus) {
@@ -1146,6 +1146,7 @@
             localStorage.setItem("presentMembers", JSON.stringify(presentMembers));
             localStorage.setItem("availableMembers", JSON.stringify(availableMembers));
             localStorage.setItem("frontMembers", JSON.stringify(frontMembers));
+            localStorage.removeItem("deadMembers");
             
             //console.log("剩餘成員:", presentMembers);
             //console.log("可行動的成員", availableMembers);
@@ -1537,7 +1538,7 @@
                 if (randomValue < 1) { // 100% 被搶劫
                     battleResult = 6;
                 } else { // 0% 被抓去當奴隸（尚未實裝）
-                    battleResult = 7; 
+                    battleResult = 8; 
                 }                
                 localStorage.setItem("battleResult", battleResult);
 
@@ -1569,7 +1570,7 @@
                     localStorage.setItem("battleResult", battleResult);
                 }
 
-            } else if (battleResult === 7) { // 成為奴隸的情況（尚未實裝）
+            } else if (battleResult === 8) { // 成為奴隸的情況（尚未實裝）
 
             }
 

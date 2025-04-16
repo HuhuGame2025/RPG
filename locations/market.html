@@ -30,7 +30,7 @@
             <button onclick="showShop('blacksmith')">🔨<br>鐵匠鋪</button>
             <button onclick="showShop('grocery')">🫙<br>雜貨店</button>
             <button onclick="showShop('clothes')">🧥<br>服飾店</button>
-            <button onclick="showPlayerItems('sell')">♻️<br>舊貨商</button>
+            <button onclick="showSellList('sell')">♻️<br>舊貨商</button>
             <button onclick="showDialogue('拍賣', threshold)">🪙<br>拍賣場</button>
         </div>
 
@@ -69,7 +69,6 @@
             grocery: "雜貨店販售旅行需要的補給品。",
             clothes: "服飾店販售最時尚的服裝精品。",
             sell: "舊貨商會收購大部分的物品，價錢雖低但能馬上兌現。",
-            sellAtAuction: (threshold) => `價值高於 $${threshold} 的物品才能拍賣。`,
             auction: "每件商品只能出價一次，出價最高越容易得標，得標後才需付款。",
             nothingToSell: "你目前沒有物品可賣。",
         };
@@ -139,7 +138,7 @@
                     "拍賣": {
                         text: "這裡是拍賣場，你可以將物品上架拍賣，隔天再來查看結果。",
                         choices: [
-                            { text: "上架拍賣", next: "上架拍賣", action: "showPlayerItems('sellAtAuction')" },
+                            { text: "上架拍賣", next: "上架拍賣", action: "showSellList('sellAtAuction')" },
                             { text: "查看拍賣品", next: "查看拍賣品", action: "showAuctionItems()" },
                             { text: "離開", next: "", action: "removeDialogue()" },
                         ]
@@ -197,65 +196,25 @@
             }
         }
 
-        // 顯示主角物品
-        function showPlayerItems(usage) {
+        // 顯示可販賣物品
+        function showSellList(usage) {
             // 顯示說明
-            if (usage === "sellAtAuction") {
-                document.getElementById("text").textContent = texts[usage](threshold);
-            } else {
+            if (usage === "sell") {
                 document.getElementById("text").textContent = texts[usage];
             }
-
-            // 讀取主角的物品
-            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-
-            // 統計物品數量
-            let count = {};
-            playerItems.forEach(item => {
-                count[item] = (count[item] || 0) + 1;
-            });
-
-            // 顯示物品列表
-            let itemList;
-            if (usage === "sell") {
-                itemList = document.getElementById("item-list");
-            } else {
-                itemList = document.getElementById("addition"); // 在對話中
-            }
             
-            itemList.innerHTML = "";
+            // 顯示主角物品列表
+            showPlayerItems(usage);
 
-            Object.keys(count).forEach(itemId => {
-                //let item = itemDatabase.find(i => i.id === itemId); // 從資料庫查找物品
-                let item = findItemData(itemId); // 從資料庫查找物品
-                if (!item) return;
+            // 找到列表容器
+            let itemList;
+            if (document.getElementById("addition")) {
+                itemList = document.getElementById("addition"); // 如果在對話中
+            } else {
+                itemList = document.getElementById("item-list");
+            }
 
-                // 如果是上架拍賣，排除價格未達門檻的物品
-                if (usage === "sellAtAuction" && item.price < threshold) return;
-
-                // 排除 specialItem 類型的物品和同伴專屬物品
-                if (item.type === "specialItem" || item.owner) return;
-
-                if (item) {
-                    let itemDiv = document.createElement("div");
-                    itemDiv.classList.add("item", "background");
-
-                    // 顯示物品資料
-                    itemDiv.innerHTML = showItemHTML(item, count[itemId], usage);
-
-                    // 點擊物品時，顯示或隱藏描述
-                    let itemElement = itemDiv.querySelector(".column-container");
-                    let hidedElement = itemDiv.querySelector(".hided");
-
-                    itemElement.addEventListener("click", () => {
-                        hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
-                    });
-
-                    itemList.appendChild(itemDiv);
-                }
-            });
-
-            // 如果沒有物品，顯示沒有物品可賣的訊息
+            // 如果列表中沒有物品，顯示沒有物品可賣的訊息
             if (itemList.innerHTML === "") {
                document.getElementById("text").textContent = texts.nothingToSell;
                return;
@@ -327,7 +286,7 @@
             localStorage.setItem("playerMoney", playerMoney);
 
             // 重新顯示可販賣物品
-            showPlayerItems('sell');
+            showSellList('sell');
         }
 
         // 拍賣品價格門檻
@@ -439,7 +398,7 @@
             localStorage.setItem("auctionItems", JSON.stringify(auctionItems));
 
             // 重新顯示可拍賣物品
-            showPlayerItems('sellAtAuction');
+            showSellList('sellAtAuction');
         }
 
         // 下架拍賣品

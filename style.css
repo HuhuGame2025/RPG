@@ -453,3 +453,12 @@
         content: "︿";
     }
 
+    /* 名稱輸入框 */
+    .nameInput {
+        font-size: 1em;
+        color: #ccc;
+        background: #222;
+        border: 1px solid #ccc;
+        border-radius: 15px;
+        padding: 10px 15px;
+    }

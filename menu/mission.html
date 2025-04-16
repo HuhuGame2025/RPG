@@ -22,7 +22,7 @@
     </div>
 
     <!-- 通知框 -->
-   <div id="toast-container"></div>
+    <div id="toast-container"></div>
 
     <div class="main-content">
         <br>
@@ -40,12 +40,12 @@
     
         // 頁面載入時
         window.onload = function() {
-            getTakenMissions() // 讀取任務
+            showTakenMissions() // 顯示已承接的任務
             preferences(); // 偏好設定
         };
 
-        // 讀取已承接的任務
-        function getTakenMissions() {
+        // 顯示已承接的任務
+        function showTakenMissions() {
             // 清空列表
             const list = document.getElementById("list");
             list.innerHTML = "";
@@ -63,7 +63,10 @@
 
                     <div class="hided" style="display: none;">
                         ${mission.description}
-                        <p>報酬： $${mission.price}</p>
+                        <p>
+                            報酬： $${mission.price}
+                            ${mission.sharePrice ? `（分得 $${mission.sharePrice}）` : "" }
+                        </p>
                         <div class="menu">
                             <button id="quit-btn" onclick="quitMission('${mission.id}')">放棄</button>
                         </div>
@@ -84,29 +87,42 @@
 
         // 放棄任務
         function quitMission(missionId) {
+            let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
+            let mission = takenMissions.find(mission => mission.id === missionId); // 找到任務的資料
+
             // 如果是送貨任務，檢查是否帶著包裹
-            if ((missionId === "task01" || missionId === "task02")) {
+            if (missionId === "task01" || missionId === "task02") {
                 const itemId = missionId.replace("task", "package");
                 if (hasItem(itemId) || hasItem(`${itemId}_damaged`)) {
-                    alert("退還包裹後才能放棄");
+                    alert("要先將包裹退還給公會，才能放棄這個任務");
                     return;
                 }
             }
 
             // 先讓玩家確認是否要放棄
-            const isConfirmed = confirm("確定放棄任務嗎？");
-            if (!isConfirmed) {
-                return; // 如果玩家按「取消」，就不執行後續動作
-            }
+            if (mission.sharePrice) {
+                const isConfirmed = confirm("放棄任務將會解散隊伍中的冒險者，確定放棄任務嗎？");
+                if (!isConfirmed) return; // 按取消就不執行後續動作
 
-            let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
+                // 移除身分為「冒險者」的同伴
+                const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+                for (let i = teamMembers.length - 1; i >= 0; i--) { // 用倒序處理，以免移除後 index 改變而漏掉項目
+                    const member = teamMembers[i];
+                    if (member.id !== "player" && member.type === "冒險者") {
+                        removeCompanion(member.id);
+                    }
+                }
+            } else {
+                const isConfirmed = confirm("確定放棄任務嗎？");
+                if (!isConfirmed) return; // 按取消就不執行後續動作
+            }
 
             // 根據 id 移除任務
             takenMissions = takenMissions.filter(m => m.id !== missionId);
             localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
 
             // 重新讀取
-            getTakenMissions();
+            showTakenMissions();
         }
 
     </script>

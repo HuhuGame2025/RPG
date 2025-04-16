@@ -16,7 +16,7 @@
     <div id="buttonBar"></div>
 
     <!-- 通知框 -->
-   <div id="toast-container"></div>
+    <div id="toast-container"></div>
 
     <!-- 主要內容區域 -->
     <div id="main" class="main-content">
@@ -33,8 +33,8 @@
 
         <!-- 選單 -->
         <div id="menu" class="menu">
-            <button onclick="showMissionList('task')">查看兼職</button>
             <button onclick="showMissionList('quest')">查看委託</button>
+            <button onclick="showMissionList('task')">查看兼職</button>
             <button onclick="lostProperty()">失物招領</button>
             <button onclick="showDialogue('start')">💬 和接待員交談</button>
         </div>
@@ -82,7 +82,7 @@
                     },
                         "關於任務": {
                             npc: "npc",
-                            text: "你可以在這裡承接兼職和委託，兼職是較為簡單的日常工作，委託則具有挑戰性，完成委託可以提升你的名聲。<br><br>當你完成任務要求後，別忘了回到公會提交結果，才能領取任務報酬喔。",
+                            text: "你可以在這裡承接兼職和委託，兼職是較為簡單的日常工作，委託則具有挑戰性，完成委託可以提升你的名聲。<br><br>當你完成任務後，別忘了回到公會提交結果，才能領取報酬喔。",
                             choices: [
                                 { text: "知道了", next: "start" },
                             ]
@@ -96,7 +96,7 @@
                         },
                         "關於接待員": {
                             npc: "npc",
-                            text: "我很熱愛我的工作，能幫助鎮民解決問題，還能夠看著冒險者們成長。<br><br>我認為只要努力一定會有收穫，即使失敗也會獲得寶貴的經驗，所以請不要害怕失敗，勇往直前吧。",
+                            text: "我很熱愛這份工作，能幫助鎮民解決問題，還能夠看著新一代的冒險者成長。<br><br>我認為只要努力一定會有收穫，即使失敗也會獲得寶貴的經驗，所以請不要害怕失敗，勇往直前吧。",
                             choices: [
                                 { text: "原來如此", next: "start" },
                             ]
@@ -192,6 +192,84 @@
                         text: "那個孩子沒有活下來是嗎？真是太令人難過了。<br><br>很抱歉，冒險者，因為任務沒有完成，我不能將報酬交給你。",
                         choices: [
                             { text: "好吧", next: "", action: "checkMissions()" },
+                        ]
+                    },
+
+                // 組隊承接
+                    "組隊承接": {
+                        npc: "npc",
+                        text: "這是一個有挑戰性的任務，你想和其他冒險者組隊嗎？<br><br>他們會和你一起冒險，直到任務完成，並和你平分任務報酬。<br><br>但要提醒你一下，即使中途遣散隊員，當你完成任務時，報酬依舊會分配給現在登記的隊員喔。",
+                        choices: [
+                            { text: "有哪些冒險者？", next: "隊員介紹" },
+                            { text: "我不需要組隊了", next: "不組隊" },
+                        ]
+                    },
+                    "不組隊": {
+                        npc: "npc",
+                        text: "沒關係，如果你還需要夥伴，也可以到酒館雇用有空的冒險者喔。",
+                        choices: [
+                            { text: "知道了", next: "", action: "removeDialogue()" },
+                        ]
+                    },
+
+                    "隊員介紹": {
+                        npc: "npc",
+                        text: "這些是登記在公會的冒險者名單，你比較想了解哪一位？我可以為你介紹。",
+                        choices: [
+                            { text: "雷納德（人類戰士）", condition: "!isCompanion('雷納德')", next: "關於雷納德" },
+                            { text: "塔爾穆克（獸人戰士）", condition: "!isCompanion('塔爾穆克')", next: "關於塔爾穆克" },
+                            { text: "賽恩（刺客）", condition: "!isCompanion('賽恩')", next: "關於賽恩" },
+                            { text: "艾德蒙（人類戰士）", condition: "!isCompanion('艾德蒙')", next: "關於艾德蒙" },
+                            { text: "諾伊爾（精靈遊俠）", condition: "!isCompanion('諾伊爾')", next: "關於諾伊爾" },
+                            { text: "我不需要組隊了", next: "不組隊" },
+                        ]
+                    },
+                        "關於雷納德": {
+                            npc: "npc",
+                            text: "啊，雷納德，他是一位正直又善良的勇者，非常熱心助人。<br><br>他各方面的能力都很優秀，一把可靠的巨劍是他的老戰友。<br><br>而且他有個堅持，就是不收任何酬勞。只要你願意，他會免費加入你的隊伍。",
+                            choices: [
+                                { text: "我要和雷納德組隊", next: "隊員加入", action: "(addCompanion(null, '雷納德', '冒險者'), shareReward())" },
+                                { text: "再看看其他人", next: "隊員介紹" },
+                            ]
+                        },
+                        "關於塔爾穆克": {
+                            npc: "npc",
+                            text: "塔爾穆克是我們最勇猛的戰士，雖然脾氣有點嚇人，但到目前為止他還算守規矩。<br><br>他是個高大魁武的獸人，揮舞著一把引以為傲的戰斧，能擔當隊伍的肉盾。",
+                            choices: [
+                                { text: "我要和塔爾穆克組隊", next: "隊員加入", action: "(addCompanion(null, '塔爾穆克', '冒險者'), shareReward())" },
+                                { text: "再看看其他人", next: "隊員介紹" },
+                            ]
+                        },
+                        "關於賽恩": {
+                            npc: "npc",
+                            text: "我承認我對賽恩不是很了解，他總是蒙著面，也不太說話。<br><br>但他的戰鬥表現很不錯，能用匕首精準刺殺目標，來無影去無蹤。<br><br>只是有人說……噢，沒什麼，傳聞不可靠啦。",
+                            choices: [
+                                { text: "我要和賽恩組隊", next: "隊員加入", action: "(addCompanion(null, '賽恩', '冒險者'), shareReward())" },
+                                { text: "再看看其他人", next: "隊員介紹" },
+                            ]
+                        },
+                        "關於艾德蒙": {
+                            npc: "npc",
+                            text: "艾德蒙嗎？雖然他的能力不是最突出的，但他是個活潑開朗的人。<br><br>他有一把單手劍，不幸的是他弄丟了，所以你可能會需要借他武器。",
+                            choices: [
+                                { text: "我要和艾德蒙組隊", next: "隊員加入", action: "(addCompanion(null, '艾德蒙', '冒險者'), shareReward())" },
+                                { text: "再看看其他人", next: "隊員介紹" },
+                            ]
+                        },
+                        "關於諾伊爾": {
+                            npc: "npc",
+                            text: "諾伊爾是來自遙遠國度的高等精靈，你一眼就能認出這位美少年，雖然我猜他比我們都還年長。<br><br>他的體力不是很好，但身輕如燕，非常敏捷，使用一把優雅的短弓。",
+                            choices: [
+                                { text: "我要和諾伊爾組隊", next: "隊員加入", action: "(addCompanion(null, '諾伊爾', '冒險者'), shareReward())" },
+                                { text: "再看看其他人", next: "隊員介紹" },
+                            ]
+                        },
+                    "隊員加入": {
+                        npc: "npc",
+                        text: "好的，我這就通知他過來。還想選擇其他隊友嗎？<br><br>隊友越多越安心，但相對地，你分到的報酬就會越少喔。",
+                        choices: [
+                            { text: "再看看其他人", next: "隊員介紹" },
+                            { text: "確定組隊", next: "", action: "removeDialogue()" },
                         ]
                     },
 
@@ -384,6 +462,83 @@
                         ]
                     },
 
+                // 組隊承接
+                    "組隊承接": {
+                        npc: "npc",
+                        text: "要找人組隊？那些傢伙閒著沒事都泡在隔壁的酒館，叫一聲就來了。<br><br>但你要確定喔，你的報酬會跟那些人平分，而且就算領錢之前把他們踢掉，他們還是會分到錢。<br><br>這是規定，別怪我沒提醒你。",
+                        choices: [
+                            { text: "有哪些冒險者？", next: "隊員介紹" },
+                            { text: "我不需要組隊了", next: "不組隊" },
+                        ]
+                    },
+                    "不組隊": {
+                        npc: "npc",
+                        text: "是啊，幹嘛跟人分錢？",
+                        choices: [
+                            { text: "再見", next: "", action: "removeDialogue()" },
+                        ]
+                    },
+                    "隊員介紹": {
+                        npc: "npc",
+                        text: "目前就這些人，不要問我他們是幹什麼的，你挑個順眼的名字就好了。",
+                        choices: [
+                            { text: "雷納德（人類戰士）", condition: "!isCompanion('雷納德')", next: "關於雷納德" },
+                            { text: "塔爾穆克（獸人戰士）", condition: "!isCompanion('塔爾穆克')", next: "關於塔爾穆克" },
+                            { text: "賽恩（刺客）", condition: "!isCompanion('賽恩')", next: "關於賽恩" },
+                            { text: "艾德蒙（人類戰士）", condition: "!isCompanion('艾德蒙')", next: "關於艾德蒙" },
+                            { text: "諾伊爾（精靈遊俠）", condition: "!isCompanion('諾伊爾')", next: "關於諾伊爾" },
+                            { text: "我不需要組隊了", next: "不組隊" },
+                        ]
+                    },
+                        "關於雷納德": {
+                            npc: "npc",
+                            text: "雷納德？那個濫好人是專門做白工的，操死他吧，不用分他錢。<br><br>如果他開始唸東唸西，就直接叫他滾。",
+                            choices: [
+                                { text: "我要和雷納德組隊", next: "隊員加入", action: "(addCompanion(null, '雷納德', '冒險者'), shareReward())" },
+                                { text: "再看看其他人", next: "隊員介紹" },
+                            ]
+                        },
+                        "關於塔爾穆克": {
+                            npc: "npc",
+                            text: "這種奇怪的名字，聽起來就是獸人。獸人會來當冒險者，通常都是被部落淘汰的廢物。",
+                            choices: [
+                                { text: "我要和塔爾穆克組隊", next: "隊員加入", action: "(addCompanion(null, '塔爾穆克', '冒險者'), shareReward())" },
+                                { text: "再看看其他人", next: "隊員介紹" },
+                            ]
+                        },
+                        "關於賽恩": {
+                            npc: "npc",
+                            text: "有這個人？沒印象，大概是個廢物。",
+                            choices: [
+                                { text: "我要和賽恩組隊", next: "隊員加入", action: "(addCompanion(null, '賽恩', '冒險者'), shareReward())" },
+                                { text: "再看看其他人", next: "隊員介紹" },
+                            ]
+                        },
+                        "關於艾德蒙": {
+                            npc: "npc",
+                            text: "給艾德蒙一點工作做也好，他還欠一屁股債呢。<br><br>啊，不過……那個白癡連自己的劍都輸掉了，你有多的武器嗎？",
+                            choices: [
+                                { text: "我要和艾德蒙組隊", next: "隊員加入", action: "(addCompanion(null, '艾德蒙', '冒險者'), shareReward())" },
+                                { text: "再看看其他人", next: "隊員介紹" },
+                            ]
+                        },
+                        "關於諾伊爾": {
+                            npc: "npc",
+                            text: "是那個血統高貴的小鬼，看起來弱得要命，誰會想帶這種拖油瓶？",
+                            choices: [
+                                { text: "我要和諾伊爾組隊", next: "隊員加入", action: "(addCompanion(null, '諾伊爾', '冒險者'), shareReward())" },
+                                { text: "再看看其他人", next: "隊員介紹" },
+                            ]
+                        },
+                    "隊員加入": {
+                        npc: "npc",
+                        text: "我吹個口哨，他馬上就會到門口。<br><br>確定你的隊伍就是這些人了嗎？",
+                        choices: [
+                            { text: "再看看其他人", next: "隊員介紹" },
+                            { text: "確定組隊", next: "", action: "removeDialogue()" },
+                        ]
+                    },
+
                 // 失物招領
                     "有失物": {
                         text: "成堆無人認領的背包，屬於無名的冒險者們。<br><br>你認出其中一個背包是你的，裡面的錢和物品都完好如初。<br><br>但你需要支付 $100 的保管費才能領回。",
@@ -470,7 +625,7 @@
         // 顯示文本
         const texts = {
             tasks: "兼職適合想在冒險途中順便賺外快的冒險者。",
-            quests: "委託適合有實力的冒險者，完成民眾的請求，能讓冒險者名聲水漲船高。",
+            quests: "委託適合有實力的冒險者，完成民眾的請求，能讓冒險者名聲水漲船高。一次只能進行一件委託。",
             choosePrisoner: "要把誰交出去？",
         };
 
@@ -505,10 +660,10 @@
             { id: "task05", type: "task", name: "收集種子", startPos: ["town01", "town02"], description: "食人花的種子能做成美味佳餚，但要取得必須冒著生命危險，如果有 10 個我就高價收購。", price: 200, status: "" },
 
             // 委託
-            { id: "quest01", type: "quest", name: "失竊的紅寶石", startPos: ["town01"], description: "一顆稀有的紅寶石失竊了，我們知道下手的盜賊團躲在哪，希望有人能從他們的巢穴中取回寶石。", price: 300, status: "" },
-            { id: "quest02", type: "quest", name: "吸血鬼擄走的孩子", startPos: ["town01"], description: "吸血鬼擄走了一個孩子，囚禁在一座古堡的地牢裡，去營救的守衛也有去無回，希望勇者出手相助。", price: 250, status: "" },
-            { id: "quest03", type: "quest", name: "奴隸的復仇", startPos: ["town02"], description: "我曾經為了一袋金幣淪為獸人的奴隸，現在我自由了，我要復仇！讓那個渾蛋嚐嚐同樣的滋味！", price: 200, status: "" },
-            { id: "quest04", type: "quest", name: "協尋丈夫", startPos: ["town02"], description: "丈夫在月圓之夜變成狼人，離家出走了，希望有人能帶他回家。不過，請先制伏他再帶回來。", price: 300, status: "" }
+            { id: "quest01", type: "quest", name: "失竊的紅寶石", startPos: ["town01"], description: "一顆稀有的紅寶石失竊了，我們知道下手的盜賊團躲在哪，希望有人能從他們的巢穴中取回寶石。", price: 600, status: "" },
+            { id: "quest02", type: "quest", name: "吸血鬼擄走的孩子", startPos: ["town01"], description: "吸血鬼擄走了一個孩子，囚禁在一座古堡的地牢裡，去營救的守衛也有去無回，希望勇者出手相助。", price: 500, status: "" },
+            { id: "quest03", type: "quest", name: "奴隸的復仇", startPos: ["town02"], description: "我曾經為了一袋金幣淪為獸人的奴隸，現在我自由了，我要復仇！讓那個渾蛋嚐嚐同樣的滋味！", price: 400, status: "" },
+            { id: "quest04", type: "quest", name: "協尋丈夫", startPos: ["town02"], description: "丈夫在月圓之夜變成狼人，離家出走了，希望有人能帶他回家。不過，請先制伏他再帶回來。", price: 600, status: "" }
         ];
 
         // 檢查任務是否完成
@@ -743,6 +898,9 @@
                     } else {
                         button.innerHTML = `
                             <button onclick="takeMission('${mission.id}')">承接</button>
+                            ${mission.type === "quest" ? `
+                                <button onclick="(takeMission('${mission.id}'), showDialogue('組隊承接'))">組隊承接</button>
+                            ` : "" }
                         `;
                     }
                     //console.log(`任務 ${mission.id} | 狀態: ${mission.status}`);
@@ -757,11 +915,18 @@
 
         // 承接任務
         function takeMission(missionId) {
+            // 檢查是否已接其他委託
+            let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
+            let hasQuest = takenMissions.some(mission => mission.type === "quest");
+            if (hasQuest) {
+                alert("已有進行中的委託");
+                return;
+            }
+
             // 找到這個任務的資料
             let mission = missions.find(m => m.id === missionId);
                 
             // 添加任務資料
-            let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
             let takenMission = {
                 id: mission.id,
                 type: mission.type,
@@ -786,6 +951,21 @@
             showMissionList(mission.type); // 重新顯示任務列表
         }
 
+        // 計算組隊分成
+        function shareReward() {
+            // 計算組隊的冒險者人數
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            const adventurers = teamMembers.filter(m => m.type === "冒險者");
+
+            // 找到委託的資料
+            let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
+            let quest = takenMissions.find(mission => mission.type === "quest");
+            if (quest) {
+                quest.sharePrice = Math.round(quest.price / adventurers.length); // 報酬除以人數
+            }
+            localStorage.setItem("takenMissions", JSON.stringify(takenMissions));
+        }
+
         // 提交任務
         function reportMission(missionId) {
             let takenMissions = JSON.parse(localStorage.getItem("takenMissions")) || [];
@@ -801,6 +981,9 @@
                 completedMissions.push(mission);
                 localStorage.setItem("completedMissions", JSON.stringify(completedMissions));
             }
+
+            // 如果是組隊承接，只會拿到分成
+            if (mission.sharePrice) mission.price = mission.sharePrice;
 
             getItem("$" + mission.price); // 獲得報酬
             takenMissions = takenMissions.filter((m) => m.id !== mission.id); // 清除任務

@@ -40,12 +40,6 @@
     <!-- 對話區域 -->
     <div id="dialogue" class="main-content"></div>
 
-    <!-- 突發事件 -->
-    <p id="text"></p>
-    <div class="menu">
-        <div id="button-container"></div>
-    </div>
-
     <script src="../script.js" defer></script>
     <script>
         // 畫面載入時
@@ -223,7 +217,7 @@
                 "start": {
                     text: "夜裡，你從熟睡中醒來，看見{npcName}趴在你的床邊，露出尖銳的獠牙。",
                     choices: [
-                        { text: "抵抗", next: "", action: "battle(2, 'npcName', 1, 'town/inn.html')" },
+                        { text: "抵抗", next: "", action: "battle(2, 'npcName', 1, 'locations/inn.html')" },
                         { text: "允許", next: "", action: "bloodSucked()" },
                     ]
                 },
@@ -276,11 +270,19 @@
                         ]
                     },
             },
+
+            "突發事件": {
+                "食人花種子": {
+                    text: "夜裡，一個奇怪的聲響從你的背包裡傳來，食人花種子發芽了，兇猛的食人花幼苗對你發動攻擊。",
+                    choices: [
+                        { text: "起身戰鬥", next: "", action: "seedBattle()" },
+                    ]
+                },
+            },
         };
 
         // 顯示文本
         const texts = {
-            seedGrown: "夜裡，一個奇怪的聲響從你的背包裡傳來，食人花種子發芽了，兇猛的食人花幼苗對你發動攻擊。",
         };
 
         // 住宿
@@ -310,7 +312,7 @@
                 let nightWithSain = parseInt(localStorage.getItem("nightWithSain")) || 0;
             
                 // 賽恩首次襲擊
-                if (isCompanion("雷納德") && !isTrue('賽恩不再夜襲') && !isTrue('用血支付賽恩')) {
+                if (isCompanion("賽恩") && !isTrue('賽恩不再夜襲') && !isTrue('用血支付賽恩')) {
                     // 計算和賽恩過幾夜
                     if (nightWithSain < 3) { 
                         nightWithSain ++;
@@ -363,35 +365,21 @@
                     return true; // 保留其他物品
                 });
                 localStorage.setItem("playerItems", JSON.stringify(playerItems));
+                localStorage.setItem("grownCount", grownCount);
 
                 // 如果有種子長出來，進入指定的戰鬥
                 if (grownCount > 0) {
-                    // 隱藏主要內容
-                    document.getElementById("main").style.display = "none";
-
-                    // 顯示種子長出來的訊息
-                    document.getElementById("text").textContent = texts.seedGrown;
-
-                    // 顯示戰鬥按鈕
-                    document.getElementById("button-container").innerHTML = `
-                        <button id="fight-btn">⚔️ 戰鬥</button>
-                    `;
-                    document.getElementById("fight-btn").addEventListener("click", function () {
-                        let encounter = {
-                            situation: 2,
-                            enemyAdj: "",
-                            enemyName: "食人花幼苗",
-                            enemyCount: grownCount,
-                            destination: "town/inn.html",
-                        };
-                        localStorage.setItem("encounter", JSON.stringify(encounter)); // 儲存指定遭遇
-                        localStorage.setItem("backgroundStyle", "url('images/inn.jpg')"); // 儲存背景圖
-                        window.location.href = "../encounter.html"; // 跳轉到遭遇頁面
-                    });
+                    localStorage.setItem("npcName", "突發事件");
+                    showDialogue("食人花種子");
+                    return;
                 }
-                goTop();
-                return;
             }
+        }
+
+        // 食人花種子戰鬥
+        function seedBattle() {
+            let grownCount = JSON.parse(localStorage.getItem("grownCount")) || [];
+            battle(2, '食人花幼苗', grownCount, 'locations/inn.html');
         }
 
         // 被吸血

@@ -1035,7 +1035,7 @@
                         button.onclick = function () {
                             removeCompanion(companion.id);// 移除選擇的同伴
                             document.body.removeChild(menu);  // 清除選單
-                            showDialogue("capture"); // 顯示敵人加入的對話
+                            showDialogue("邀請成功"); // 顯示敵人加入的對話
                         };
 
                         menu.appendChild(button);
@@ -1150,20 +1150,10 @@
 
             localStorage.removeItem("enemies"); // 清空所有敵人
             localStorage.removeItem("npcId"); // 清除交談對象
-            localStorage.removeItem("situation"); // 清除情況
             turnSwitch("enemySurrender", false); // 清除敵人投降
             turnSwitch("hasPersuaded", false); // 清除說服結果
             turnSwitch("hasInvited", false); // 清除邀請結果
-            turnSwitch("inBattle", false); // 清除戰鬥中
             turnSwitch('captureFail', false);
-            localStorage.removeItem("encounter"); // 清除指定遭遇
-
-            // 清空隊員的狀態
-            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
-            teamMembers.forEach(member => {
-                member.status = [];
-            });
-            localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
             
             turnSwitch(); // 如果在開關中，標記開關完成
             
@@ -1180,16 +1170,10 @@
                 localStorage.setItem("currentKey", encounter.successKey);
             }
 
-            // 預設跳轉到地圖
-            let destination = 'map.html';
+            localStorage.setItem("battleResult", 7); 
 
-            // 如果有指定目的地
-            if (encounter && encounter.destination) {
-                destination = encounter.destination; 
-            }
-
-            // 跳轉到目的地
-            window.location.href = destination;
+            // 跳轉到戰鬥結果
+            window.location.href = "battleResult.html";
         }
     </script>
 

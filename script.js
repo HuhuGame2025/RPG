@@ -4,19 +4,22 @@
         let lastScrollTop = 0;
         const buttonBar = document.getElementById("buttonBar");
 
-        window.addEventListener("scroll", function() {
-            let currentScroll = Math.max(window.scrollY, 0); // 避免 scrollY 變負數
+        if (buttonBar) {
+            window.addEventListener("scroll", function() {
+                let currentScroll = Math.max(window.scrollY, 0); // 避免 scrollY 變負數
 
-            if (currentScroll > lastScrollTop) {
-                // 向下滾動 -> 隱藏按鈕列
-                buttonBar.classList.add("hidden");
-            } else {
-                // 向上滾動 -> 顯示按鈕列
-                buttonBar.classList.remove("hidden");
-            }
+                if (currentScroll > lastScrollTop) {
+                    // 向下滾動 -> 隱藏按鈕列
+                    buttonBar.classList.add("hidden");
+                } else {
+                    // 向上滾動 -> 顯示按鈕列
+                    buttonBar.classList.remove("hidden");
+                }
 
-            lastScrollTop = currentScroll;
-        });
+                lastScrollTop = currentScroll;
+            });
+        }
+
 
     // 顯示按鈕列
     function showButtonBar() {
@@ -28,7 +31,7 @@
             buttonBar.innerHTML =`
                 <!-- 按鈕列 -->
                 <a onclick="goTo('menu/character')">🎭<span>角色</span></a>
-                <a onclick="goTo('menu/quest')">📜<span>任務</span></a>
+                <a onclick="goTo('menu/mission')">📜<span>任務</span></a>
                 <a onclick="goTo('menu/inventory')">💰<span>物品</span></a>
                 <a onclick="goTo('menu/option')">⚙️<span>選項</span></a>
                 <!-- <a style="flex: 0 0 40px;" onclick="toggleFullScreen()">⛶</a> -->
@@ -38,7 +41,7 @@
             buttonBar.innerHTML =`
                 <!-- 按鈕列 -->
                 <a onclick="goTo('menu/character')">🎭<span>角色</span></a>
-                <a onclick="goTo('menu/quest')">📜<span>任務</span></a>
+                <a onclick="goTo('menu/mission')">📜<span>任務</span></a>
                 <a>🚫<span class="warn">物品</span></a>
                 <a onclick="goTo('menu/option')">⚙️<span>選項</span></a>
                 <!-- <a style="flex: 0 0 40px;" onclick="toggleFullScreen()">⛶</a> -->
@@ -93,7 +96,8 @@
         }
     
         // 讀取主角的名字
-        const playerName = localStorage.getItem("playerName");
+        const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+        const playerName = teamMembers.find(m => m.id === "player").name;
 
         // 讀取NPC名字
         let npcName = localStorage.getItem("npcName");
@@ -168,7 +172,7 @@
         // 如果有指定 npc 名字
         if (dialogue.npc === "npc") {
             npcName = npcName; // 如果資料庫只打 "npc"，預設為對話者名字
-        } else if (dialogue === "speaker") {
+        } else if (dialogue.npc === "speaker") {
             npcName = speaker; // 如果資料庫只打 "speaker"，使用函式指定的 speaker 為名字
         } else if (dialogue.npc) {
             npcName = dialogue.npc; // 如果資料庫有指定名字，使用此名字
@@ -533,7 +537,7 @@
         { name: "雷納德", type: "傭兵", description: "老練的冒險者，飽經風霜的臉龐洋溢著溫暖的微笑。", cost: 0, con: 15, str: 15, dex: 12, wis: 14, cha: 12, weaponId: "npcWeapon01", armorId: "npcArmor01" },
         { name: "塔爾穆克", type: "傭兵", description: "身材魁武的獸人狂戰士，背著一把巨大的戰斧，眼神充滿怒火。", cost: 150, con: 18, str: 18, dex: 10, wis: 10, cha: 7, weaponId: "npcWeapon02", armorId: "npcArmor02" },
         { name: "賽恩", type: "傭兵", description: "蒙面的刺客，整張臉隱藏在面罩下，沉默寡言，散發著一絲危險氣息。", cost: 120, con: 13, str: 13, dex: 18, wis: 14, cha: 10, weaponId: "npcWeapon03", armorId: "npcArmor03" },
-        { name: "艾德蒙", type: "傭兵", description: "看起來像個小混混，不太正經，喜歡自吹自擂，給人感覺不怎麼可靠。", cost: 100, con: 12, str: 12, dex: 12, wis: 8, cha: 8, weaponId: "npcWeapon04", armorId: "npcArmor04" },
+        { name: "艾德蒙", type: "傭兵", description: "看起來像個小混混，不太正經，喜歡自吹自擂，給人感覺不怎麼可靠。", cost: 100, con: 8, str: 12, dex: 12, wis: 10, cha: 9, weaponId: "", armorId: "npcArmor04" },
         { name: "諾伊爾", type: "傭兵", description: "初出茅廬的高等精靈少年，一臉純真，比起協助你，他看起來更需要協助。", cost: 90, con: 9, str: 9, dex: 16, wis: 16, cha: 18, weaponId: "npcWeapon05", armorId: "npcArmor05" }
     ];
 
@@ -582,110 +586,115 @@
         }
     }
 
-    // 主角加入隊伍（創角時）
-    function playerToTeamMembers() {
-        let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
-
-        // 讀取主角資料
-        const playerData = {
-            name: localStorage.getItem("playerName"),
-            id: "player",
-            type: localStorage.getItem("PlayerType"),
-            HP: parseInt(localStorage.getItem("playerHP")),
-            MaxHP: parseInt(localStorage.getItem("playerMaxHP")),
-            str: { basic: parseInt(localStorage.getItem("playerStr")) },
-            dex: { basic: parseInt(localStorage.getItem("playerDex")) },
-            con: { basic: parseInt(localStorage.getItem("playerCon")) },
-            wis: { basic: parseInt(localStorage.getItem("playerWis")) },
-            cha: { basic: parseInt(localStorage.getItem("playerCha")) },
-            arm: { basic: 0 },
-            weapon: {},
-            armor: {},
-            MaxHP: parseInt(localStorage.getItem("playerMaxHP")),
-            HP: parseInt(localStorage.getItem("playerMaxHP")),
-            status: [], // 初始狀態
-            mood: 0,
-            emotion: [], // 初始狀態
-            description: "",
-        };
-
-        // 加總屬性
-        ["str", "dex", "con", "wis", "cha", "arm"].forEach(attr => {
-            playerData[attr].total = Object.entries(playerData[attr])
-                .filter(([key]) => key !== "total") // 過濾掉 "total"
-                .reduce((sum, [, val]) => sum + val, 0); // 累加數值
-        });
-
-        // 檢查隊伍內是否已有主角
-        let playerIndex = teamMembers.findIndex(member => member.id === "player");
-
-        if (playerIndex !== -1) {
-            // 如果找到主角，更新資料
-            teamMembers[playerIndex] = playerData;
-        } else {
-            // 否則將主角加入隊伍
-            teamMembers.push(playerData);
+    // 同伴加入隊伍（輸入物件資料或 name）
+    function addCompanion(companion, companionName, companionType) {
+        // 顯示文本
+        const texts = {
+            partyFull : "隊伍人數已滿，請選擇要替換的同伴",
         }
 
-        // 儲存隊伍成員
-        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
-
-        // 穿布衣
-        equip("player", "clothes01"); 
-
-        // 添加情緒
-        getEmotion("player", "fullHP", false); 
-
-
-        console.log("隊伍更新:", teamMembers);
-    }
-
-    // 同伴加入隊伍
-    function addCompanion(companion) {
         // 讀取隊伍資料
         let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
-        // 如果有形容詞，則加到名字前面
-        let companionName = companion.adj ? `${companion.adj}${companion.name}` : companion.name;
+        // 檢查隊伍是否已滿
+        if (teamMembers.length >= 4) {
+            let menu = document.createElement("div");
+            menu.classList.add("menu");
 
-        // 生成同伴的id
-        const companionId = `companion${teamMembers.length}`;
+            // 顯示隊伍已滿的訊息
+            let message = document.createElement("p");
+            message.textContent = texts.partyFull; 
+            menu.appendChild(message);
 
-        // 添加同伴資料並設定初始的HP和MaxHP
-        teamMembers.push({
-            name: companionName, // 加入處理後的名字
-            id: companionId,  // 自動產生 id
-            type: companion.type,
-            str: { basic: companion.str, },
-            dex: { basic: companion.dex, },
-            con: { basic: companion.con, },
-            wis: { basic: companion.wis, },
-            cha: { basic: companion.cha, },
-            arm: { basic: 0 },
-            MaxHP: companion.con * 3, // MaxHP
-            HP: companion.con * 3, // 初始HP
-            status: [], // 初始狀態
-            mood: 0,
-            emotion: [], // 初始狀態
-            description: companion.description,
-        });
+            // 為每個成員建立一個按鈕
+            teamMembers.forEach(companion => {
+                if (companion.id === "player") return; // 排除主角
 
-        // 儲存
-        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+                let button = document.createElement("button");
+                button.textContent = companion.name;
 
-        // 將同伴裝備加入物品中並穿上
-        if (companion.weaponId) {
-            getItem(companion.weaponId);
-            equip(companionId, companion.weaponId);
+                button.onclick = function () {
+                    removeCompanion(companion.id);// 移除選擇的同伴
+                    document.body.removeChild(menu);  // 清除選單
+                    document.getElementById("dialogue").style.display = "block"; // 顯示對話
+                    addMember(); // 同伴加入
+                };
+
+                menu.appendChild(button);
+            });
+
+            // 取消按鈕
+            let cancelButton = document.createElement("button");
+            cancelButton.textContent = "取消";
+    
+            cancelButton.onclick = function () {
+                document.body.removeChild(menu); // 清除選單
+                document.getElementById("dialogue").style.display = "block"; // 顯示對話
+                // 不加入
+            };
+
+            menu.appendChild(cancelButton);
+            document.body.appendChild(menu);
+
+            // 隱藏對話
+            document.getElementById("dialogue").style.display = "none";
+        } else {
+            addMember(); // 隊伍未滿，直接加入
         }
-        if (companion.armorId) {
-            getItem(companion.armorId);
-            equip(companionId, companion.armorId);
-        }
-        console.log("同伴加入", teamMembers);
 
-        // 添加滿血情緒
-        getEmotion(companionId, "fullHP", false); 
+        // 將同伴加入
+        function addMember() {
+            // 重新讀取隊伍資料（萬一剛移除舊同伴）
+            let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+
+            // 取得同伴資料
+            if (companion) {
+                // 如果有物件資料，獲取同伴名字
+                companionName = companion.adj ? `${companion.adj}${companion.name}` : companion.name; // 有形容詞就加到名字中
+            } else {
+                // 如果沒有物件資料，用名字查找資料
+                companion = mercenaries.find(m => m.name === companionName);
+            }
+
+            // 生成同伴的新id
+            const companionId = `companion${teamMembers.length}`;
+
+            // 添加同伴資料並設定初始的HP和MaxHP
+            teamMembers.push({
+                name: companionName, // 加入處理後的名字
+                id: companionId,  // 自動產生 id
+                type: companionType || companion.type,
+                str: { basic: companion.str, },
+                dex: { basic: companion.dex, },
+                con: { basic: companion.con, },
+                wis: { basic: companion.wis, },
+                cha: { basic: companion.cha, },
+                arm: { basic: 0 },
+                MaxHP: companion.con * 3, // MaxHP
+                HP: companion.con * 3, // 初始HP
+                status: [], // 初始狀態
+                mood: 0,
+                emotion: [], // 初始狀態
+                description: companion.description,
+            });
+
+            // 儲存
+            localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+
+            // 將同伴裝備加入物品中並穿上
+            if (companion.weaponId) {
+                getItem(companion.weaponId);
+                equip(companionId, companion.weaponId);
+            }
+            if (companion.armorId) {
+                getItem(companion.armorId);
+                equip(companionId, companion.armorId);
+            }
+            console.log("同伴加入", teamMembers);
+
+            // 添加滿血情緒
+            getEmotion(companionId, "fullHP", false); 
+        }
     }
 
     // 同伴離開隊伍（輸入 id 或 name 都可以）
@@ -730,7 +739,7 @@
             turnSwitch("用血支付賽恩", false);
         }
 
-        // 如果是傭兵，加入冷卻傭兵名單，當天不會再次出現
+        // 加入冷卻傭兵名單，如果是傭兵，當天不會再出現於酒館
         let cooldownMerc = JSON.parse(localStorage.getItem("cooldownMerc")) || [];
         cooldownMerc.push(companion);
         localStorage.setItem("cooldownMerc", JSON.stringify(cooldownMerc));
@@ -740,11 +749,15 @@
     function resetHP() {
         // 讀取隊伍資訊
         const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+        const nightGuard = localStorage.getItem("nightGuard");
 
         teamMembers.forEach(member => {
-            member.HP = member.MaxHP; // 將 HP 設為最大值
+            // 排除站哨者
+            if (member.name !== nightGuard) {
+                member.HP = member.MaxHP; // 將 HP 設為最大值
+            }
         });
-        
+         
         localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
 
         teamMembers.forEach(member => {
@@ -800,6 +813,11 @@
                 actionElement.textContent = texts.okay; // 輕傷
             }
         });
+    }
+
+    // 人數已滿時替換同伴（回傳true/false)
+    function replaceMember() {
+
     }
 
 // 主角相關
@@ -963,13 +981,22 @@
         { type: "armor", id: "lootClothes02", name: "🧥 巨大的腰布", cha: -1, price: 0, description: "如果不排斥臭味，可以披在身上當斗篷。" },
         { type: "armor", id: "lootClothes03", name: "🧥 破爛衣服", price: 0, description: "已經破爛到無法稱為衣服，只是一串碎布。" },
         { type: "armor", id: "lootClothes04", name: "🧥 迷你披風", price: 1, description: "看起來像洋娃娃的配件，也可以拿來當領巾。" },
-        // 消耗品,
+        // 補給品,
         { type: "supply", id: "healPotion01", name: "🫙 治療藥水", heal: 10, usable: true, consumable: true, price: 5, shop: "grocery", description: "立即恢復生命值。" },
         { type: "supply", id: "healPotion02", name: "🫙 中級治療藥水", heal: 20, usable: true, consumable: true, price: 10, shop: "grocery", description: "立即恢復生命值。" },
         { type: "supply", id: "healPotion03", name: "🫙 高級治療藥水", heal: 30, usable: true, consumable: true, price: 15, shop: "grocery", description: "立即恢復生命值。" },
         { type: "supply", id: "bandage", name: "💰 繃帶", removeStatus: "流血", usable: true, consumable: true, price: 1, shop: "grocery", description: "能止住一處流血的傷口。" },
+        { type: "supply", id: "antidote", name: "💰 解毒藥", removeStatus: "中毒", usable: true, consumable: true, price: 1, shop: "grocery", description: "能解除一層中毒。" },
         { type: "supply", id: "water", name: "🫙 水", removeStatus: "燃燒", usable: true, consumable: true, price: 1, shop: "grocery", description: "一瓶乾淨的水。" },
+        //{ type: "supply", id: "cookingTool", name: "🫕 野炊工具", usable: true, shop: "grocery", description: "只要有柴火和食材，就能隨時隨地烹飪食物。" },
+        //{ type: "supply", id: "tent", name: "⛺ 帳篷", usable: true, shop: "grocery", description: "能搭建簡便的營地，但在野外過夜有一定的危險。" },
         { type: "supply", id: "bloodWine", name: "🍾 血葡萄酒", heal: 5, usable: true, consumable: true, price: 15, description: "以生長在地底的血葡萄釀成的酒，味道像人血，是吸血鬼喜愛的飲品。" },
+        // 食物,
+        { type: "food", id: "potato", name: "🥔 馬鈴薯", heal: 10, price: 1, shop: "grocery", description: "農田收成的馬鈴薯，烹飪後可以食用。" },
+        { type: "food", id: "fish", name: "🐟 鮮魚", heal: 20, price: 2, shop: "grocery", description: "新鮮捕撈的魚，烹飪後可以食用。" },
+        { type: "food", id: "meat", name: "🥩 生肉", heal: 30, price: 3, shop: "grocery", description: "打獵取得的肉，烹飪後可以食用。" },
+        { type: "food", id: "tentacleLoot", name: "🥓 觸手肉", heal: 40, price: 4, description: "長滿吸盤的滑溜觸手，死後仍會扭動，烹飪後可以食用。" },
+        { type: "food", id: "spiderLoot", name: "🕷️ 蜘蛛肉", heal: 50, price: 5, description: "堅韌的肉，有微弱毒素，摸過之後手會發癢，烹飪後可以食用。" },
         // 料理,
         { type: "meal", id: "meal01", name: "🍺 啤酒", heal: 10, price: 1, shop: "tavern", description: "最受旅人與戰士歡迎的經典佳釀。" },
         { type: "meal", id: "meal02", name: "🥧 莓果派", heal: 10, price: 1, shop: "tavern", description: "內餡包滿了新鮮野莓的甜派，酸甜可口。" },
@@ -980,16 +1007,14 @@
         // 戰利品,
         { type: "loot", id: "wormLoot", name: "💰 蠕蟲", heal: 1, usable: true, consumable: true, price: 0, description: "富含營養，但味道噁心，吃了會一整天不舒服。" },
         { type: "loot", id: "slimeLoot", name: "💰 黏液", price: 1, description: "史萊姆的黏液。" },
-        { type: "loot", id: "spiderLoot", name: "💰 蜘蛛肉", price: 5, description: "摸了手會癢癢的，不能吃。" },
         { type: "loot", id: "fairyDust", name: "💰 仙塵", price: 1, description: "仙子的魔法粉末，通常會邊飛邊灑落。" },
         { type: "loot", id: "batLoot", name: "💰 蝙蝠翅膀", price: 1, description: "蝙蝠的翅膀。" },
         { type: "loot", id: "vineLoot", name: "💰 植物莖", price: 3, description: "切下來的藤蔓。" },
         { type: "loot", id: "mushroomLoot", name: "💰 毒蘑菇", price: 2, description: "不可食用的蘑菇。" },
         { type: "loot", id: "manEaterSeed", name: "🫘 食人花種子", price: 0, description: "蘊藏著蠢蠢欲動的生命，商人不願意買，但有人在公會高價收購。" },
-        { type: "loot", id: "meat", name: "💰 生肉", price: 3, description: "動物的肉，烹飪後可以食用。" },
         { type: "loot", id: "rottenMeat", name: "💰 腐肉", price: 0, description: "已經腐爛的肉塊。" },
         { type: "loot", id: "fur", name: "💰 毛皮", price: 3, description: "動物的毛皮。" },
-        { type: "loot", id: "lizardLoot", name: "💰 火蜥蜴尾巴", price: 2, description: "火蜥蜴的斷尾。" },
+        { type: "loot", id: "lizardLoot", name: "💰 蜥蜴皮", price: 2, description: "火蜥蜴的硬皮。" },
         { type: "loot", id: "tusk", name: "💰 獠牙", price: 4, description: "野豬的獠牙。" },
         { type: "loot", id: "silk", name: "💰 蜘蛛絲", price: 5, description: "巨型蜘蛛的絲線。" },
         { type: "loot", id: "gargoyleLoot", name: "💰 水晶眼珠", price: 10, description: "石像鬼的眼珠。" },
@@ -997,11 +1022,8 @@
         { type: "loot", id: "eagleLoot", name: "💰 堅硬羽毛", price: 2, description: "巨鷹的羽毛。" },
         { type: "loot", id: "dragonLoot", name: "💰 龍鱗", price: 30, description: "龍的鱗片。" },
         { type: "loot", id: "wood", name: "🪵 木頭", price: 0, description: "可當作柴火。" },
-        { type: "loot", id: "potato", name: "🥔 馬鈴薯", price: 0, description: "農田常見的作物，烹飪後可以食用。" },
         { type: "loot", id: "treantLoot", name: "💰 樹妖皮", price: 6, description: "樹妖掉落的樹皮。" },
         { type: "loot", id: "cloth", name: "💰 布料", price: 0, description: "拆解衣物得到的碎布。" },
-        { type: "loot", id: "piranhaLoot", name: "💰 食人魚", price: 1, description: "新鮮的食人魚。" },
-        { type: "loot", id: "tentacleLoot", name: "💰 觸手肉", price: 0, description: "湖中觸手的肉。" },
         { type: "loot", id: "ghostLoot", name: "💰 幽靈物質", price: 15 },
         { type: "loot", id: "ironＷire", name: "📎 鐵絲", price: 0, description: "可以用來撬鎖。" },
         { type: "loot", id: "MarcusRing", name: "💍 馬卡斯的戒指", price: 200, description: "從馬卡斯手上取下的金戒指，看起來很名貴。" },
@@ -1017,13 +1039,83 @@
         { type: "specialItem", id: "specialItem15", name: "💰 沾到綠血的玻璃", price: 0, description: "這塊玻璃碎片沾了哥布林的血，讓吸血鬼覺得臭氣熏天。" },
         { type: "specialItem", id: "specialItem16", name: "💰 幽靈菇", price: 0, description: "吃下後不知道會變成怎麼樣的毒菇。" },
         { type: "specialItem", id: "key01", name: "🗝️ 牢房鑰匙", price: 50, description: "可以打開監獄裡任何一間牢房。" },
-        { type: "specialItem", id: "key02", name: "🗝️ 鐵鑰匙", price: 0, description: "堅固的鐵製鑰匙。" }
+        { type: "specialItem", id: "key02", name: "🗝️ 鐵鑰匙", price: 0, description: "堅固的鐵製鑰匙。" },
     ];
+
+    // 商品限購數量
+    const buyLimit = 10;
+
+    // 顯示主角物品列表
+    function showPlayerItems(usage, itemType, memberName) {
+        // 儲存列表以便刷新
+        const currentList = [usage, itemType, memberName];
+        localStorage.setItem("currentList", JSON.stringify(currentList));
+
+        // 讀取主角物品
+        let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+
+        // 統計物品數量
+        let count = {};
+        playerItems.forEach(item => {
+            count[item] = (count[item] || 0) + 1;
+        });
+
+        // 找到列表容器
+        let itemList;
+        if (document.getElementById("addition")) {
+            itemList = document.getElementById("addition"); // 如果在對話中
+        } else {
+            itemList = document.getElementById("item-list");
+        }
+            
+        itemList.innerHTML = "";
+
+        // 顯示物品列表
+        Object.keys(count).forEach(itemId => {
+            //let item = itemData.find(i => i.id === itemId); // 從資料庫查找物品
+            let item = findItemData(itemId); // 從資料庫查找物品
+            if (!item) return;
+
+            // 如果有指定類型，以類型篩選物品
+            if (itemType && item.type !== itemType) return;
+
+            // 如果是穿裝備，以類型篩選物品，排除其他人的專屬裝備
+            if ((usage === "equip" && itemType && item.type !== itemType) || (item.owner && item.owner !== memberName)) return;
+
+            // 如果是上架拍賣，排除價格未達門檻的物品
+            if (usage === "sellAtAuction" && item.price < threshold) return;
+
+            // 如果是賣出、上架拍賣，排除 specialItem 和同伴專屬物品
+            if (usage === "sell" || usage === "sellAtAuction") {
+                if (item.type === "specialItem" || item.owner) return;
+            }
+
+            // 創建物品欄位
+            let itemDiv = document.createElement("div");
+            itemDiv.classList.add("item");
+
+            // 顯示物品資料
+            itemDiv.innerHTML = showItemHTML(item, count[itemId], usage);
+
+            // 點擊物品時，顯示或隱藏詳細資訊
+            let itemElement = itemDiv;
+            let hidedElement = itemDiv.querySelector(".hided");
+            itemElement.addEventListener("click", () => {
+                hidedElement.style.display = (hidedElement.style.display === "none") ? "block" : "none";
+            });
+
+            itemList.appendChild(itemDiv);
+        });
+    }
 
     // 顯示商品列表
         // 單個商品 showShop(null, 'weapon01');        
         // 多個商品 showShop(null, ['weapon01', 'armor03', 'supply05']);
     function showShop(shopType, itemIds) {
+        // 儲存列表以便刷新
+        const currentList = [shopType, itemIds];
+        localStorage.setItem("currentList", JSON.stringify(currentList));
+
         // 顯示商店說明（如果有）
         if (texts && texts[shopType] && document.getElementById("text")) {
             document.getElementById("text").textContent = texts[shopType];
@@ -1043,39 +1135,55 @@
         }
         console.log(itemData);
 
-        // 顯示金錢
-        const playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
-        let container = document.getElementById("addition");  // 插入到對話區域
 
-        let moneyDiv = document.getElementById("playerMoney");
-        if (!moneyDiv) { // 如果沒有欄位就建立（用於對話中）
+        // 找到列表容器
+        let itemList;
+        if (document.getElementById("addition")) {
+            itemList = document.getElementById("addition"); // 如果在對話中
+        } else {
+            itemList = document.getElementById("item-list");
+        }
+        itemList.innerHTML = "";
+
+        // 顯示目前金錢
+        const playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
+        if (document.getElementById("addition")) {
+            // 如果在對話中，建立金錢欄位
+            let container = document.getElementById("addition");
             moneyDiv = document.createElement("div");
             moneyDiv.innerHTML = `
                 <p class="small">🪙 $<span id="playerMoney">${playerMoney}</span></p>
             `;
             container.appendChild(moneyDiv);
+        } else {
+            let moneyDiv = document.getElementById("playerMoney"); // 找到欄位
         }
 
-        // 檢查並建立 item-list 容器
-        let itemList = document.getElementById("item-list");
-        if (!itemList) { // 如果沒有容器就建立（用於對話中）
-            itemList = document.createElement("div");
-            itemList.id = "item-list";
-            container.appendChild(itemList);
-        }
-
-        // 顯示列表
-        itemList.innerHTML = "";
-
+        // 顯示物品列表
         itemData.forEach(item => {
             let itemDiv = document.createElement("div");
             itemDiv.classList.add("item", "background");
             
+            // 讀取已購數量
+            const boughtCount = JSON.parse(localStorage.getItem("boughtCount")) || {};
+            const townId = JSON.parse(localStorage.getItem("playerPos")).id; // 讀取主角所在城鎮
+            if (!boughtCount[townId])  boughtCount[townId] = {}; // 沒買過就初始化
+            if (boughtCount[townId][item.id] === undefined) boughtCount[townId][item.id] = 0; // 沒買過就初始化
+            localStorage.setItem("boughtCount", JSON.stringify(boughtCount)); // 儲存初始化數據
+            
+            // 如果賣完（達到限購數量）就不顯示
+            if (boughtCount[townId][item.id] === buyLimit) {
+                return;
+            }
+
+            // 計算庫存量
+            const count = buyLimit - boughtCount[townId][item.id];
+
             // 顯示物品資料
             if (shopType === "tavern") {
-                itemDiv.innerHTML = showItemHTML(item, null, "tavern");
+                itemDiv.innerHTML = showItemHTML(item, count, "tavern");
             } else {
-                itemDiv.innerHTML = showItemHTML(item, null, "shop");
+                itemDiv.innerHTML = showItemHTML(item, count, "shop");
             }
 
             // 點擊物品時，顯示或隱藏詳細資訊
@@ -1092,139 +1200,99 @@
 
     // 顯示物品資料
     function showItemHTML(item, count, usage) {
-        // 找到物品附加狀態的資料
-        let status;
-        if (item.addStatus) {
-            status = statusData.find(s => s.name === item.addStatus);
-        }
-
-        if (usage !== "description") {
-            // 判斷物品價格
-            let itemPrice;
-            if (usage === "shop" || usage === "tavern") {
-                itemPrice = "$" + item.price * 2; // 顯示商店價格（2倍）
-            } else if (usage === "auction") {
-                itemPrice = "$" + item.startingPrice; // 拍賣中、流標，顯示起標價
-            } else if (usage === "sold") {
-                itemPrice = "$" + item.finalPrice; // 成交，顯示成交價
-            } else if (item.price) {
-                itemPrice = "$" + item.price; // 顯示賣出價格
-            } else {
-                itemPrice = "-"; // 無價格
+        // 找到附加狀態的資料
+            let status;
+            if (item.addStatus) {
+                status = statusData.find(s => s.name === item.addStatus);
             }
 
-            // 顯示完整資料
-            return `
-                <!-- 物品名稱、數量、價格、小按鈕 -->
-                <div class="column-container" style="cursor: pointer;">
-                    <span class="column">
-                        ${item.name}${count ? ` × ${count}` : "" }
-                    </span>
+        // 創建物品價格
+            let itemPrice;
+            if (usage === "shop" || usage === "tavern") { // 商店，顯示 2 倍價格                
+                itemPrice = "$" + item.price * 2; 
+            } else if (usage === "sell") { // 賣出，顯示價格與賣出按鈕
+                itemPrice = "$" + item.price + `
+                    <button class="small-button" onclick="sellItem('${item.id}')">
+                        <spam class="small">賣出</span>
+                    </button>
+                `;
+            } else if (usage === "auction") { // 拍賣中、流標，顯示起標價                
+                itemPrice = `<span class="small note">起標價</span> $` + item.startingPrice; 
+            } else if (usage === "sold") { // 拍賣成交，顯示成交價                
+                itemPrice = `<span class="small note">成交價</span> $` + item.finalPrice;
+            } else if (usage === "equip") { // 裝備
+                itemPrice = `
+                    <button class="small-button" onclick="(equip(memberId, '${item.id}'), showCharacterSheet())">
+                        <span class="small">選擇</span>
+                    </button>
+                `;
+            } else if (usage === "cook") { // 烹飪
+                itemPrice = `
+                    <button class="small-button" onclick="cook('${item.id}')">
+                        <spam class="small">烹飪</span>
+                    </button>
+                `;
+            } else if (item.price) { // 顯示價格
+                itemPrice = "$" + item.price; 
+            } else { // 無價格
+                itemPrice = "-"; 
+            }
 
-                    ${usage === "auction" ? `
-                        <span class="column-small small note">起標價</span>
-                    ` : "" }
-                    ${usage === "sold" ? `
-                        <span class="column-small small note">成交價</span>
-                    ` : "" }
-                    ${usage !== "equip" ? `
-                        <span class="column-small">${itemPrice}</span>
-                    ` : "" }
+        // 創建動作按鈕
+            let buttons = "";
+            if (usage === "inventory") { // 物品欄
+                buttons = `
+                    ${item.usable ? 
+                        `<button class="column center" onclick="useItem('${item.id}')">
+                            <span class="small">使用</span>
+                        </button>` : ""}
+                    ${item.investigable ? 
+                        `<button class="column center" onclick="investigateItem('${item.id}')">
+                            <span class="small">查看</span>
+                        </button>` : ""}
+                    ${item.type !== "specialItem" && !item.owner ? 
+                        `<button class="column center" onclick="discardItem('${item.id}')">
+                            <span class="small">🗑️ 丟棄</span>
+                        </button>` : ""}
+                `;
+            } else if (usage === "shop") { // 商店
+                buttons = `
+                    <button onclick="buyItem('${item.id}')" class="small-button">
+                        <span class="small">購買</span>
+                    </button>
+                    <button onclick="stealItem('${item.id}')" class="small-button" style="flex: 0 0 60px;">
+                        <span class="small warn">偷竊</span>
+                    </button>
+                `;
+            } else if (usage === "sellAtAuction") { // 上架拍賣
+                buttons = `
+                    <button onclick="listForAuction('${item.id}')" class="small-button">
+                        <spam class="small">上架拍賣</span>
+                    </button>
+                `;
+            } else if (usage === "auction" && item.seller === "player") { // 拍賣品                
+                buttons = `
+                    <button onclick="delistFromAuction('${item.id}', 'auction')" class="small-button">
+                        <span class="small">下架</span>
+                    </button>
+                `;
+            } else if (usage === "sold") { // 拍賣成交
+                buttons = `
+                    <button onclick="delistFromAuction('${item.id}', 'sold')" class="small-button">
+                        <span class="small">收款</span>
+                    </button>
+                `;
+            } else if (usage === "tavern") { // 酒館
+                buttons = `
+                    <button onclick="buyItem('${item.id}')" class="small-button">
+                        <span class="small">點餐</span>
+                    </button>
+                `;
+            }
 
-                    ${usage === "equip" ? `
-                        <button class="small-button" onclick="(equip(memberId, '${item.id}'), showCharacterSheet())">
-                            <span class="small">選擇</span>
-                        </button>` : "" }
-
-                    ${usage === "sell" ? `
-                        <button class="small-button" onclick="sellItem('${item.id}')">
-                            <spam class="small">賣出</span>
-                        </button>` : "" }
-
-                </div>
-
-                <!-- 隱藏的物品描述、按鈕 -->
-                <div class="hided" style="display: none;">
-                    <hr class="light-hr">
-                    <p class="small note">
-                        ${item.description}
-                        ${item.needStr ? `<br><span class="warn">需要力量 ${item.needStr}，否則會承受敏捷減值。</span>` : ""}
-                    </p>
-                    <p>
-                        ${item.str ? `<span class="small">⚔️ 力量</span> ${(item.str > 0 ? `+${item.str}<br>` : item.str)}` : ""}
-                        ${item.cha ? `<span class="small">✨ 魅力</span> ${(item.cha > 0 ? `+${item.cha}<br>` : item.cha)}` : ""}
-                        ${item.arm ? `<span class="small">🛡️ 護甲</span> ${(item.arm > 0 ? `+${item.arm}<br>` : item.arm)}` : ""}
-                        ${item.dex && !item.needStr ? `<span class="small">🏃 敏捷</span> ${(item.dex > 0 ? `+${item.dex}` : item.dex)}<br>` : ""}
-                        ${item.heal ? `<span class="small">❤️‍🩹 恢復 HP</span> ${item.heal}` : ""}
-                    </p>
-                    <p  class="small note">
-                        ${item.addStatus ? `${status.icon} ${item.addChance*100}% 機率造成【${item.addStatus}】，目標${status.description}` : ""}
-                    </p>
-
-                    ${usage === "inventory" ? `
-                        <div class="row-buttons">
-                            ${item.usable ? 
-                                `<button class="column center" onclick="useItem('${item.id}')">
-                                    <span class="small">使用</span>
-                                </button>` : ""}
-                            ${item.investigable ? 
-                                `<button class="column center" onclick="investigateItem('${item.id}')">
-                                    <span class="small">查看</span>
-                                </button>` : ""}
-                            ${item.type !== "specialItem" && !item.owner ? 
-                                `<button class="column center" onclick="discardItem('${item.id}')">
-                                    <span class="small">🗑️ 丟棄</span>
-                                </button>` : ""}
-                        </div>
-                    ` : "" }
-
-                    ${usage === "shop" ? `
-                        <div class="row-buttons">
-                            <button onclick="buyItem('${item.id}')" class="small-button">
-                                <span class="small">購買</span>
-                            </button>
-                            <button onclick="stealItem('${item.id}')" class="small-button" style="flex: 0 0 60px;">
-                                <span class="small warn">偷竊</span>
-                            </button>
-                        </div>
-                    ` : "" }
-
-                    ${usage === "sellAtAuction" ? `
-                        <div class="row-buttons">
-                            <button onclick="listForAuction('${item.id}')" class="small-button">
-                                <spam class="small">上架拍賣</span>
-                            </button>
-                        </div>
-                    ` : "" }
-
-                    ${usage === "auction" && item.seller === "player" ? `
-                        <div class="row-buttons">
-                            <button onclick="delistFromAuction('${item.id}', 'auction')" class="small-button">
-                                <span class="small">下架</span>
-                            </button>
-                        </div>
-                    ` : "" }
-
-                    ${usage === "sold" ? `
-                        <div class="row-buttons">
-                            <button onclick="delistFromAuction('${item.id}', 'sold')" class="small-button">
-                                <span class="small">收款</span>
-                            </button>
-                        </div>
-                    ` : "" }
-
-                    ${usage === "tavern" ? `
-                        <div class="row-buttons">
-                            <button onclick="buyItem('${item.id}')" class="small-button">
-                                <span class="small">點餐</span>
-                            </button>
-                        </div>
-                    ` : "" }
-                </div>
-            `;
-        } else {
-            // 只顯示物品描述（用於查看角色身上的裝備）
-            return `
+        // 創建隱藏的內容
+        let hidedElement = `
+                <hr class="light-hr">
                 <p class="small note">
                     ${item.description}
                     ${item.needStr ? `<br><span class="warn">需要力量 ${item.needStr}，否則會承受敏捷減值。</span>` : ""}
@@ -1239,7 +1307,28 @@
                 <p  class="small note">
                     ${item.addStatus ? `${status.icon} ${item.addChance*100}% 機率造成【${item.addStatus}】，目標${status.description}` : ""}
                 </p>
+                <div class="row-buttons">${buttons}</div>
+        `;
+
+        // 回傳資料
+        if (usage !== "description") {
+            // 回傳完整資料
+            return `
+                <!-- 物品名稱、數量、價格、小按鈕 -->
+                <div class="column-container" style="cursor: pointer;">
+                    <span class="column">
+                        ${item.name}${count ? ` × ${count}` : "" }
+                    </span>
+                    <span class="column-small">${itemPrice}</span>
+                </div>
+
+                <!-- 隱藏的物品描述、按鈕 -->
+                <div class="hided" style="display: none;">${hidedElement}</div>
             `;
+
+        } else {
+            // 只回傳隱藏的內容（用於查看角色身上的裝備）
+            return hidedElement;
         }
     }
 
@@ -1251,73 +1340,90 @@
 
         // 找到這件商品的資料
         let item = itemDatabase.find(i => i.id === itemId);
+        if (!item) return;
+        
+        // 讓玩家輸入數量
+        let input = prompt(`資金有 $${playerMoney}，要購買幾份？`, "1");
 
-        if (item) {
-            let buyAmount; // 購買數量
+        // 如果玩家按「取消」，則直接結束函式
+        if (input === null) return;
 
-            // 讓玩家輸入數量
-            let input = prompt(`資金有 $${playerMoney}，要購買幾份？`, "1");
+        // 取得購買數量
+        let buyAmount = parseInt(input); 
 
-            // 如果玩家按「取消」，則直接結束函式
-            if (input === null) return;
+        // 驗證輸入是否有效
+        if (isNaN(buyAmount) || buyAmount <= 0) {
+            alert("請輸入有效的數量");
+            return;
+        }
 
-            buyAmount = parseInt(input);
+        let buyPrice = item.price * 2; // 設定購買價格為 2 倍
+        let totalCost = buyPrice * buyAmount; // 計算總價格
 
-            // 驗證輸入是否有效
-            if (isNaN(buyAmount) || buyAmount <= 0) {
-                alert("請輸入有效的數量");
-                return;
+        // 檢查錢夠不夠
+        if (playerMoney < totalCost) {
+            alert("金錢不足");
+            return;
+        }
+
+        // 檢查是否超出限購數量
+        const boughtCount = JSON.parse(localStorage.getItem("boughtCount")) || [];
+        const townId = JSON.parse(localStorage.getItem("playerPos")).id; // 讀取主角所在城鎮
+        if (boughtCount[townId][itemId] + buyAmount > buyLimit) {
+            alert("庫存不足");
+            return;
+        }
+
+        // 扣除金錢
+        playerMoney -= totalCost;
+
+        // 獲得商品
+        if (item.type === "meal") {
+            // 如果是料理，加入點餐清單（乘以數量）
+            for (let i = 0; i < buyAmount; i++) {
+                orderedMeals.push(item);
             }
 
-            let buyPrice = item.price * 2; // 設定購買價格為 2 倍
-            let totalCost = buyPrice * buyAmount; // 計算總價格
+            // 重新計算隊伍需要的治療量
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            let requiredHeal = 0;
+            teamMembers.forEach(member =>{
+                requiredHeal += member.MaxHP;
+                requiredHeal -= member.HP;
+            });
 
-            if (playerMoney >= totalCost) {
-                // 扣除金錢
-                playerMoney -= totalCost;
+            // 重新計算料理的總治療量
+            const totalHeal = orderedMeals.reduce((sum, meal) => sum + meal.heal, 0);
 
-                if (item.type === "meal") {
-                    // 如果是料理，加入點餐清單（乘以數量）
-                    for (let i = 0; i < buyAmount; i++) {
-                        orderedMeals.push(item);
-                    }
-
-                    // 重新計算隊伍需要的治療量
-                    const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
-                    let requiredHeal = 0;
-                    teamMembers.forEach(member =>{
-                        requiredHeal += member.MaxHP;
-                        requiredHeal -= member.HP;
-                    });
-
-                    // 重新計算料理的總治療量
-                    const totalHeal = orderedMeals.reduce((sum, meal) => sum + meal.heal, 0);
-
-                    // 重新顯示訊息
-                    if (teamMembers.length > 1) {
-                        document.getElementById("text").innerHTML = texts.sitTogether(requiredHeal, totalHeal); // 和同伴坐下
-                    } else {
-                        document.getElementById("text").innerHTML = texts.sit(requiredHeal, totalHeal); // 獨自坐下
-                    }
-
-                } else {
-                    // 如果是商品，加入玩家背包 (乘以數量)
-                    for (let i = 0; i < buyAmount; i++) {
-                        playerItems.push(itemId);
-                    }
-                }
-
-                // 存回 localStorage
-                localStorage.setItem("playerItems", JSON.stringify(playerItems));
-                localStorage.setItem("orderedMeals", JSON.stringify(orderedMeals));
-                localStorage.setItem("playerMoney", playerMoney);
-
-                // 更新顯示的金錢
-                loadPartyData();
+            // 重新顯示訊息
+            if (teamMembers.length > 1) {
+                document.getElementById("text").innerHTML = texts.sitTogether(requiredHeal, totalHeal); // 和同伴坐下
             } else {
-                alert("金錢不足");
+                document.getElementById("text").innerHTML = texts.sit(requiredHeal, totalHeal); // 獨自坐下
+            }
+
+        } else {
+            // 如果是商品，加入玩家背包 (乘以數量)
+            for (let i = 0; i < buyAmount; i++) {
+                playerItems.push(itemId);
             }
         }
+
+        // 已購數量增加
+        boughtCount[townId][itemId] += buyAmount;
+
+        // 存回 localStorage
+        localStorage.setItem("playerItems", JSON.stringify(playerItems));
+        localStorage.setItem("orderedMeals", JSON.stringify(orderedMeals));
+        localStorage.setItem("playerMoney", playerMoney);
+        localStorage.setItem("boughtCount", JSON.stringify(boughtCount));
+
+        // 更新顯示的金錢
+        loadPartyData();
+
+        // 重新顯示列表
+        const currentList = JSON.parse(localStorage.getItem("currentList")) || [];
+        showShop(currentList[0], currentList[1]);
     }
 
     // 獲得物品或金錢
@@ -1747,6 +1853,9 @@
         turnSwitch("拚酒開始", false);
         turnSwitch("拚酒結束", false);
         localStorage.removeItem("drinkingResults");
+
+        // 重置商品已購次數（商店補貨）
+        localStorage.removeItem("boughtCount");
 
         // 重置離隊後冷卻中的傭兵
         localStorage.removeItem("cooldownMerc");

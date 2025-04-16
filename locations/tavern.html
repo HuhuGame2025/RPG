@@ -79,11 +79,6 @@
             rollCompanions(); // 抽選在場的人
             loadPartyData();
 
-            // 檢查是否已經用過餐
-            if (isTrue("酒館用餐")) {
-                document.getElementById("orderButton").style.display = "none"; // 隱藏按鈕
-            }
-
             // 檢查是否已經拚過酒
             if (isTrue("拚酒結束")) {
                 document.getElementById("drinkingButton").style.display = "none"; // 隱藏按鈕
@@ -234,20 +229,16 @@
 
         // 顯示文本
         const texts = {
-            drinkingContest: "大家都坐了下來，每人拿出 $10 當賭注，開始喝酒……",
-            drinkingWin: (prize) => `其他人都醉倒了，你撐到了最後，獲得所有的賭金 $${prize}！`,
-            drinkingLose: (name, prize) => `你不勝酒力醉倒了……而撐到最後的人是${name}，拿走了 $${prize} 賭金。`,
-            drinkingAllLose: "所有人都醉倒了，沒有人一個人撐到最後。",
-            drinkingNoOne: "酒館裡目前沒有人在。",
             sit: (requiredHeal, totalHeal) => `你找了一個空位坐下。<br>你需要補充 ${requiredHeal} 生命值，目前點的餐點能補充 ${totalHeal}。`,
             sitTogether: (requiredHeal, totalHeal) => `你和同伴一起坐下。<br>你們需要補充 ${requiredHeal} 生命值，目前點的餐點能補充 ${totalHeal}。`,
             serveMeal: (meal) => `稍後，服務生送上了${meal}。`,
             eat: "你獨自享用，十分滿足。",
             eatTogether: "你們一起分享，度過了愉快的時光。",
-            good: "精力充沛",
-            dead: "體力透支，無法繼續冒險",
-            bad: "還能勉強再撐一下",
-            okay: "目前還有體力",
+            drinkingContest: "大家都坐了下來，每人拿出 $10 當賭注，開始喝酒……",
+            drinkingWin: (prize) => `其他人都醉倒了，你撐到了最後，獲得所有的賭金 $${prize}！`,
+            drinkingLose: (name, prize) => `你不勝酒力醉倒了……而撐到最後的人是${name}，拿走了 $${prize} 賭金。`,
+            drinkingAllLose: "所有人都醉倒了，沒有人一個人撐到最後。",
+            drinkingNoOne: "酒館裡目前沒有人在。",
         };
 
         // 拚酒的狀態
@@ -416,14 +407,9 @@
             
             // 顯示等待按鈕
             document.getElementById("button-container").innerHTML = `
-                <button id="order-btn">等待餐點</button>
+                <button onclick="checkOrder()">等待餐點</button>
                 <button id="cancel-btn">取消</button>
             `;
-
-            // 等待餐點
-            document.getElementById("order-btn").addEventListener("click", function () {
-                checkOrder();
-            });
 
             // 取消
             document.getElementById("cancel-btn").addEventListener("click", function () {
@@ -452,7 +438,6 @@
             if (orderedMeals.length > 0) {
                 document.getElementById("item-list").innerHTML = ""; // 清空列表
                 document.getElementById("money").style.display = "none"; // 隱藏金錢
-                turnSwitch("酒館用餐", false);; // 還沒吃，移除標記
                 showTeam(); // 顯示隊伍
 
                 // 生成所有餐點名稱的字符串，並去除 emoji
@@ -573,8 +558,7 @@
                         location.reload();  // 重新加載當前頁面
                     });
 
-                    turnSwitch("酒館用餐");
-                    showTeam(); // 顯示隊伍健康程度
+                    showTeam(); // 顯示隊伍
                 });
             }
         }
@@ -584,7 +568,7 @@
             // 讀取隊伍資訊
             const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
-            // 清除傭兵獵表
+            // 清除傭兵列表
             document.getElementById("companion-list").innerHTML = "";
 
             // 顯示同伴（上排）

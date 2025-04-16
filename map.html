@@ -1140,13 +1140,13 @@
             // 走向湖
             } else if (mapData[newY][newX] === icons.lake) {
                 loadBackground("lake"); // 讀取背景
-                document.getElementById("situation-text").textContent = texts.nearLake;
+                document.getElementById("location-text").textContent = texts.nearLake;
 
                 // 顯示按鈕
-                document.getElementById("menu").innerHTML = `
-                    <button id="situation-btn">🛶 租船（$5）</button>
+                document.getElementById("location-menu").innerHTML = `
+                    <button id="location-btn">🛶 租船（$5）</button>
                 `;
-                document.getElementById("situation-btn").addEventListener("click", function () {
+                document.getElementById("location-btn").addEventListener("click", function () {
                     // 檢查資金
                     let playerMoney = parseInt(localStorage.getItem("playerMoney")) || 0;
                     let cost = 5; // 租船費
