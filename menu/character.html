@@ -423,8 +423,8 @@
                     choices: [
                         { text: "雷納德", condition: "isCompanion('雷納德')", next: "關於雷納德" },
                         { text: "塔爾穆克", condition: "isCompanion('塔爾穆克')", next: "關於塔爾穆克" },
-                        { text: "賽恩", condition: "isCompanion('賽恩')", next: "賽恩" },
-                        { text: "諾伊爾", condition: "isCompanion('諾伊爾')", next: "諾伊爾" },
+                        { text: "賽恩", condition: "isCompanion('賽恩')", next: "關於賽恩" },
+                        { text: "諾伊爾", condition: "isCompanion('諾伊爾')", next: "關於諾伊爾" },
                         { text: "換個話題", next: "start" },
                     ]
                 },
@@ -457,6 +457,13 @@
                         ]
                     },
 
+                "解散": {
+                    npc: "npc",
+                    text: "喔耶！提早下班了！記得下次要再找我啊！",
+                    choices: [
+                        { text: "再見", next: "", action: "(dismiss(), showTeamMenu(), removeDialogue())" },
+                    ]
+                },
                 "戰鬥中": {
                     npc: "npc",
                     text: "喂，我們還在戰鬥中欸，你確定要現在聊天？",
@@ -1208,9 +1215,9 @@
             const npcId = localStorage.getItem("npcId");
             let npc = teamMembers.find(m => m.id === npcId);
 
-            // 以主角魅力和對方感知擲骰
-            let result = roll(player.cha.total, npc.wis);
-            console.log(`主角魅力: ${player.cha.total}, 對方感知: ${npc.wis.total}`);
+            // 以主角魅力和對方智力擲骰
+            let result = roll(player.cha.total, npc.int);
+            console.log(`主角魅力: ${player.cha.total}, 對方感知: ${npc.int.total}`);
             console.log(`計算的說服成功率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
             turnSwitch("hasPersuaded"); // 標記為已說服，跳轉頁面時再清除，以免刷新頁面時重骰

@@ -87,8 +87,9 @@
     // 顯示對話
         // 返回上一段對話 next: "back"
     function showDialogue(key, price, speaker) {
-        // 隱藏主要內容
+        // 隱藏主要內容和按鈕列
         document.getElementById("main").style.display = "none";
+        document.getElementById("buttonBar").style.display = "none";
 
         // 清空物品容器
         if (document.getElementById("item-list")) {
@@ -242,8 +243,9 @@
         document.getElementById("dialogue").innerHTML = "";
         //document.getElementById("dialogue").style.display = "none";
 
-        // 顯示主要內容
+        // 顯示主要內容和按鈕列
         document.getElementById("main").style.display = "block";
+        document.getElementById("buttonBar").style.display = "flex";
 
         loadPartyData();
     }
@@ -405,6 +407,7 @@
             con: member.con.total,
             str: member.str.total,
             dex: member.dex.total,
+            int: member.int.total,
             wis: member.wis.total,
             cha: member.cha.total,
         };
@@ -530,15 +533,73 @@
         return inEvent;
     }
 
+// 職業相關
+
+    // 職業資料庫
+    const classData = [
+        { id: "warrior", name: "戰士", description: "戰士是訓練有素的精兵，又或是無畏的狂戰士。戰鬥就是他們的生存意義，離死亡越接近，他們的鬥志越高昂。", keyAttr: "力量", skill: ["armorDestroy","suppress","berserk"], asEnemy: true },
+        { id: "paladin", name: "聖騎士", description: "聖騎士為正義與公理而戰，有強烈的使命感，扶弱濟貧、懲奸除惡。他們願將自身化為弱者的盾，無私的英雄形象深植人心。", keyAttr: "體質、魅力", mp: "cha", skill: ["disarm","guard","divineSanction"], asEnemy: false },
+        { id: "rogue", name: "刺客", description: "刺客潛伏在暗影中，往往在戰鬥開始前就解決了敵人。有些刺客擅長偽裝成無害的樣子，讓目標失去警惕。", keyAttr: "敏捷、魅力", skill: ["stealth","sneakAttack","lure"], asEnemy: true },
+        { id: "hunter", name: "獵人", description: "獵人擅長追蹤與精準出擊，能以野獸般的感官找出隱藏的事物。他們不會冒然行動，一旦盯上獵物就絕不放過。", keyAttr: "感知", skill: ["mark","reveal","criticalBlast"], asEnemy: true },
+        { id: "wizard", name: "法師", description: "法師能施展強大的魔法，造成大規模傷害，左右戰局。然而法術的成本高昂，也使他們難以兼顧自己的安全。", keyAttr: "智力", mp: "int", skill: ["lightning","earthquake","fireball"], asEnemy: true },
+        { id: "cleric", name: "牧師", description: "牧師的神奇能力來自於信仰，他們是治療者，不奪取性命，但能夠克制敵對的施法者，淨化對方的異端魔力。", keyAttr: "感知", mp: "wis", skill: ["healing","magicShield","seal"], asEnemy: true }
+    ];
+
+    // 技能資料庫
+    const skillData = [
+        { id: "attack", icon: "⚔️", name: "攻擊", description: "以武器攻擊一個目標，造成等同角色力量的物理傷害。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "擊中了${target.name}(${result.damage})！", missMessage: "試圖攻擊，但${target.name}躲過了", damage: "user.str - target.arm" },
+        { id: "disarm", icon: "🫴", name: "繳械", description: "通過一次敏捷檢定，去除目標的武器。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "準確地把${target.name}手中的武器擊飛，現在他赤手空拳了！", missMessage: "沒能讓${target.name}放開武器", targetStatus: "空手" },
+        { id: "guard", icon: "🛡️", name: "守護", description: "選擇一個同排的同伴，代替同伴承受本回合所有攻擊，且無法進行閃避。", target: "同排單體", hitMessage: "將不顧一切地保護${target.name}的安全", targetStatus: "被守護", userStatus: "守護" },
+        { id: "divineSanction", icon: "🌟", name: "神聖制裁", description: "攻擊一個目標，造成物理傷害，加上等同聖騎士魅力的魔法傷害。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "發出一道聖光，對${target.name}執行制裁，懲罰了他的罪((${result.damage})！", missMessage: "發出一道聖光，但${target.name}僥倖躲過了制裁", damage: ["Math.max(user.str - target.arm","0) + user.cha"], cost: 1 },
+        { id: "armorDestroy", icon: "💥", name: "破甲", description: "攻擊一個近距離目標，削減目標的護甲值，削減量等於此次傷害的1/5，但戰士會受到等同目標護甲值的反彈傷害。", target: "前排單體", hitCheck: "dex-vs-dex", hitMessage: "擊中了${target.name}(${result.damage})！驚人的力量擊破了對方護甲(${result.damage}/5)，但也傷到了自己(${target.arm.total} + ${result.damage}/5)", missMessage: "試圖攻擊，但${target.name}躲過了", damage: "user.str - target.arm", userDamage: "target.arm", targetStatus: "破甲" },
+        { id: "suppress", icon: "🤚", name: "壓制", description: "通過一次力量檢定，將一個近距離目標壓在地上，使其無法行動也無法閃避，但壓制期間戰士無法閃避其他敵人的攻擊。", target: "前排單體", hitCheck: "str-vs-str", hitMessage: "朝${target.name}猛撲過去，把他壓制在地上，無法逃離！", missMessage: "朝${target.name}猛撲過去，但撲了個空", targetStatus: "被壓制", userStatus: "壓制", cancelable : true },
+        { id: "berserk", icon: "🌋", name: "狂暴", description: "戰士 HP 低於 50% 時可發動，獲得 3 回合狂暴和流血。狂暴狀態下，HP 每損失 1 點，爆擊率就提高 1%。", condition: "user.HP <= user.MaxHP / 2", target: "自己", hitMessage: "發出令人膽顫心驚的怒吼！他無所畏懼，傷得越重，打人越痛！", userStatus: ["狂暴","流血"] },
+        { id: "stealth", icon: "🐈‍⬛", name: "隱身", description: "通過一次潛行檢定，敵人將無法看見刺客（範圍攻擊仍會命中），直到刺客發動攻擊。如果此次攻擊殺死目標，刺客將繼續保持隱身。", target: "敵方感知最高者", hitCheck: "dex-vs-wis", hitMessage: "隱藏自己的氣息，消失了蹤跡……", missMessage: "試圖躲藏起來，但仍然暴露了", userStatus: "隱身", cancelable : true },
+        { id: "sneakAttack", icon: "🗡️", name: "偷襲", description: "在隱身時或敵人沒有警覺時，攻擊一個目標，必定命中，傷害加倍、爆擊率加倍，前後排皆可。", condition: "隱身或偷襲回合", target: "任一單體", hitMessage: "無聲無息地偷襲，擊中了${target.name}(${result.damage})！", damage: "user.str * 2 - target.arm", critRate: "user.crit * 2" },
+        { id: "lure", icon: "🪤", name: "誘捕", description: "通過一次魅力檢定，將一個後排的目標引到前排，進行攻擊。", target: "後排單體", hitCheck: "cha-vs-int", hitMessage: "使手段吸引${target.name}的注意，趁機擊中了他(${result.damage})！", missMessage: "嘗試吸引${target.name}的注意，但他無動於衷", damage: "user.str - target.arm", targetMove: "往前" },
+        { id: "mark", icon: "👁️", name: "鷹眼", description: "看穿一個目標的動作，使我方對目標的所有攻擊獲得命中優勢，直到換一個目標。", target: "任一單體", hitCheck: "wis-vs-dex", hitMessage: "以敏銳目光看穿了${target.name}的動向！", missMessage: "眼睛跟不上${target.name}的速度", targetStatus: "被標記" },
+        { id: "reveal", icon: "🔍", name: "搜索", description: "通過一次偵查檢定，讓隱身的敵人現形。", target: "敵方隱身者", hitCheck: "wis-vs-dex", hitMessage: "搜索隱藏的跡象，發現了${target.name}！", missMessage: "搜索了一番，什麼也沒發現……", targetStatus: "-隱身" },
+        { id: "criticalBlast", icon: "🎯", name: "弱點爆破", description: "攻擊一個目標，如果目標已被標記，通過一次偵查檢定，即可造成爆擊。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "瞄準${target.name}的弱點，擊中了他(${result.damage})！", missMessage: "瞄準${target.name}，但對方警覺地保護起弱點", damage: "user.str - target.arm", critRate: "wis-vs-dex" },
+        { id: "lightning", icon: "⚡", name: "閃電術", description: "攻擊一個目標，造成等同法師智力的魔法傷害，無法被閃避。目標必須通過一次體質豁免，否則會受到麻痺。", target: "任一單體", hitMessage: "發射一道閃電，瞬間擊中了${target.name}(${result.damage})！", damage: "user.int", statusCheck: "int-vs-con", targetStatus: "麻痺", cost: 1 },
+        { id: "earthquake", icon: "🪨", name: "地震術", description: "與目標同排的生物必須通過一次敏捷豁免，否則會倒地。", target: "任一排", hitMessage: "使${target.name}腳下的地面震動起來！", statusCheck: "int-vs-dex", targetStatus: "倒地", cost: 2 },
+        { id: "fireball", icon: "☄️", name: "火球術", description: "攻擊與目標同排的生物，造成等同法師智力的魔法傷害，無法被閃避，並附加燃燒。", target: "任一排", hitMessage: "降下一顆巨大而熾熱的火球，落在了${target.name}頭上(${result.damage})！", damage: "user.int", targetStatus: "燃燒", cost: 2 },
+        { id: "healing", icon: "❤️‍🩹", name: "治癒術", description: "治療一個生物，治療量等同牧師的感知，並解除中毒、燃燒。", target: "任一單體", hitMessage: "為${target.name}治療了傷勢(${result.damage})", damage: "-user.wis", targetStatus: ["-中毒","-燃燒"], cost: 1 },
+        { id: "magicShield", icon: "🛡️", name: "防護術", description: "為一個我方角色創造能吸收物理和魔法傷害的防護罩，防護罩的 HP 等同牧師的感知。", target: "任一單體", hitMessage: "在${target.name}周圍創造了一層防護罩", targetStatus: "防護罩", cost: 1 },
+        { id: "seal", icon: "🔒", name: "魔力封印", description: "通過一次感知檢定，讓一個目標一回合無法施法，並吸取 2MP。", target: "任一單體", hitCheck: "wis-vs-wis", hitMessage: "封印了${target.name}的魔力，並從中吸取了一部分(${result.mpDamage})！", missMessage: "試圖封印${target.name}的魔力，但他的力量太強大了", mpDamage: 2, userMpDamage: -2, targetStatus: "封印" }
+    ];
+
+    // 顯示屬性等級
+    function showAttributeLevel(attr, value) {
+        const attributeLevel = {
+            con: { low: "弱不禁風", middle: "中等", high: "身強體壯" },
+            str: { low: "軟弱無力", middle: "普通", high: "孔武有力" },
+            dex: { low: "動作笨拙", middle: "尋常", high: "身手矯捷" },
+            int: { low: "愚昧無知", middle: "平均", high: "足智多謀" },
+            wis: { low: "少一根筋", middle: "一般", high: "明察秋毫" },
+            cha: { low: "惹人厭惡", middle: "平凡", high: "令人著迷" },
+            arm: { low: "", middle: "良好", high: "銅牆鐵壁"},
+        };
+
+        let level = "";
+        if (value < 8) {
+            level = attributeLevel[attr].low;
+        } else if (value <= 12) {
+            level = attributeLevel[attr].middle;
+        } else {
+            level = attributeLevel[attr].high;
+        }
+        return level;
+    }
+
 // 隊伍相關
 
     // 傭兵資料庫
     const mercenaries = [
-        { name: "雷納德", type: "傭兵", description: "老練的冒險者，飽經風霜的臉龐洋溢著溫暖的微笑。", cost: 0, con: 15, str: 15, dex: 12, wis: 14, cha: 12, weaponId: "npcWeapon01", armorId: "npcArmor01" },
-        { name: "塔爾穆克", type: "傭兵", description: "身材魁武的獸人狂戰士，背著一把巨大的戰斧，眼神充滿怒火。", cost: 150, con: 18, str: 18, dex: 10, wis: 10, cha: 7, weaponId: "npcWeapon02", armorId: "npcArmor02" },
-        { name: "賽恩", type: "傭兵", description: "蒙面的刺客，整張臉隱藏在面罩下，沉默寡言，散發著一絲危險氣息。", cost: 120, con: 13, str: 13, dex: 18, wis: 14, cha: 10, weaponId: "npcWeapon03", armorId: "npcArmor03" },
-        { name: "艾德蒙", type: "傭兵", description: "看起來像個小混混，不太正經，喜歡自吹自擂，給人感覺不怎麼可靠。", cost: 100, con: 8, str: 12, dex: 12, wis: 10, cha: 9, weaponId: "", armorId: "npcArmor04" },
-        { name: "諾伊爾", type: "傭兵", description: "初出茅廬的高等精靈少年，一臉純真，比起協助你，他看起來更需要協助。", cost: 90, con: 9, str: 9, dex: 16, wis: 16, cha: 18, weaponId: "npcWeapon05", armorId: "npcArmor05" }
+        { name: "雷納德", type: "傭兵", classId: "paladin", description: "老練的冒險者，穿著全套盔甲，飽經風霜的臉龐洋溢著溫暖的微笑。", cost: 0, con: 16, str: 15, dex: 13, int: 10, wis: 12, cha: 14, weaponId: "npcWeapon01", armorId: "npcArmor01" },
+        { name: "塔爾穆克", type: "傭兵", classId: "warrior", description: "身材魁武的獸人狂戰士，背著一把巨大的戰斧，眼神充滿怒火。", cost: 150, con: 18, str: 18, dex: 12, int: 8, wis: 10, cha: 8, weaponId: "npcWeapon02", armorId: "npcArmor02" },
+        { name: "賽恩", type: "傭兵", classId: "rogue", description: "蒙面的刺客，整張臉隱藏在面罩下，沉默寡言，散發著一絲危險氣息。", cost: 120, con: 12, str: 13, dex: 17, int: 10, wis: 14, cha: 10, weaponId: "npcWeapon03", armorId: "npcArmor03" },
+        { name: "艾德蒙", type: "傭兵", classId: "hunter", description: "看起來像個小混混，不太正經，喜歡自吹自擂，給人感覺不怎麼可靠。", cost: 100, con: 8, str: 14, dex: 14, int: 10, wis: 16, cha: 12, weaponId: "", armorId: "npcArmor04" },
+        { name: "諾伊爾", type: "傭兵", classId: "wizard", description: "初出茅廬的高等精靈少年，一臉純真，比起協助你，他看起來更需要協助。", cost: 90, con: 8, str: 8, dex: 12, int: 16, wis: 12, cha: 16, weaponId: "", armorId: "npcArmor05" }
     ];
 
     // 讀取隊伍資料
@@ -667,6 +728,7 @@
                 str: { basic: companion.str, },
                 dex: { basic: companion.dex, },
                 con: { basic: companion.con, },
+                int: { basic: companion.int, },
                 wis: { basic: companion.wis, },
                 cha: { basic: companion.cha, },
                 arm: { basic: 0 },
@@ -821,7 +883,6 @@
     }
 
 // 主角相關
-
     // 主角 HP 增減
     function addPlayerHP(amount) {
         let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
@@ -962,7 +1023,7 @@
         { type: "armor", id: "armor04", name: "🛡️ 鎖子甲", arm: 8, needStr: 12, price: 80, shop: "blacksmith", description: "以鐵環相扣製成的鎧甲。" },
         { type: "armor", id: "armor05", name: "🛡️ 全身板甲", arm: 10, needStr: 14, price: 100, shop: "blacksmith", description: "完整保護全身的重型盔甲。" },
         // NPC專屬,
-        { type: "armor", id: "npcArmor01", name: "🛡️ 雷納德的胸甲", arm: 6, owner: "雷納德", description: "包覆軀幹的堅固胸甲。" },
+        { type: "armor", id: "npcArmor01", name: "🛡️ 雷納德的板甲", arm: 10, needStr: 14, owner: "雷納德", description: "完整保護全身的重型盔甲。" },
         { type: "armor", id: "npcArmor02", name: "🛡️ 塔爾穆克的胸甲", arm: 6, owner: "塔爾穆克", description: "包覆軀幹的堅固胸甲。" },
         { type: "armor", id: "npcArmor03", name: "🛡️ 賽恩的皮甲", arm: 2, owner: "賽恩", description: "活動性佳的輕型盔甲。" },
         { type: "armor", id: "npcArmor04", name: "🛡️ 艾德蒙的鱗甲", arm: 4, owner: "艾德蒙", description: "以皮革和鐵片製成的鎧甲。" },
@@ -1532,7 +1593,7 @@
         }
 
         // 加總屬性
-        ["str", "dex", "con", "wis", "cha", "arm"].forEach(attr => {
+        ["str", "dex", "con", "int" , "wis", "cha", "arm"].forEach(attr => {
             member[attr].total = Object.entries(member[attr])
                 .filter(([key]) => key !== "total") // 過濾掉 "total"
                 .reduce((sum, [, val]) => sum + val, 0); // 累加數值
@@ -1741,11 +1802,17 @@
         // 找到情緒的資料
         const newEmotion = emotionData.find(e => e.id === emotionId);
 
-        // 如果是無限期情緒，不會重複獲得
-        const hasEmotion = member.emotion.find(e => e.id === emotionId);
-        if (newEmotion.indefinite && hasEmotion) {
+        // 情緒不會重複獲得
+        const hasEmotion = member.emotion.some(e => e.id === emotionId);
+        if (hasEmotion) {
             return;
         }
+
+        // 如果是無限期情緒，不會重複獲得
+        //const hasEmotion = member.emotion.find(e => e.id === emotionId);
+        //if (newEmotion.indefinite && hasEmotion) {
+        //    return;
+        //}
 
         // 添加情緒
         member.emotion.push(newEmotion);
@@ -1811,7 +1878,7 @@
         }
 
         // 加總屬性
-        ["str", "dex", "con", "wis", "cha", "arm"].forEach(attr => {
+        ["str", "dex", "con", "int", "wis", "cha", "arm"].forEach(attr => {
             member[attr].total = Object.entries(member[attr])
                 .filter(([key]) => key !== "total") // 過濾掉 "total"
                 .reduce((sum, [, val]) => sum + val, 0); // 累加數值
@@ -1822,6 +1889,13 @@
     }
     
 // 場景跳轉相關
+
+    // 地點
+    const locations = [
+        { id: "town01", name: "晨曦鎮", x: 1, y: 0, visible: true },  
+        { id: "town02", name: "鐵石鎮", x: 5, y: 4, visible: true }, 
+    ];
+
 
     // 新的一天
     function nextDay() {
@@ -1928,7 +2002,13 @@
     }
 
     // 快速旅行
-    function fastTravel() {
+    function fastTravel(townId) {
+        // 如果有指定城鎮
+        if (townId) {
+            const townPos = locations.find(town => town.id === townId);
+            localStorage.setItem("townPos", JSON.stringify(townPos)); // 儲存為最近城鎮
+        }
+
         // 讀取最近的城鎮位置
         const townPos = JSON.parse(localStorage.getItem("townPos"));
 

@@ -793,7 +793,7 @@
         window.onload = function() {
             getDialogueNpc(); // 判斷交談對象
             preferences(); // 偏好設定
-            showButtonBar(); // 顯示按鈕列
+            //showButtonBar(); // 顯示按鈕列
             loadBackground(); // 讀取背景
         };
 
@@ -957,7 +957,7 @@
             // 讀取所有敵人資料
             const enemyCount = JSON.parse(localStorage.getItem("enemyCount")); // 初始敵人數量
             const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-            const enemyWis = enemies.length > 0 ? enemies[0].wis.total : ""; // 取第一個敵人的感知
+            const enemyInt = enemies.length > 0 ? enemies[0].int.total : ""; // 取第一個敵人的智力
             const hurtEnemies = enemies.filter(e => e.HP < e.MaxHP); // 找出被攻擊過的敵人
             
             // 檢查是否攻擊過敵人
@@ -972,8 +972,8 @@
             }
 
             // 以主角魅力和對方感知擲骰
-            let result = roll(member.cha.total, enemyWis);
-            console.log(`主角魅力: ${member.cha.total}, 敵人感知: ${enemyWis}`);
+            let result = roll(member.cha.total, enemyInt);
+            console.log(`主角魅力: ${member.cha.total}, 敵人感知: ${enemyInt}`);
             console.log(`說服成功率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
  
             turnSwitch("hasPersuaded"); // 標記為已說服，跳轉頁面時再清除，以免刷新頁面時重骰
@@ -997,11 +997,11 @@
             // 讀取所有敵人資料
             const enemyCount = JSON.parse(localStorage.getItem("enemyCount"));
             const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-            const enemyWis = enemies.length > 0 ? enemies[0].wis.total : ""; // 取第一個敵人的感知
+            const enemyInt = enemies.length > 0 ? enemies[0].int.total : ""; // 取第一個敵人的智力
 
             // 以主角魅力和對方感知擲骰
-            let result = roll(member.cha.total, enemyWis);
-            console.log(`主角魅力: ${member.cha.total}, 敵人感知: ${enemyWis}`);
+            let result = roll(member.cha.total, enemyInt);
+            console.log(`主角魅力: ${member.cha.total}, 敵人感知: ${enemyInt}`);
             console.log(`邀請成功率: ${(result.chance*100).toFixed(2)}%`);  // 顯示精確到小數點後2位
 
             turnSwitch("hasInvited"); // 標記為已邀請，跳轉頁面時再清除，以免刷新頁面時重骰
@@ -1077,7 +1077,6 @@
             // 讀取所有敵人資料
             const enemyCount = JSON.parse(localStorage.getItem("enemyCount"));
             const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
-            const enemyWis = enemies.length > 0 ? enemies[0].wis : ""; // 取第一個敵人的感知
 
             // 檢查是否殺過敵人的同伴
             if (enemyCount > enemies.length) {
@@ -1125,6 +1124,7 @@
                     str: enemy.str,
                     dex: enemy.dex,
                     con: enemy.con,
+                    int: enemy.int,
                     wis: enemy.wis,
                     cha: enemy.cha,
                     arm: enemy.arm,

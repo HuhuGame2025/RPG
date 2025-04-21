@@ -264,11 +264,6 @@
             farm: "🌾",
         };
 
-        // 地點
-        const locations = [
-            { id: "town01", name: "晨曦鎮", x: 1, y: 0, visible: true },  
-            { id: "town02", name: "鐵石鎮", x: 5, y: 4, visible: true }, 
-        ];
 
         // 讀取角色位置，預設在 (2,2)
         let playerPos = JSON.parse(localStorage.getItem("playerPos")) || { x: 1, y: 1 };
@@ -1290,14 +1285,10 @@
 
                 const locationIcon = mapData[playerPos.y][playerPos.x];
                 
-                // 讀取採集次數
-                let harvestCounts = JSON.parse(localStorage.getItem("harvestCounts")) || [
-                    [0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0],
-                    [0,0,0,0,0,0,0,0]
-                ];
+                // 讀取或初始化採集次數
+                let harvestCounts = JSON.parse(localStorage.getItem("harvestCounts")) || [];
+                if (!harvestCounts[playerPos.y]) harvestCounts[playerPos.y] = []; // 確保有y軸
+                if (harvestCounts[playerPos.y][playerPos.x] == null) harvestCounts[playerPos.y][playerPos.x] = 0; // 確保有x軸
                 let harvest = harvestCounts[playerPos.y][playerPos.x]; // 採集次數
                 console.log("採集次數: ", harvest);
 
@@ -1434,6 +1425,21 @@
                     `;
                     document.getElementById("location-btn").addEventListener("click", function () {
                         getItem("potato");
+                        harvestCounts[playerPos.y][playerPos.x]++; // 記錄採集次數（寫 harvest 沒有用）
+                        localStorage.setItem("harvestCounts", JSON.stringify(harvestCounts));
+                        window.location.href = 'encounter.html'; // 跳轉到遭遇頁面
+                    });
+
+                // 位於湖中
+                } else if (locationIcon === icons.lake) {
+                    if (harvest === 1) return; // 只能採集1次
+
+                    // 顯示按鈕
+                    document.getElementById("location-menu").innerHTML = `
+                        <button id="location-btn">🎣 釣魚</button>
+                    `;
+                    document.getElementById("location-btn").addEventListener("click", function () {
+                        getItem("fish");
                         harvestCounts[playerPos.y][playerPos.x]++; // 記錄採集次數（寫 harvest 沒有用）
                         localStorage.setItem("harvestCounts", JSON.stringify(harvestCounts));
                         window.location.href = 'encounter.html'; // 跳轉到遭遇頁面

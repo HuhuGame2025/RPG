@@ -33,6 +33,7 @@
             <br>
             <button onclick="showDialogue('start')">遊戲說明</button>
             <button onclick="adjustPreference()">偏好設定</button>
+            <button onclick="showDialogue('cheat')">作弊</button>
             <br>
             <a href="../title.html"><button>回首頁</button></a>
         </div>
@@ -59,6 +60,7 @@
         // 對話資料庫
         const dialogueData = {
             "說明": {
+                // 說明
                 "start": {
                     text: "",
                     choices: [
@@ -137,9 +139,32 @@
                         { text: "返回", next: "start" },
                     ]
                 },
+
+                // 作弊
+                "cheat": {
+                    text: "",
+                    choices: [
+                        { text: "獲得金錢 $10000", next: "獲得金錢", action: "getItem('$10000')" },
+                        { text: "恢復隊伍 HP", next: "恢復隊伍", action: "resetHP()" },
+                        { text: "傳送到晨曦鎮", action: "fastTravel('town01')" },
+                        { text: "傳送到鐵石鎮", action: "fastTravel('town02')" },
+                        { text: "返回", next: "", action: "removeDialogue()" },
+                    ]
+                },
+                "獲得金錢": {
+                    text: "已獲得 $10000",
+                    choices: [
+                        { text: "繼續", next: "cheat" },
+                    ]
+                },
+                "恢復隊伍": {
+                    text: "已恢復隊伍 HP",
+                    choices: [
+                        { text: "繼續", next: "cheat" },
+                    ]
+                },
             },
         }
-
 
         function showFileInput() {
             document.getElementById("fileInput").style.display = "block";

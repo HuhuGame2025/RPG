@@ -333,6 +333,7 @@
         display: flex;
         justify-content: center; /* 水平置中，要配合 display: flex */
         align-items: center; /* 垂直置中，要配合 display: flex */
+        transition: transform 0.15s ease-in-out; /* 定義過渡效果 */
     }
     /* 三種尺寸 */
     .font-large .avatar {
@@ -346,6 +347,11 @@
     .font-small .avatar {
         width: 60px;
         height: 60px;
+    }
+
+    /* 彈跳 */
+    .jump {
+        transform: translateY(-50px); /* 物件向上跳動 */
     }
 
     .avatar span {

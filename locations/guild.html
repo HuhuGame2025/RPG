@@ -985,6 +985,14 @@
             // 如果是組隊承接，只會拿到分成
             if (mission.sharePrice) mission.price = mission.sharePrice;
 
+            // 移除身分為「冒險者」的同伴
+            for (let i = teamMembers.length - 1; i >= 0; i--) { // 用倒序處理，以免移除後 index 改變而漏掉項目
+                const member = teamMembers[i];
+                if (member.id !== "player" && member.type === "冒險者") {
+                    removeCompanion(member.id);
+                }
+            }
+
             getItem("$" + mission.price); // 獲得報酬
             takenMissions = takenMissions.filter((m) => m.id !== mission.id); // 清除任務
             localStorage.setItem("takenMissions", JSON.stringify(takenMissions));

@@ -212,16 +212,15 @@
             });
             localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
 
-            // 艾德蒙滿血復活
+            // 艾德蒙 1 血復活
             let member = teamMembers.find(m => m.name === "艾德蒙");
-            if (member) {
-                if (member.HP === 0 && !isTrue("艾德蒙第一次死")) {
+            if (member && member.HP === 0) {
+                if (!isTrue("艾德蒙第一次死")) {
                     localStorage.setItem("npcName", "艾德蒙");
                     showDialogue("艾德蒙第一次死");
-                    return;
+                    return; // 不回到地圖
                 } else {
-                    member.HP = member.MaxHP;
-                    getEmotion(member.id, "fullHP");
+                    member.HP = 1;
                 }
             }
             localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
