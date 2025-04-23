@@ -204,6 +204,7 @@
             turnSwitch("enemySurrender", false); // 清除敵人投降
             turnSwitch("inBattle", false); // 清除戰鬥中
             localStorage.removeItem("encounter"); // 清除指定遭遇
+            turnSwitch("敵人回合", false); // 關閉敵人回合
 
             // 重置隊員狀態
             const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];

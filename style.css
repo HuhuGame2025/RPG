@@ -142,7 +142,7 @@
     .row-buttons button {
         flex: 1; /* 佔滿剩餘空間 */
         margin: 5px 0;
-        padding: 5px;
+        padding: 0px;
         font-size: 1em;
         background: rgba(50, 50, 50, 0);
         border-radius: 0;
@@ -294,7 +294,7 @@
     #toast-container {
         position: fixed;
         top: 20px;
-        left: 20px;
+        right: 20px; /* 靠右 */
         z-index: 9999;
         display: flex;
         flex-direction: column;
