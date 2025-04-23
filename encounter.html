@@ -324,7 +324,7 @@
             // 隨機選擇一種敵人
             let randomIndex = Math.floor(Math.random() * possibleEnemies.length);
             let selectedEnemy = possibleEnemies[randomIndex];
-            //selectedEnemy = enemies.find(e => e.name.startsWith("石化")); // 測試用
+            //selectedEnemy = 0; // 測試用
 
             // 使用加權隨機決定敵人數量
                 let enemyCount;
@@ -343,18 +343,16 @@
             // 如果有指定遭遇
             const encounter = JSON.parse(localStorage.getItem("encounter"));
             if (encounter) {
-                if (encounter.enemyName) { 
-                    selectedEnemy = enemies.find(e => encounter.enemyName === e.name); // 使用指定的敵人
-                }
-                if (encounter.enemyCount) { 
-                    enemyCount = encounter.enemyCount; // 使用指定的數量
-                }
+                // 使用指定的敵人
+                if (encounter.enemyName) selectedEnemy = enemies.find(e => encounter.enemyName === e.name); 
+                // 使用指定的數量
+                if (encounter.enemyCount) enemyCount = encounter.enemyCount;
             }
 
             // 建立敵人陣列（所有敵人都是相同種類）
             let enemiesEncountered = [];
             for (let i = 0; i < enemyCount; i++) {
-                // 隨機抽形容詞
+                // 抽形容詞
                 let adj = "";
                 if (selectedEnemy.type.includes("智慧") || selectedEnemy.type.includes("類人")) {
                     // 智慧或類人生物
@@ -413,7 +411,6 @@
                         .reduce((sum, [, val]) => sum + val, 0); // 累加數值
                 });
 
-
                 // 生成敵人的id
                 const enemyId = `enemy${enemiesEncountered.length + 1}`;
 
@@ -439,7 +436,10 @@
                     actionBattle: selectedEnemy.actionBattle,
                     description: selectedEnemy.description,
                     MaxHP: selectedEnemy.con*3, // MaxHP
-                    HP: selectedEnemy.con*3, // 初始 HP   
+                    HP: selectedEnemy.con*3, // 初始 HP
+                    MaxMP: 0,
+                    MP: 0,
+                    critRate: 5, // 爆擊率 5%
                     status: [], // 初始狀態
                     addStatus: selectedEnemy.addStatus,
                     addChance: selectedEnemy.addChance,
@@ -450,6 +450,13 @@
             localStorage.setItem("enemyCount", enemyCount);
             localStorage.setItem("enemies", JSON.stringify(enemiesEncountered));
             localStorage.setItem("availableEnemies", JSON.stringify(enemiesEncountered));
+            
+            // 隨機決定前排敵人（50% 機率）
+            let frontEnemies = [];
+            enemiesEncountered.forEach(enemy => {
+                if (Math.random() <= 0.5) frontEnemies.push(enemy);
+            });
+            localStorage.setItem("frontEnemies", JSON.stringify(frontEnemies));
         }
 
         // 跳轉畫面

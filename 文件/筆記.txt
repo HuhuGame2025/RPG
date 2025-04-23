@@ -1,3 +1,12 @@
+【優先】
+處理狀態
+處理聯手攻擊
+處理範圍技能
+擊殺目標時的訊息、添加情緒
+按下技能後跳出說明視窗，附「使用」按鈕，不要擋到技能列
+
+********************************************************************************************
+
 要增加帶不同夥伴的好處或樂趣（一旦這些行為是「想做的」而不是「被逼的」，就不用擔心玩家會一頭栽進無限刷）
 文案不要讓人有「系統強迫我」的感覺，而要像是「角色有生命」
 
@@ -6,7 +15,7 @@ NPC和敵人會對裸體做出反應
 每日活動給予短期目標
 某些個性會和隊友吵架，某些個性會安慰人
 
-讓下一次擲骰成功的效果
+讓下一次擲骰成功的技能
 遊戲中可以選擇「重要之人」
 可以激勵、惹怒夥伴（模擬市民互動選項）
 在城鎮租房，可以睡覺、存放財物、替換傭兵
@@ -20,6 +29,12 @@ NPC和敵人會對裸體做出反應
 傭兵計日收費
 隨機生成普通冒險者、傭兵
 職業
+角色死亡時盔甲會受損
+將取第一個敵人的函式改為用ID判斷敵人
+將create程式碼模組化
+仙子有回復MP的技能，使用仙塵也能回復MP
+
+後排可以躲掩體，飛行時無法使用掩體，草原和湖上沒有掩體
 
 ********************************************************************************************
 
@@ -204,14 +219,19 @@ const playerName = localStorage.getItem("playerName");
 const playerCon = parseInt(localStorage.getItem("playerCon"));
 const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
 
-// 顯示資料
-document.getElementById("playerName").textContent = playerName;
-
 // 跳轉頁面
 window.location.href = 'battle.html';
 
-// 無限金錢，在F12輸入
-localStorage.setItem("playerMoney", "99999");  
-
 // 顯示在log
 console.log(teamMembers);
+
+
+
+//取得物件的key
+Object.keys(attributes).forEach(value => {
+
+//取得物件的值
+Object.values(attributes).forEach(value => {
+
+// 取得物件的key和值
+for (const [key, value] of Object.entries(attributes)) {

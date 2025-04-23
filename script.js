@@ -537,35 +537,71 @@
 
     // 職業資料庫
     const classData = [
-        { id: "warrior", name: "戰士", description: "戰士是訓練有素的精兵，又或是無畏的狂戰士。戰鬥就是他們的生存意義，離死亡越接近，他們的鬥志越高昂。", keyAttr: "力量", skill: ["armorDestroy","suppress","berserk"], asEnemy: true },
-        { id: "paladin", name: "聖騎士", description: "聖騎士為正義與公理而戰，有強烈的使命感，扶弱濟貧、懲奸除惡。他們願將自身化為弱者的盾，無私的英雄形象深植人心。", keyAttr: "體質、魅力", mp: "cha", skill: ["disarm","guard","divineSanction"], asEnemy: false },
-        { id: "rogue", name: "刺客", description: "刺客潛伏在暗影中，往往在戰鬥開始前就解決了敵人。有些刺客擅長偽裝成無害的樣子，讓目標失去警惕。", keyAttr: "敏捷、魅力", skill: ["stealth","sneakAttack","lure"], asEnemy: true },
-        { id: "hunter", name: "獵人", description: "獵人擅長追蹤與精準出擊，能以野獸般的感官找出隱藏的事物。他們不會冒然行動，一旦盯上獵物就絕不放過。", keyAttr: "感知", skill: ["mark","reveal","criticalBlast"], asEnemy: true },
-        { id: "wizard", name: "法師", description: "法師能施展強大的魔法，造成大規模傷害，左右戰局。然而法術的成本高昂，也使他們難以兼顧自己的安全。", keyAttr: "智力", mp: "int", skill: ["lightning","earthquake","fireball"], asEnemy: true },
-        { id: "cleric", name: "牧師", description: "牧師的神奇能力來自於信仰，他們是治療者，不奪取性命，但能夠克制敵對的施法者，淨化對方的異端魔力。", keyAttr: "感知", mp: "wis", skill: ["healing","magicShield","seal"], asEnemy: true }
+        { id: "warrior", name: "戰士", description: "戰士是訓練有素的精兵，又或是無畏的狂戰士。戰鬥就是他們的生存意義，離死亡越接近，他們的鬥志越高昂。", keyAttr: "力量", skills: ["armorBreak","pin","berserk"], asEnemy: true },
+        { id: "paladin", name: "聖騎士", description: "聖騎士為正義與公理而戰，有強烈的使命感，扶弱濟貧、懲奸除惡。他們願將自身化為弱者的盾，無私的英雄形象深植人心。", keyAttr: "體質、魅力", mp: "cha", skills: ["disarm","guard","divineSanction"], asEnemy: false },
+        { id: "rogue", name: "刺客", description: "刺客潛伏在暗影中，往往在戰鬥開始前就解決了敵人。有些刺客擅長偽裝成無害的樣子，讓目標失去警惕。", keyAttr: "敏捷、魅力", skills: ["stealth","sneakAttack","lure"], asEnemy: true },
+        { id: "hunter", name: "獵人", description: "獵人擅長追蹤與精準出擊，能以野獸般的感官找出隱藏的事物。他們不會冒然行動，一旦盯上獵物就絕不放過。", keyAttr: "感知", skills: ["mark","reveal","criticalBlast"], asEnemy: true },
+        { id: "wizard", name: "法師", description: "法師能施展強大的魔法，造成大規模傷害，左右戰局。然而法術的成本高昂，也使他們難以兼顧自己的安全。", keyAttr: "智力", mp: "int", skills: ["lightning","earthquake","fireball"], asEnemy: true },
+        { id: "cleric", name: "牧師", description: "牧師的神奇能力來自於信仰，他們是治療者，不奪取性命，但能夠克制敵對的施法者，淨化對方的異端魔力。", keyAttr: "感知", mp: "wis", skills: ["heal","magicShield","seal"], asEnemy: true }
     ];
 
     // 技能資料庫
     const skillData = [
         { id: "attack", icon: "⚔️", name: "攻擊", description: "以武器攻擊一個目標，造成等同角色力量的物理傷害。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "擊中了${target.name}(${result.damage})！", missMessage: "試圖攻擊，但${target.name}躲過了", damage: "user.str - target.arm" },
-        { id: "disarm", icon: "🫴", name: "繳械", description: "通過一次敏捷檢定，去除目標的武器。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "準確地把${target.name}手中的武器擊飛，現在他赤手空拳了！", missMessage: "沒能讓${target.name}放開武器", targetStatus: "空手" },
-        { id: "guard", icon: "🛡️", name: "守護", description: "選擇一個同排的同伴，代替同伴承受本回合所有攻擊，且無法進行閃避。", target: "同排單體", hitMessage: "將不顧一切地保護${target.name}的安全", targetStatus: "被守護", userStatus: "守護" },
+        // 戰士,
+        { id: "armorBreak", icon: "💥", name: "破甲", description: "攻擊一個近距離目標，削減目標的護甲值，削減量等於此次傷害的1/5，但戰士會受到等同目標護甲值的反彈傷害。", target: "前排單體", hitCheck: "dex-vs-dex", hitMessage: "擊中了${target.name}(${result.damage})！驚人的力量擊破了對方護甲(${result.damage}/5)，但也傷到了自己(${target.arm.total} + ${result.damage}/5)", missMessage: "試圖攻擊，但${target.name}躲過了", damage: "user.str - target.arm", userDamage: "target.arm", targetStatus: "armorBroken", armorBreak: "(user.str - target.arm) / 5" },
+        { id: "pin", icon: "🤚", name: "壓制", description: "通過一次力量檢定，將一個近距離目標壓在地上，使其無法行動也無法閃避，但壓制期間戰士無法閃避其他敵人的攻擊。", target: "前排單體", hitCheck: "str-vs-str", hitMessage: "朝${target.name}猛撲過去，把他壓制在地上，無法逃離！", missMessage: "朝${target.name}猛撲過去，但撲了個空", targetStatus: "pinned", userStatus: "pinning" },
+        { id: "berserk", icon: "🌋", name: "狂暴", description: "戰士 HP 低於 50% 時可發動，獲得 3 回合狂暴和流血。狂暴狀態下，攻擊獲得命中優勢，HP 每損失 1 點，爆擊率就提高 1%。", condition: "user.HP <= user.MaxHP / 2", target: "自己", hitMessage: "發出令人膽顫心驚的怒吼！他無所畏懼，傷得越重，打人越痛！", userStatus: ["berserk","bleeding"] },
+        //【魯莽攻擊】此次攻擊獲得優勢，但本回合敵人對戰士的攻擊也獲得優勢。,
+        // 聖騎士,
+        { id: "disarm", icon: "🫴", name: "繳械", description: "通過一次敏捷檢定，去除目標的武器。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "準確地把${target.name}手中的武器擊飛，現在他赤手空拳了！", missMessage: "沒能讓${target.name}放開武器", targetStatus: "disarmed" },
+        { id: "guard", icon: "🛡️", name: "守護", description: "選擇一個同排的同伴，代替同伴承受本回合所有攻擊，且承受閃避劣勢。", target: "同排單體", hitMessage: "將不顧一切地保護${target.name}的安全", targetStatus: "guarded", userStatus: "guarding" },
         { id: "divineSanction", icon: "🌟", name: "神聖制裁", description: "攻擊一個目標，造成物理傷害，加上等同聖騎士魅力的魔法傷害。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "發出一道聖光，對${target.name}執行制裁，懲罰了他的罪((${result.damage})！", missMessage: "發出一道聖光，但${target.name}僥倖躲過了制裁", damage: ["Math.max(user.str - target.arm","0) + user.cha"], cost: 1 },
-        { id: "armorDestroy", icon: "💥", name: "破甲", description: "攻擊一個近距離目標，削減目標的護甲值，削減量等於此次傷害的1/5，但戰士會受到等同目標護甲值的反彈傷害。", target: "前排單體", hitCheck: "dex-vs-dex", hitMessage: "擊中了${target.name}(${result.damage})！驚人的力量擊破了對方護甲(${result.damage}/5)，但也傷到了自己(${target.arm.total} + ${result.damage}/5)", missMessage: "試圖攻擊，但${target.name}躲過了", damage: "user.str - target.arm", userDamage: "target.arm", targetStatus: "破甲" },
-        { id: "suppress", icon: "🤚", name: "壓制", description: "通過一次力量檢定，將一個近距離目標壓在地上，使其無法行動也無法閃避，但壓制期間戰士無法閃避其他敵人的攻擊。", target: "前排單體", hitCheck: "str-vs-str", hitMessage: "朝${target.name}猛撲過去，把他壓制在地上，無法逃離！", missMessage: "朝${target.name}猛撲過去，但撲了個空", targetStatus: "被壓制", userStatus: "壓制", cancelable : true },
-        { id: "berserk", icon: "🌋", name: "狂暴", description: "戰士 HP 低於 50% 時可發動，獲得 3 回合狂暴和流血。狂暴狀態下，HP 每損失 1 點，爆擊率就提高 1%。", condition: "user.HP <= user.MaxHP / 2", target: "自己", hitMessage: "發出令人膽顫心驚的怒吼！他無所畏懼，傷得越重，打人越痛！", userStatus: ["狂暴","流血"] },
-        { id: "stealth", icon: "🐈‍⬛", name: "隱身", description: "通過一次潛行檢定，敵人將無法看見刺客（範圍攻擊仍會命中），直到刺客發動攻擊。如果此次攻擊殺死目標，刺客將繼續保持隱身。", target: "敵方感知最高者", hitCheck: "dex-vs-wis", hitMessage: "隱藏自己的氣息，消失了蹤跡……", missMessage: "試圖躲藏起來，但仍然暴露了", userStatus: "隱身", cancelable : true },
-        { id: "sneakAttack", icon: "🗡️", name: "偷襲", description: "在隱身時或敵人沒有警覺時，攻擊一個目標，必定命中，傷害加倍、爆擊率加倍，前後排皆可。", condition: "隱身或偷襲回合", target: "任一單體", hitMessage: "無聲無息地偷襲，擊中了${target.name}(${result.damage})！", damage: "user.str * 2 - target.arm", critRate: "user.crit * 2" },
-        { id: "lure", icon: "🪤", name: "誘捕", description: "通過一次魅力檢定，將一個後排的目標引到前排，進行攻擊。", target: "後排單體", hitCheck: "cha-vs-int", hitMessage: "使手段吸引${target.name}的注意，趁機擊中了他(${result.damage})！", missMessage: "嘗試吸引${target.name}的注意，但他無動於衷", damage: "user.str - target.arm", targetMove: "往前" },
-        { id: "mark", icon: "👁️", name: "鷹眼", description: "看穿一個目標的動作，使我方對目標的所有攻擊獲得命中優勢，直到換一個目標。", target: "任一單體", hitCheck: "wis-vs-dex", hitMessage: "以敏銳目光看穿了${target.name}的動向！", missMessage: "眼睛跟不上${target.name}的速度", targetStatus: "被標記" },
-        { id: "reveal", icon: "🔍", name: "搜索", description: "通過一次偵查檢定，讓隱身的敵人現形。", target: "敵方隱身者", hitCheck: "wis-vs-dex", hitMessage: "搜索隱藏的跡象，發現了${target.name}！", missMessage: "搜索了一番，什麼也沒發現……", targetStatus: "-隱身" },
-        { id: "criticalBlast", icon: "🎯", name: "弱點爆破", description: "攻擊一個目標，如果目標已被標記，通過一次偵查檢定，即可造成爆擊。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "瞄準${target.name}的弱點，擊中了他(${result.damage})！", missMessage: "瞄準${target.name}，但對方警覺地保護起弱點", damage: "user.str - target.arm", critRate: "wis-vs-dex" },
-        { id: "lightning", icon: "⚡", name: "閃電術", description: "攻擊一個目標，造成等同法師智力的魔法傷害，無法被閃避。目標必須通過一次體質豁免，否則會受到麻痺。", target: "任一單體", hitMessage: "發射一道閃電，瞬間擊中了${target.name}(${result.damage})！", damage: "user.int", statusCheck: "int-vs-con", targetStatus: "麻痺", cost: 1 },
-        { id: "earthquake", icon: "🪨", name: "地震術", description: "與目標同排的生物必須通過一次敏捷豁免，否則會倒地。", target: "任一排", hitMessage: "使${target.name}腳下的地面震動起來！", statusCheck: "int-vs-dex", targetStatus: "倒地", cost: 2 },
-        { id: "fireball", icon: "☄️", name: "火球術", description: "攻擊與目標同排的生物，造成等同法師智力的魔法傷害，無法被閃避，並附加燃燒。", target: "任一排", hitMessage: "降下一顆巨大而熾熱的火球，落在了${target.name}頭上(${result.damage})！", damage: "user.int", targetStatus: "燃燒", cost: 2 },
-        { id: "healing", icon: "❤️‍🩹", name: "治癒術", description: "治療一個生物，治療量等同牧師的感知，並解除中毒、燃燒。", target: "任一單體", hitMessage: "為${target.name}治療了傷勢(${result.damage})", damage: "-user.wis", targetStatus: ["-中毒","-燃燒"], cost: 1 },
-        { id: "magicShield", icon: "🛡️", name: "防護術", description: "為一個我方角色創造能吸收物理和魔法傷害的防護罩，防護罩的 HP 等同牧師的感知。", target: "任一單體", hitMessage: "在${target.name}周圍創造了一層防護罩", targetStatus: "防護罩", cost: 1 },
-        { id: "seal", icon: "🔒", name: "魔力封印", description: "通過一次感知檢定，讓一個目標一回合無法施法，並吸取 2MP。", target: "任一單體", hitCheck: "wis-vs-wis", hitMessage: "封印了${target.name}的魔力，並從中吸取了一部分(${result.mpDamage})！", missMessage: "試圖封印${target.name}的魔力，但他的力量太強大了", mpDamage: 2, userMpDamage: -2, targetStatus: "封印" }
+        // 刺客,
+        { id: "stealth", icon: "🐈‍⬛", name: "隱身", description: "通過一次潛行檢定，敵人將無法看見刺客（範圍攻擊仍會命中），直到刺客發動攻擊。如果此次攻擊殺死目標，刺客將繼續保持隱身。（逃跑必成功）", target: "敵方感知最高者", hitCheck: "dex-vs-wis", hitMessage: "隱藏自己的氣息，消失了蹤跡……", missMessage: "試圖躲藏起來，但仍然暴露了", userStatus: "hidden" },
+        { id: "sneakAttack", icon: "🗡️", name: "偷襲", description: "在隱身或敵人無防備時，攻擊一個目標，必定命中，爆擊率加倍，前後排皆可。", condition: "user.status.includes(\"hidden\") || situation === 4", target: "任一單體", hitMessage: "無聲無息地偷襲，擊中了${target.name}(${result.damage})！", critRate: "user.crit * 2", damage: "user.str - target.arm" },
+        { id: "lure", icon: "🪤", name: "誘捕", description: "通過一次魅力檢定，將一個後排的目標引到前排，進行偷襲。", target: "後排單體", hitCheck: "cha-vs-int", hitMessage: "使手段吸引${target.name}的注意，趁機擊中了他(${result.damage})！", missMessage: "嘗試吸引${target.name}的注意，但他無動於衷", critRate: "user.crit * 2", damage: "user.str - target.arm", targetMove: "往前" },
+        // 獵人,
+        { id: "mark", icon: "👁️", name: "鷹眼", description: "看穿一個目標的動作，使我方對目標的所有攻擊獲得命中優勢，直到換一個目標。", target: "任一單體", hitCheck: "wis-vs-dex", hitMessage: "以敏銳目光看穿了${target.name}的動向！", missMessage: "眼睛跟不上${target.name}的速度", targetStatus: "marked" },
+        { id: "reveal", icon: "🔍", name: "搜索", description: "通過一次偵查檢定，讓隱身的敵人現形。", target: "敵方隱身者", hitCheck: "wis-vs-dex", hitMessage: "搜索隱藏的跡象，發現了${target.name}！", missMessage: "搜索了一番，什麼也沒發現……", targetStatus: "-invisible" },
+        { id: "criticalBlast", icon: "🎯", name: "弱點爆破", description: "攻擊一個目標，如果目標已被標記，通過一次偵查檢定，即可造成爆擊。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "瞄準${target.name}的弱點，擊中了他(${result.damage})！", missMessage: "瞄準${target.name}，但對方警覺地保護起弱點", critRate: "wis-vs-dex", damage: "user.str - target.arm" },
+        // 法師,
+        { id: "lightning", icon: "⚡", name: "閃電術", description: "攻擊一個目標，造成等同法師智力的魔法傷害，無法被閃避。目標必須通過一次體質豁免，否則會受到麻痺。", target: "任一單體", hitMessage: "發射一道閃電，瞬間擊中了${target.name}(${result.damage})！", damage: "user.int", statusCheck: "int-vs-con", targetStatus: "paralyzed", cost: 1 },
+        { id: "earthquake", icon: "🪨", name: "地震術", description: "與目標同排的生物必須通過一次敏捷豁免，否則會倒地。", target: "任一排", hitMessage: "使${target.name}腳下的地面震動起來！", statusCheck: "int-vs-dex", targetStatus: "prone", cost: 2 },
+        { id: "fireball", icon: "☄️", name: "火球術", description: "攻擊與目標同排的生物，造成等同法師智力的魔法傷害，無法被閃避，並附加燃燒。", target: "任一排", hitMessage: "降下一顆巨大而熾熱的火球，落在了${target.name}頭上(${result.damage})！", damage: "user.int", targetStatus: "burning", cost: 2 },
+        //【黑暗術】使所有敵人的攻擊承受劣勢。,
+        //【狂風術】後排所有敵人必須通過一個體質檢定，否則會被吹到前排，檢定難度取決於法師的智力。,
+        // 牧師,
+        { id: "heal", icon: "❤️‍🩹", name: "治癒術", description: "治療一個生物，治療量等同牧師的感知，並解除中毒、燃燒、麻痺。", target: "任一單體", hitMessage: "為${target.name}治療了傷勢(${result.damage})", damage: "-user.wis", targetStatus: ["-poisoned","-burning","-paralyzed"], cost: 1 },
+        { id: "magicShield", icon: "🛡️", name: "防護術", description: "為一個我方角色創造能吸收物理和魔法傷害的防護罩，防護罩的 HP 等同牧師的感知。", target: "任一單體", hitMessage: "在${target.name}周圍創造了一層防護罩", tempHP: "user.wis", cost: 1 },
+        { id: "seal", icon: "🔒", name: "魔力封印", description: "通過一次感知檢定，讓一個目標一回合無法施法，並吸取 2MP。", target: "任一施法者", hitCheck: "wis-vs-wis", hitMessage: "封印了${target.name}的魔力，並從中吸取了一部分(${result.mpAbsorb})！", missMessage: "試圖封印${target.name}的魔力，但他的力量太強大了", mpAbsorb: 2, targetStatus: "sealed" },
+        //【聖光術】敵方所有的不死生物受到等同牧師感知的傷害。
+    ];
+
+    // 狀態資料庫
+    const statusData = [
+        // 行動限制,
+        { id: "petrified", icon: "🗿", name: "石化", description: "無法行動和閃避，但護甲 +15。", duration: 1, noAction: true, arm: 15 },
+        { id: "paralyzed", icon: "⚡", name: "麻痺", description: "無法行動和閃避。", duration: 1, noAction: true },
+        { id: "pinned", icon: "🤚", name: "被壓制", description: "無法行動和閃避。", duration: 1, noAction: true },
+        { id: "pinning", icon: "🤚", name: "壓制", description: "正在壓制對方，無法閃避。可自行解除。", duration: 1, noAction: true, cancelable : true },
+        { id: "sealed", icon: "🔒", name: "封印", description: "無法使用法術。", duration: 1, noMagic: true },
+        { id: "disarmed", icon: "🫴", name: "武器掉落", description: "只能空手戰鬥，或花費一回合撿回武器。", noWeapon: true, removable: true },
+        // 目標限制,
+        { id: "hidden", icon: "🐈‍⬛", name: "隱身", description: "對手看不到此角色。", untargetable: true, cancelable : true },
+        { id: "flying", icon: "🪽", name: "飛行", description: "飛上天，迴避所有近戰攻擊。", duration: 1, flying: true, cancelable : true },
+        // 增益,
+        { id: "berserk", icon: "🌋", name: "狂暴", description: "攻擊獲得命中優勢，HP 每損失 1 點，爆擊率就提高 1%。", duration: 3, critRate: "user.crit + user.MaxHP - user.HP", hitGain: true },
+        { id: "guarded", icon: "🛡️", name: "被守護", description: "不會受到來自外部的傷害。", duration: 1, invincible: true },
+        // 減益,
+        { id: "prone", icon: "💫", name: "倒地", description: "敏捷 -5，可花費一回合站起來。", dex: -5, removable: true },
+        { id: "marked", icon: "👁️", name: "被盯上", description: "所有針對此角色的攻擊獲得命中優勢。", dodgeSuffer: true },
+        { id: "guarding", icon: "🛡️", name: "守護", description: "代替被守護者承受傷害，且承受閃避劣勢。", duration: 1, dodgeSuffer: true, substitute: true },
+        { id: "blinded", icon: "🕶", name: "目盲", description: "感知 -5，敏捷 -5", duration: 1, dex: -5, wis: -5 },
+        // 持續傷害,
+        { id: "bleeding", icon: "🩸", name: "流血", description: "每回合受到 3 傷害，可用繃帶止血。", duration: 3, damage: 3 },
+        { id: "burning", icon: "🔥", name: "燃燒", description: "每回合受到 6 傷害，可用水澆熄。", duration: 2, damage: 6 },
+        { id: "poisoned", icon: "🤢", name: "中毒", description: "力量 -1，敏捷 -1，此外每回合受到 1 傷害，可用解毒劑解除。", duration: 10, damage: 1, str: -1, dex: -1 }
     ];
 
     // 顯示屬性等級
@@ -720,11 +756,21 @@
             // 生成同伴的新id
             const companionId = `companion${teamMembers.length}`;
 
+            // 根據技能所需的 MP，決定 MP 上限
+            let totalMP;
+            const classSkills = classData.find(cla => cla.id === companion.classId).skills;
+            classSkills.forEach(skillId => {
+                const skill = skillData.find(s => s.id === skillId); // 找到技能資料
+                if (skill.cost === 1) totalMP += 2; // 一環法術可用 2 次
+                if (skill.cost === 2) totalMP += 1; // 二環法術可用 1 次
+            });
+
             // 添加同伴資料並設定初始的HP和MaxHP
             teamMembers.push({
                 name: companionName, // 加入處理後的名字
                 id: companionId,  // 自動產生 id
                 type: companionType || companion.type,
+                classId: companion.classId,
                 str: { basic: companion.str, },
                 dex: { basic: companion.dex, },
                 con: { basic: companion.con, },
@@ -733,10 +779,15 @@
                 cha: { basic: companion.cha, },
                 arm: { basic: 0 },
                 MaxHP: companion.con * 3, // MaxHP
-                HP: companion.con * 3, // 初始HP
-                status: [], // 初始狀態
+                HP: companion.con * 3, // 初始 HP
+                MaxMP: totalMP,
+                MP: totalMP,
+                critRate: 5, // 爆擊率 5%
+                status: [],
+                emotion: [],
                 mood: 0,
-                emotion: [], // 初始狀態
+                weapon: {},
+                armor: {}, 
                 description: companion.description,
             });
 
@@ -807,7 +858,7 @@
         localStorage.setItem("cooldownMerc", JSON.stringify(cooldownMerc));
     }
 
-    // 回滿隊伍 HP
+    // 回滿隊伍 HP、MP
     function resetHP() {
         // 讀取隊伍資訊
         const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
@@ -817,6 +868,7 @@
             // 排除站哨者
             if (member.name !== nightGuard) {
                 member.HP = member.MaxHP; // 將 HP 設為最大值
+                member.MP = member.MaxMP; // 將 MP 設為最大值
             }
         });
          
@@ -1368,6 +1420,7 @@
                 <p  class="small note">
                     ${item.addStatus ? `${status.icon} ${item.addChance*100}% 機率造成【${item.addStatus}】，目標${status.description}` : ""}
                 </p>
+                <hr class="light-hr">
                 <div class="row-buttons">${buttons}</div>
         `;
 
@@ -1709,17 +1762,7 @@
         return item;
     }
 
-// 狀態與情緒
-
-    // 狀態資料庫
-    const statusData = [
-        { icon: "🩸", name: "流血", HP: -3, duration: 3, description: "每回合受到 3 傷害，可用繃帶止血。" },
-        { icon: "🔥", name: "燃燒", HP: -6, duration: 2, description: "每回合受到 6 傷害，可用水澆熄。" },
-        { icon: "🤢", name: "中毒", str: -1, dex: -1, HP: -1, duration: 5, description: "力量 -1，敏捷 -1，此外每回合受到 1 傷害，可用解毒劑解除。" },
-        { icon: "💫", name: "倒地", immobile: true, duration: 1, description: "必須花 1 回合起身。" },
-        { icon: "🗿", name: "石化", immobile: true, arm: 15, duration: 1, description: "無法行動，但護甲 +15。" },
-        { icon: "🪽", name: "飛行", duration: 1, description: "飛上天，迴避所有近戰攻擊。" },
-    ];
+// 情緒相關
 
     // 情緒資料庫
     const emotionData = [
@@ -1895,7 +1938,6 @@
         { id: "town01", name: "晨曦鎮", x: 1, y: 0, visible: true },  
         { id: "town02", name: "鐵石鎮", x: 5, y: 4, visible: true }, 
     ];
-
 
     // 新的一天
     function nextDay() {

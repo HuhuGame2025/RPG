@@ -99,7 +99,7 @@
             const skillmenu = document.getElementById(`${plClass.id}-skill`);
             skillmenu.innerHTML = "";
 
-            plClass.skill.forEach(skillId => {
+            plClass.skills.forEach(skillId => {
                 // 找到技能資料
                 const skill = skillData.find(s => s.id === skillId);
 
@@ -121,11 +121,6 @@
             { id: "peasant", name: "平民", point: 12, money: 100, description: "你是未經訓練的普通人，這是你第一次踏上冒險。", difficulty: "中等"},
             { id: "criminal", name: "逃犯", point: 18, fame: -5, wantedLevel: 3, money: 0, description: "你曾憑藉某種不合法的本領牟利，後來被捕了，不久前才逃出監獄，要是引起守衛注意就麻煩大了。", difficulty: "困難" },
             { id: "tester", name: "測試員", point: 42, money: 10000, description: "你是來測試遊戲功能的，不需要慢慢玩。", difficulty: "非常簡單" },
-            //{ id: "peasant", name: "平民", money: 100, description: "你是未經訓練的普通人，各項屬性都是人類中的平均值。", difficulty: "中等"},
-            //{ id: "soldier", name: "士兵", con: 2, str: 2, dex: 2, wis: 2, money: 150, weaponId: "sword01", armorId: "armor01", description: "你戰鬥經驗豐富，準備充足，比一般人更能適應這個危險的地區。", difficulty: "非常簡單" },
-            //{ id: "noble", name: "貴族", con: -1, str: -1, dex: -1, cha: 2, fame: 5, armorId: "fineClothes01", money: 500, description: "你來自顯赫的家族，雖然已經失去了地位，但過去的名聲和積蓄仍能成為你的助力。", difficulty: "簡單" },
-            //{ id: "barbarian", name: "野蠻人", con: 1, str: 1, dex: 1, int: -2, wis: 3, cha: -3, weaponId: "dagger01", armorId: "lootClothes01", money: 0, description: "你在山林裡長大，有自己的生存之道，不跟文明社會來往，也不需要金錢。", difficulty: "簡單" },
-            //{ id: "criminal", name: "逃犯", dex: 2, wis: 2, fame: -5, wantedLevel: 1, money: 0, description: "你已經被通緝了，如果引起守衛注意後果將不堪設想。", difficulty: "困難" },
         ];
 
         // 顯示背景
@@ -197,17 +192,16 @@
         }
 
         // 屬性
-        let attributes = [
-            { id: "con", name: "🫀 體質", value: 8, note: "影響 HP 上限"},
-            { id: "str", name: "⚔️ 力量", value: 8, note: "攻擊的基礎傷害" },
-            { id: "dex", name: "🏃 敏捷", value: 8, note: "命中、閃避、潛行" },
-            { id: "int", name: "🧠 智力", value: 8, note: "學習與思考的能力" },
-            { id: "wis", name: "👁️ 感知", value: 8, note: "洞察環境的能力" },
-            { id: "cha", name: "✨ 魅力", value: 8, note: "社交的能力" },
-        ];
+        let attributes = {
+            con: { name: "🫀 體質", value: 8, note: "影響 HP 上限" },
+            str: { name: "⚔️ 力量", value: 8, note: "攻擊的基礎傷害" },
+            dex: { name: "🏃 敏捷", value: 8, note: "命中、閃避、潛行" },
+            int: { name: "🧠 智力", value: 8, note: "學習與思考的能力" },
+            wis: { name: "👁️ 感知", value: 8, note: "洞察環境的能力" },
+            cha: { name: "✨ 魅力", value: 8, note: "社交的能力" }
+        };
 
         remainingPoints = backgroundData[0].point; // 剩餘點數
-        TOTAL_MAX = 48 + backgroundData[0].point; // 屬性總和上限
         const MIN_ATTR = 8; // 屬性最小值
         const MAX_ATTR = 15; // 屬性最大值
 
@@ -223,58 +217,50 @@
                 </p>
             `;
 
-            attributes.forEach(attribute => {
+            for (const [id, attr] of Object.entries(attributes)) {
                 let attributeDiv = document.createElement("div");
                 attributeDiv.innerHTML = `
                     <div class="item">
                         <div class="column-container">
-                            <p class="column">${attribute.name}</p>
+                            <p class="column">${attr.name}</p>
                             <div class="column" style="display: flex;">
-                                <button onclick="adjustAttribute('${attribute.id}', -1)" class="small-button">-</button>
-                                <span id="${attribute.id}" class="column-small center">${attribute.value}</span>
-                                <button onclick="adjustAttribute('${attribute.id}', 1)" class="small-button">+</button>
-                            </div> 
+                                <button onclick="adjustAttribute('${id}', -1)" class="small-button">-</button>
+                                <span id="${id}" class="column-small center">${attr.value}</span>
+                                <button onclick="adjustAttribute('${id}', 1)" class="small-button">+</button>
+                            </div>
                         </div>
                         <p class="column-container">
-                            <span class="column note small">${attribute.note}</span>
-                            <span id="${attribute.id}-level" class="column center note small"></span>
+                            <span class="column note small">${attr.note}</span>
+                            <span class="column center note small">${showAttributeLevel(id, attr.value)}</span>
                         </p>
                     </div>
                 `;
                 menu.appendChild(attributeDiv);
-
-                // 顯示屬性等級
-                document.getElementById(`${attribute.id}-level`).textContent = showAttributeLevel(attribute.id, attribute.value);
-            });
+            }
         }
 
         // 調整屬性
-        function adjustAttribute(attributeId, delta) {
-            let attribute = attributes.find(attr => attr.id === attributeId);
-
+        function adjustAttribute(attrId, delta) {
             // 計算新值
-            const newValue = attribute.value + delta;
+            let attr = attributes[attrId];
+            const newValue = attr.value + delta;
 
-            // 計算總和
-            const total = attributes.reduce((sum, attr) => sum + attr.value, 0);
+            // 檢查新值是否在範圍內，且剩餘點數不為負
+            if (newValue < MIN_ATTR || newValue > MAX_ATTR) return;
+            if (remainingPoints - delta < 0) return;
 
-            // 檢查新值是否在範圍內，且總和不超過上限
-            if (newValue >= MIN_ATTR && newValue <= MAX_ATTR && total + delta <= TOTAL_MAX) {
-                attribute.value = newValue;
-                document.getElementById(`${attribute.id}`).textContent = newValue;
-                document.getElementById(`${attribute.id}-level`).textContent = showAttributeLevel(attribute.id, newValue);
-                remainingPoints -= delta;
-                document.getElementById("remainingPoints").textContent = remainingPoints;
-            }
+            // 套用新值
+            attr.value = newValue;
+            remainingPoints -= delta;
+            showAttribute();
         }
 
         // 重置屬性
         function resetAttribute(point){
             remainingPoints = point;
-            TOTAL_MAX = 48 + point;
-            attributes.forEach(attr => {
+            Object.values(attributes).forEach(attr => {
                 attr.value = 8;
-            })
+            });
         }
 
         // 個性資料庫
@@ -305,26 +291,37 @@
             // 如果沒選角色背景，預設為平民
             if (!plBackground) plBackground = backgroundData[0];
             
+            // 根據技能所需的 MP，決定 MP 上限
+            let totalMP = 0;
+            plClass.skills.forEach(skillId => {
+                const skill = skillData.find(s => s.id === skillId); // 找到技能資料
+                if (skill.cost === 1) totalMP += 2; // 一環法術可用 2 次
+                if (skill.cost === 2) totalMP += 1; // 二環法術可用 1 次
+            });
+
             // 儲存主角資料
             const playerData = {
                 name: name,
                 id: "player",
                 type: "冒險者",
                 classId: plClass.id,
-                con: { basic: attributes.find(attr => attr.id === "con").value + (plBackground.con || 0) },
-                str: { basic: attributes.find(attr => attr.id === "str").value + (plBackground.str || 0) },
-                dex: { basic: attributes.find(attr => attr.id === "dex").value + (plBackground.dex || 0) },
-                int: { basic: attributes.find(attr => attr.id === "int").value + (plBackground.int || 0) },
-                wis: { basic: attributes.find(attr => attr.id === "wis").value + (plBackground.wis || 0) },
-                cha: { basic: attributes.find(attr => attr.id === "cha").value + (plBackground.cha || 0) },
+                con: { basic: attributes.con.value + (plBackground.con || 0) },
+                str: { basic: attributes.str.value + (plBackground.str || 0) },
+                dex: { basic: attributes.dex.value + (plBackground.dex || 0) },
+                int: { basic: attributes.int.value + (plBackground.int || 0) },
+                wis: { basic: attributes.wis.value + (plBackground.wis || 0) },
+                cha: { basic: attributes.cha.value + (plBackground.cha || 0) },
                 arm: { basic: 0 },
+                MaxHP: (attributes.con.value + (plBackground.con || 0)) * 3,
+                HP: (attributes.con.value + (plBackground.con || 0)) * 3,
+                MaxMP: totalMP,
+                MP: totalMP,
+                critRate: 5, // 爆擊率 5%
+                status: [],
+                emotion: [],
+                mood: 0,
                 weapon: {},
                 armor: {},
-                MaxHP: attributes.find(attr => attr.id === "con").value * 3,
-                HP: attributes.find(attr => attr.id === "con").value * 3,
-                status: [], // 初始狀態
-                mood: 0,
-                emotion: [], // 初始狀態
                 description: `【${plBackground.name}】${plBackground.description}`,
             };
 

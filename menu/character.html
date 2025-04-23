@@ -1084,6 +1084,9 @@
                             <div class="bottomborder">
                                 <h3>${member.name}</h3>
                                 <h4 class="hp" style="margin:5px 0;">${member.HP} / ${member.MaxHP}</h4>
+                                ${member.MaxMP > 0 ? `
+                                    <h4 class="mp" style="margin:5px 0;">${member.MP} / ${member.MaxMP}</h4>
+                                ` : "" }
                             </div>
                         </div>
                         <div class="row-buttons">

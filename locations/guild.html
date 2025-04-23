@@ -899,7 +899,7 @@
                         button.innerHTML = `
                             <button onclick="takeMission('${mission.id}')">承接</button>
                             ${mission.type === "quest" ? `
-                                <button onclick="(takeMission('${mission.id}'), showDialogue('組隊承接'))">組隊承接</button>
+                                <button onclick="takeMission('${mission.id}') && showDialogue('組隊承接')">組隊承接</button>
                             ` : "" }
                         `;
                     }
@@ -949,6 +949,7 @@
 
             checkMissions();
             showMissionList(mission.type); // 重新顯示任務列表
+            return true; // 接下任務才能組隊
         }
 
         // 計算組隊分成
