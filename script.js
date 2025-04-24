@@ -758,9 +758,9 @@
             const companionId = `companion${teamMembers.length}`;
 
             // 根據技能所需的 MP，決定 MP 上限
-            let totalMP;
-            const classSkills = classData.find(cla => cla.id === companion.classId).skills;
-            classSkills.forEach(skillId => {
+            let totalMP = 0;
+            const skillIds = classData.find(cla => cla.id === companion.classId).skills;
+            skillIds.forEach(skillId => {
                 const skill = skillData.find(s => s.id === skillId); // 找到技能資料
                 if (skill.cost === 1) totalMP += 2; // 一環法術可用 2 次
                 if (skill.cost === 2) totalMP += 1; // 二環法術可用 1 次
