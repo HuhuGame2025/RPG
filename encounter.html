@@ -54,6 +54,9 @@
             // 清空目標敵人
             localStorage.removeItem("selectedTarget");
 
+            // 關閉敵人回合（以防上次按上一頁離開戰鬥）
+            turnSwitch("敵人回合", false);
+
             return presentMembers; // 回傳隊伍陣列
         }
 

@@ -216,17 +216,17 @@
                         npc: "npc",
                         text: "這些是登記在公會的冒險者名單，你比較想了解哪一位？我可以為你介紹。",
                         choices: [
-                            { text: "雷納德（人類戰士）", condition: "!isCompanion('雷納德')", next: "關於雷納德" },
-                            { text: "塔爾穆克（獸人戰士）", condition: "!isCompanion('塔爾穆克')", next: "關於塔爾穆克" },
+                            { text: "雷納德（聖騎士）", condition: "!isCompanion('雷納德')", next: "關於雷納德" },
+                            { text: "塔爾穆克（戰士）", condition: "!isCompanion('塔爾穆克')", next: "關於塔爾穆克" },
                             { text: "賽恩（刺客）", condition: "!isCompanion('賽恩')", next: "關於賽恩" },
-                            { text: "艾德蒙（人類戰士）", condition: "!isCompanion('艾德蒙')", next: "關於艾德蒙" },
-                            { text: "諾伊爾（精靈遊俠）", condition: "!isCompanion('諾伊爾')", next: "關於諾伊爾" },
+                            { text: "艾德蒙（獵人）", condition: "!isCompanion('艾德蒙')", next: "關於艾德蒙" },
+                            { text: "諾伊爾（法師）", condition: "!isCompanion('諾伊爾')", next: "關於諾伊爾" },
                             { text: "我不需要組隊了", next: "不組隊" },
                         ]
                     },
                         "關於雷納德": {
                             npc: "npc",
-                            text: "啊，雷納德，他是一位正直又善良的勇者，非常熱心助人。<br><br>他各方面的能力都很優秀，一把可靠的巨劍是他的老戰友。<br><br>而且他有個堅持，就是不收任何酬勞。只要你願意，他會免費加入你的隊伍。",
+                            text: "啊，雷納德，他是一位正直又善良的勇者，非常熱心助人。<br><br>他各方面的能力都很優秀，而且他有個堅持，就是不收任何酬勞。只要你願意，他會免費加入你的隊伍。",
                             choices: [
                                 { text: "我要和雷納德組隊", next: "隊員加入", action: "(addCompanion(null, '雷納德', '冒險者'), shareReward())" },
                                 { text: "再看看其他人", next: "隊員介紹" },
@@ -234,7 +234,7 @@
                         },
                         "關於塔爾穆克": {
                             npc: "npc",
-                            text: "塔爾穆克是我們最勇猛的戰士，雖然脾氣有點嚇人，但到目前為止他還算守規矩。<br><br>他是個高大魁武的獸人，揮舞著一把引以為傲的戰斧，能擔當隊伍的肉盾。",
+                            text: "塔爾穆克是我們最勇猛的戰士，雖然脾氣有點嚇人，但到目前為止他還算守規矩。<br><br>他是個高大魁武的獸人，力量和體格都很有優勢，能當打手也能當肉盾。",
                             choices: [
                                 { text: "我要和塔爾穆克組隊", next: "隊員加入", action: "(addCompanion(null, '塔爾穆克', '冒險者'), shareReward())" },
                                 { text: "再看看其他人", next: "隊員介紹" },
@@ -242,7 +242,7 @@
                         },
                         "關於賽恩": {
                             npc: "npc",
-                            text: "我承認我對賽恩不是很了解，他總是蒙著面，也不太說話。<br><br>但他的戰鬥表現很不錯，能用匕首精準刺殺目標，來無影去無蹤。<br><br>只是有人說……噢，沒什麼，傳聞不可靠啦。",
+                            text: "賽恩總是很神祕，我對他也不是很了解。<br><br>但他在戰鬥中的表現令人印象深刻，能精準刺殺目標，來無影去無蹤。<br><br>只是有人說……噢，沒什麼，傳聞不可靠啦。",
                             choices: [
                                 { text: "我要和賽恩組隊", next: "隊員加入", action: "(addCompanion(null, '賽恩', '冒險者'), shareReward())" },
                                 { text: "再看看其他人", next: "隊員介紹" },
@@ -250,7 +250,7 @@
                         },
                         "關於艾德蒙": {
                             npc: "npc",
-                            text: "艾德蒙嗎？雖然他的能力不是最突出的，但他是個活潑開朗的人。<br><br>他有一把單手劍，不幸的是他弄丟了，所以你可能會需要借他武器。",
+                            text: "艾德蒙嗎？雖然他的個性有點散漫，但關鍵時刻還是靠得住的。<br><br>對了，他的體質有點特別，可以說是不死之身，只需要一點時間就能死而復甦。",
                             choices: [
                                 { text: "我要和艾德蒙組隊", next: "隊員加入", action: "(addCompanion(null, '艾德蒙', '冒險者'), shareReward())" },
                                 { text: "再看看其他人", next: "隊員介紹" },
@@ -258,7 +258,7 @@
                         },
                         "關於諾伊爾": {
                             npc: "npc",
-                            text: "諾伊爾是來自遙遠國度的高等精靈，你一眼就能認出這位美少年，雖然我猜他比我們都還年長。<br><br>他的體力不是很好，但身輕如燕，非常敏捷，使用一把優雅的短弓。",
+                            text: "諾伊爾是來自遠方的高等精靈，你一眼就能認出這位美少年。<br><br>他是個魔法天才，只是作為冒險者的資歷尚淺，體力也不是很好，還請多加照顧他。",
                             choices: [
                                 { text: "我要和諾伊爾組隊", next: "隊員加入", action: "(addCompanion(null, '諾伊爾', '冒險者'), shareReward())" },
                                 { text: "再看看其他人", next: "隊員介紹" },
@@ -480,13 +480,13 @@
                     },
                     "隊員介紹": {
                         npc: "npc",
-                        text: "目前就這些人，不要問我他們是幹什麼的，你挑個順眼的名字就好了。",
+                        text: "目前就這些人，不要問我推薦誰，挑個你看得順眼的名字就好了。",
                         choices: [
-                            { text: "雷納德（人類戰士）", condition: "!isCompanion('雷納德')", next: "關於雷納德" },
-                            { text: "塔爾穆克（獸人戰士）", condition: "!isCompanion('塔爾穆克')", next: "關於塔爾穆克" },
+                            { text: "雷納德（聖騎士）", condition: "!isCompanion('雷納德')", next: "關於雷納德" },
+                            { text: "塔爾穆克（戰士）", condition: "!isCompanion('塔爾穆克')", next: "關於塔爾穆克" },
                             { text: "賽恩（刺客）", condition: "!isCompanion('賽恩')", next: "關於賽恩" },
-                            { text: "艾德蒙（人類戰士）", condition: "!isCompanion('艾德蒙')", next: "關於艾德蒙" },
-                            { text: "諾伊爾（精靈遊俠）", condition: "!isCompanion('諾伊爾')", next: "關於諾伊爾" },
+                            { text: "艾德蒙（獵人）", condition: "!isCompanion('艾德蒙')", next: "關於艾德蒙" },
+                            { text: "諾伊爾（法師）", condition: "!isCompanion('諾伊爾')", next: "關於諾伊爾" },
                             { text: "我不需要組隊了", next: "不組隊" },
                         ]
                     },
@@ -500,7 +500,7 @@
                         },
                         "關於塔爾穆克": {
                             npc: "npc",
-                            text: "這種奇怪的名字，聽起來就是獸人。獸人會來當冒險者，通常都是被部落淘汰的廢物。",
+                            text: "喔，那個綠皮的豬腦袋。很明顯，會來當冒險者的獸人，通常都是在部落混不下去的廢物。",
                             choices: [
                                 { text: "我要和塔爾穆克組隊", next: "隊員加入", action: "(addCompanion(null, '塔爾穆克', '冒險者'), shareReward())" },
                                 { text: "再看看其他人", next: "隊員介紹" },
@@ -508,7 +508,7 @@
                         },
                         "關於賽恩": {
                             npc: "npc",
-                            text: "有這個人？沒印象，大概是個廢物。",
+                            text: "刺客？基本上就是廢物，只能靠偷襲來贏。你也小心點別被他偷襲了。",
                             choices: [
                                 { text: "我要和賽恩組隊", next: "隊員加入", action: "(addCompanion(null, '賽恩', '冒險者'), shareReward())" },
                                 { text: "再看看其他人", next: "隊員介紹" },
@@ -516,7 +516,7 @@
                         },
                         "關於艾德蒙": {
                             npc: "npc",
-                            text: "給艾德蒙一點工作做也好，他還欠一屁股債呢。<br><br>啊，不過……那個白癡連自己的劍都輸掉了，你有多的武器嗎？",
+                            text: "給艾德蒙一點工作做也好，那個廢物還欠一屁股債，死幾百次也還不清。",
                             choices: [
                                 { text: "我要和艾德蒙組隊", next: "隊員加入", action: "(addCompanion(null, '艾德蒙', '冒險者'), shareReward())" },
                                 { text: "再看看其他人", next: "隊員介紹" },
@@ -524,7 +524,7 @@
                         },
                         "關於諾伊爾": {
                             npc: "npc",
-                            text: "是那個血統高貴的小鬼，看起來弱得要命，誰會想帶這種拖油瓶？",
+                            text: "是那個尖耳朵的小鬼，看起來瘦巴巴、弱兮兮的，誰會想帶這種廢物出去？",
                             choices: [
                                 { text: "我要和諾伊爾組隊", next: "隊員加入", action: "(addCompanion(null, '諾伊爾', '冒險者'), shareReward())" },
                                 { text: "再看看其他人", next: "隊員介紹" },

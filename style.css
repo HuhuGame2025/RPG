@@ -44,7 +44,7 @@
 /* 一般選單 */
     .menu{
         display: flex;
-        flex-direction: column;
+        flex-direction: column; /* 讓內容物直向排列 */
         text-align: center;
     }
 
@@ -297,7 +297,7 @@
         right: 20px; /* 靠右 */
         z-index: 9999;
         display: flex;
-        flex-direction: column;
+        flex-direction: column; /* 讓內容物直向排列 */
         gap: 5px;
     }
     .toast {

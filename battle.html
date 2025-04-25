@@ -26,23 +26,27 @@
             width: 100%;
         }
 
-        /* 我方區域 */
-        #member-container {
-            top: 50%;
+        /* 我方、敵方區域 */
+        #member-container, #enemy-container {
+            height: 35%;
+            display: flex;
+            flex-direction: column; /* 讓內容物直向排列 */
+            vertical-align: middle;
+        }
+        #member-container { /* 我方區域 */
+            top: 40%;
+        }
+        #enemy-container { /* 敵方區域 */
+            bottom: 60%;
         }
 
-        /* 敵方區域 */
-        #enemy-container {
-            bottom: 50%;
+        /* 排 */
+        .row {
+            display: flex;
+            margin: auto 0;
         }
 
-        /* 下排按鈕 */
-        #menu {
-            bottom: 70px; /* 至少要 50px 才看得到*/
-            margin: 0;
-        }
-
-        /* 敵我欄位 */
+        /* 我方、敵方欄位 */
         #member-infor, #enemy-infor {
             top: 0px;
         }
@@ -50,6 +54,12 @@
         .background {
             background: #000;
             box-shadow: 0 0 5px rgba(255, 255, 255, 0.4); /* 光暈 */
+        }
+
+        /* 下排按鈕 */
+        #menu {
+            bottom: 70px; /* 至少要 50px 才看得到*/
+            margin: 0;
         }
 
         .item {
@@ -60,6 +70,19 @@
         .availableMembers {
             border: 1px solid rgba(255, 255, 255, 1); /* 白框 */
             color: #fff;
+        }
+
+        /* 武器圖示 */
+        .weapon-icon {
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.8); /* 光暈 */
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
 
         /* HP 受到攻擊後變成紅字 */
@@ -94,10 +117,10 @@
         .action-buttons button {
             display: inline-block;
             flex: none;
-            width: 25%;
+            width: 30%;
             height: auto;
             background: #000;
-            margin: 5px 2px;
+            margin: 5px;
             padding: 0;
             text-align: center;
         }
@@ -135,6 +158,15 @@
             border: none;
         }
 
+        /* 前進、後退按鈕 */
+        .move-btn {
+            color: #666;
+            background: none;
+            margin: auto;
+            padding: 0;
+            display: block;
+        }
+
     </style>
 </head>
 <body>
@@ -153,10 +185,9 @@
         <div id="battle-content">
             <!-- 敵人列表 -->
             <div id="enemy-container">
-                <div id="backEnemies-row" style="display: flex"></div>
-                <div id="frontEnemies-row" style="display: flex"></div>
+                <div id="backEnemies-row" class="row"></div>
+                <div id="frontEnemies-row" class="row"></div>
 
-                <p></p>
                 <p class="small column-container bottomborder">
                     <span class="column"></span>
                     <span class="note center" id="enemy-note">　</span>
@@ -173,8 +204,8 @@
                 </p>
                 <p id="soul-count"></p>
 
-                <div id="frontMembers-row" style="display: flex"></div>
-                <div id="backMembers-row" style="display: flex"></div>
+                <div id="frontMembers-row" class="row"></div>
+                <div id="backMembers-row" class="row"></div>
             </div>
         </div>
 
@@ -278,7 +309,7 @@
             } else if (situation === 3) {
                 title.textContent = texts.surprise; // 顯示標題
                 localStorage.removeItem("situation"); // 清除遇敵方式
-                startBattle() // 開始戰鬥
+                endAction() // 開始戰鬥，初始化
                 enemyAction(); // 敵人攻擊
                 console.log("被偷襲（敵人先攻）");
 
@@ -290,13 +321,7 @@
                 });
                 console.log("發現無防備的敵人（我方第一回合攻擊、逃跑100%成功）");
             }
-            startBattle() // 開始戰鬥
-        }
-
-        // 開始戰鬥
-        function startBattle() {
-            //loadPartyData(); // 讀取隊伍資料
-            endAction(); // 每次載入時跑一次，以防有東西還原
+            endAction() // 開始戰鬥，初始化
         }
 
         // 顯示戰鬥圖像
@@ -339,12 +364,6 @@
 
                 // 按下圖像時
                 characterDiv.addEventListener("click", () => {
-                    // 如果是隊友
-                    if (!character.id.startsWith("enemy")) { 
-                        //selectedUser = null // 取消使用者
-                        //selectedAction = null // 取消動作
-                    }
-                    
                     document.getElementById("member-infor").innerHTML = ""; // 清除隊友欄位
                     document.getElementById("enemy-infor").innerHTML = ""; // 清除敵人欄位
                     showInfor(character); // 顯示欄位
@@ -359,6 +378,20 @@
                     frontEnemiesRow.appendChild(characterDiv); // 前排敵人
                 } else {
                     backEnemiesRow.appendChild(characterDiv); // 後排敵人
+                }
+
+                // 顯示前進、後退按鈕
+                if (!character.id.startsWith("enemy")) { 
+                    const isFront = frontMembers.some(m => m.id === character.id);
+                    if (!isFront) {
+                        characterDiv.insertAdjacentHTML("afterbegin", `
+                            <button class="move-btn" onclick="move('${character.id}')">⇑</button>
+                        `);
+                    } else {
+                        characterDiv.insertAdjacentHTML("beforeend", `
+                            <button class="move-btn" onclick="move('${character.id}')">⇓</button>
+                        `);
+                    }
                 }
             });
 
@@ -405,9 +438,9 @@
             characterDiv.innerHTML = `
                 <div id="${character.id}" class="item background">
                     <!-- 名稱、HP、MP -->
-                    <div class="column-container">
+                    <div class="column-container bottomborder">
+                        <div class="weapon-icon">${weaponIcon}</div>
                         <h4 class="column">
-                            ${weaponIcon}
                             ${character.adj ? `${character.adj}` : ""}${character.name}
                         </h4>
                         <h4 class="column column-container">
@@ -466,13 +499,13 @@
                 // 第一列
                 { icon: "⚔️", text: "攻擊", row: 1, condition: () =>  isAvailable, function: () => selectAttacker(character.id, 'attack') },
                 { icon: "💬", text: "交談", row: 1, condition: () =>  isAvailable, function: () => selectAttacker(character.id, 'talk') },
-                { icon: "👣", text: "前進", row: 1, condition: () =>  isAvailable, function: () => !isFront && move(character.id) },
+                //{ icon: "👣", text: "前進", row: 1, condition: () =>  isAvailable, function: () => !isFront && move(character.id) },
                 { icon: "🏃", text: "逃跑", row: 1, condition: () =>  isAvailable, function: () => useSkill("escape", character.id, null) },
 
                 // 第二列               
                 { icon: "⚔️", text: "聯手攻擊", row: 2, condition: () => isAvailable && availableMembers.length >= 2, function: () => selectAttacker('team', 'attack') },
                 { icon: "💰", text: "物品", row: 2, condition: () =>  isAvailable, function: () => useItem(character.id) },
-                { icon: "👣", text: "後退", row: 2, condition: () =>  isAvailable, function: () => isFront && move(character.id) },
+                //{ icon: "👣", text: "後退", row: 2, condition: () =>  isAvailable, function: () => isFront && move(character.id) },
                 { icon: "🏃", text: "一起逃跑", row: 2, condition: () => isAvailable && availableMembers.length >= 2, function: () => escape('team') },
 
                 // 設為目標
@@ -483,14 +516,18 @@
             // 檢查條件
                 const availableMembers = JSON.parse(localStorage.getItem("availableMembers")) || [];
                 let isAvailable = 
-                    availableMembers.some(m => m.id === character.id) &&
-                    !isTrue("敵人回合"); // 敵人回合中，我方不能行動
+                    availableMembers.some(m => m.id === character.id) && // 本回合還沒行動過
+                    !isTrue("敵人回合") && // 不是敵人回合中
+                    !hasStatus(character, "noAction"); // 沒有無法行動的狀態
+
                 const frontMembers = JSON.parse(localStorage.getItem("frontMembers")) || [];
                 const isFront = frontMembers.some(m => m.id === character.id);
+
                 const frontEnemies = JSON.parse(localStorage.getItem("frontEnemies")) || [];
                 const isFrontEnemy = 
-                    frontEnemies.some(m => m.id === character.id) || // 此角色是前排敵人
-                    (isEnemy && frontEnemies.length === 0); // 或此角色是敵人，且前排沒有敵人
+                    frontEnemies.some(m => m.id === character.id) || // 前排敵人
+                    (frontEnemies.length === 0 && isEnemy); // 前排沒有敵人，將後排視為前排
+
                 const user = availableMembers.find(m => m.id === selectedUser); // 取得使用者資料
 
             // 創建目標按鈕
@@ -547,21 +584,15 @@
                 // 找到技能資料
                 const skill = skillData.find(s => s.id === skillId); 
 
-	            // 檢查是否可用
-                const disable =
-                    skill.cost && character.MP < (skill.cost || 0) || // 檢查 MP
-                    skill.condition && !evalCondition(skill.condition, character); // 檢查技能使用條件
+	            // 檢查條件
+                const usable =
+                    (skill.condition && evalCondition(skill.condition, character)) || // 符合技能使用條件
+                    (skill.cost > 0 && character.MP >= skill.cost) || // MP 足夠
+                    (skill.cost > 0 && !hasStatus(character, "noMagic")); // 沒被禁用法術
 
                 // 創建按鈕
                 const button = document.createElement("button");
-	            if (disable) { // 不可用（灰字）
-                    button.innerHTML = `
-                        <div class="disable">
-                            <span class="action-icon">${skill.icon}</span>
-                            <span class="small disable">${skill.name}</span>
-                        </div>
-                    `;
-	            } else { // 可用
+	            if (usable) { // 可用
                     button.innerHTML = `
                         <span class="action-icon">${skill.icon}</span>
                         <span class="small">${skill.name}</span>
@@ -575,6 +606,13 @@
                             selectAttacker(character.id, skill.id); // 選擇目標
                         }
                     });
+	            } else { // 不可用（灰字）
+                    button.innerHTML = `
+                        <div class="usable">
+                            <span class="action-icon">${skill.icon}</span>
+                            <span class="small usable">${skill.name}</span>
+                        </div>
+                    `;
                 }
                 skillsMenu.appendChild(button);
             });
@@ -619,6 +657,11 @@
             setTimeout(function() {
                 jumper.classList.remove("jump"); // 移除彈跳動畫
             }, 150);
+        }
+
+        // 檢查是否擁有狀態（可輸入狀態 id 或狀態的某個屬性）
+        function hasStatus(character, key) {
+            return character.status.some(sta => sta.key);
         }
 
     // === 技能邏輯區 ===
@@ -673,18 +716,19 @@
             const presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
+
             let allCharacters = [...teamMembers, ...enemies];
             let user = allCharacters.find(m => m.id === userId);
             let target = allCharacters.find(m => m.id === targetId);
-            const isEnemy = user.id.startsWith("enemy");
 
-	        // 處理使用者
-	        if (userId === "team") {
-		        user = createTeamUser(availableMembers); // 取得聯手使用者資料
-                localStorage.setItem("availableMembers", JSON.stringify([])); // 清空可行動成員
-	        } else {
-                removeAvailableMembers(user.id); // 使用者移出可行動成員
-            }
+	        // 檢查並處理使用者資料
+	            if (userId === "team") { // 聯手使用
+		            user = createTeamUser(availableMembers);
+                    localStorage.setItem("availableMembers", JSON.stringify([])); // 清空可行動成員
+	            } else { // 單人使用
+                    removeAvailableMembers(user.id); // 使用者移出可行動成員
+                }
+                const isEnemy = user.id.startsWith("enemy"); // 使用者是敵人
 
             // 如果未指定目標
             if (!target) {
@@ -714,6 +758,7 @@
                     target = maxCharacters[randomIndex];
                 }
             }
+            const targetIsEnemy = target.id.startsWith("enemy"); // 目標是敵人
 
             // 技能結果初始化
 	        const result = {
@@ -937,14 +982,19 @@
 
         // 計算傷害公式
         function evalFormula(formula, user, target) {
-	        // 自動補上 .total
-	        const preprocessed = formula.replace(
-		        /\b(user|target)\.(str|dex|con|int|wis|cha|arm)\b/g,
-		        "$&.total"
-	        );
+            // 自動補上 .total
+            formula = formula.replace(
+                /\b(user|target)\.(str|dex|con|int|wis|cha|arm)\b/g,
+                "$&.total"
+            );
 
-            // 回傳計算結果
-            return Function("user", "target", `return ${preprocessed};`)(user, target);
+            // 計算結果
+            let result = Function("user", "target", `return ${formula};`)(user, target);
+
+            // 最小為 0（治癒除外）
+            if (!formula.startsWith("-")) result = Math.max(result, 0);
+
+            return result;
         }
 
         // 檢查技能使用條件
@@ -1076,7 +1126,6 @@
                 attackerStr += member.str.total; // 我方總力量
                 attackerWeapon.push(member.weapon); // 我方武器
                 jumpers.push(`${member.id}-avatar`); // 添加彈跳動畫
-
             });
             localStorage.setItem("jumpers", JSON.stringify(jumpers));
 
@@ -1342,16 +1391,17 @@
         // 走位
         function move(memberId) {
             // 讀取成員資料
-            const availableMembers = JSON.parse(localStorage.getItem("availableMembers")) || [];
-            const member = availableMembers.find(member => member.id === memberId);
+            const presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
+            const member = presentMembers.find(member => member.id === memberId);
 
             // 檢查成員是否在前排中
             let frontMembers = JSON.parse(localStorage.getItem("frontMembers")) || [];
-            let index = frontMembers.findIndex(member => member.id === memberId);
+            const isFront = frontMembers.some(member => member.id === memberId);
+            console.log("前排成員：", frontMembers);
 
-            if (index !== -1) {
+            if (isFront) {
                 // 如果已在前排，從前排移除
-                frontMembers.splice(index, 1);
+                frontMembers = frontMembers.filter(m => m.id !== memberId);
             
             } else {
                 // 否則，加到前排
@@ -1361,7 +1411,7 @@
             localStorage.setItem("frontMembers", JSON.stringify(frontMembers));
             console.log("前排成員：", frontMembers);
             generateAvatar();
-            showInfor(member);
+            //showInfor(member);
             avatarJump(memberId); // 跳躍動畫
         }
 
@@ -1756,7 +1806,7 @@
             generateAvatar(); // 更新顯示圖像
         }
 
-        // 回合結束
+        // 我方回合結束
         function endRound() {
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             let presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
@@ -1923,10 +1973,9 @@
                 }
 
             enemyAction(); // 敵人攻擊
-            newRound(); // 新的回合開始
         }
 
-        // 新的回合開始
+        // 新的我方回合開始
         function newRound() {
             let teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             let presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
@@ -1973,11 +2022,6 @@
                 });
             });
 
-            // 儲存更新後的資料
-            localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
-            localStorage.setItem("availableMembers", JSON.stringify(availableMembers));
-            endAction();
-
             // 檢查雷納德是否路過幫忙
                 isMember = teamMembers.some(m => m.name === "雷納德");
                 const inEvent = localStorage.getItem("inEvent");
@@ -1992,9 +2036,14 @@
                     }
                 }
 
-            generateAvatar(); // 更新顯示圖像
+            // 儲存更新後的資料
+            localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+            localStorage.setItem("availableMembers", JSON.stringify(availableMembers));
+            endAction();
 
-            window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
+            //generateAvatar(); // 更新顯示圖像
+
+            //window.scrollTo({ top: 0, behavior: "smooth" }); // 跳到畫面上方
         }
 
         // 敵人行動
@@ -2005,23 +2054,17 @@
             let enemies = JSON.parse(localStorage.getItem("enemies")) || [];
             let availableEnemies = JSON.parse(localStorage.getItem("availableEnemies")) || [];
 
-            // 上場成員沒人則不執行（戰敗時讓玩家看情況）
-            if (presentMembers.length === 0) return;
+            // 上場成員已經沒人時（戰敗時讓玩家看情況），直接結束敵人回合
+            if (presentMembers.length === 0) {
+                turnSwitch("敵人回合", false);
+                endAction();
+                return;
+            }
 
             // 只執行一個可行動敵人，等待玩家按下一步
             let enemy = enemies.find(e => e.id === availableEnemies[0].id);
             //console.log(enemy);
 
-            // 將敵人移出可行動敵人
-            availableEnemies = availableEnemies.filter(e => e.id !== enemy.id);
-            localStorage.setItem("availableEnemies", JSON.stringify(availableEnemies));
-
-            // 控制開關
-            if (availableEnemies.length === 0) {
-                turnSwitch("敵人回合", false); // 如果是最後一個，結束敵人回合
-            } else {
-                turnSwitch("敵人回合"); // 打開
-            }
 
             // 飛行類敵人，有 20% 機率飛行
             //const flyChance = 0.2;
@@ -2048,8 +2091,19 @@
                 target = teamMembers.find(m => m.id === presentMembers[randomIndex].id);
             }
 
-            // 攻擊
-            useSkill("attack", enemy.id, target.id);
+            // 將敵人移出可行動敵人
+            availableEnemies = availableEnemies.filter(e => e.id !== enemy.id);
+            localStorage.setItem("availableEnemies", JSON.stringify(availableEnemies));
+
+            // 控制開關
+            if (availableEnemies.length === 0) {
+                turnSwitch("敵人回合", false); // 如果是最後一個，結束敵人回合
+                useSkill("attack", enemy.id, target.id); // 攻擊（必須在開關之後處理）
+                newRound(); // 新的我方回合開始
+            } else {
+                turnSwitch("敵人回合"); // 打開
+                useSkill("attack", enemy.id, target.id); // 攻擊（必須在開關之後處理）
+            }
         }
 
         // 獲得金錢和戰利品
