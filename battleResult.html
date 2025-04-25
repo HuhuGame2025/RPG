@@ -206,10 +206,11 @@
             localStorage.removeItem("encounter"); // 清除指定遭遇
             turnSwitch("敵人回合", false); // 關閉敵人回合
 
-            // 重置隊員狀態
+            // 重置隊員狀態、臨時生命值
             const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
             teamMembers.forEach(member => {
                 member.status = [];
+                member.tempHP = 0;
             });
             localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
 

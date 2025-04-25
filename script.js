@@ -762,8 +762,7 @@
             const skillIds = classData.find(cla => cla.id === companion.classId).skills;
             skillIds.forEach(skillId => {
                 const skill = skillData.find(s => s.id === skillId); // 找到技能資料
-                if (skill.cost === 1) totalMP += 2; // 一環法術可用 2 次
-                if (skill.cost === 2) totalMP += 1; // 二環法術可用 1 次
+                totalMP += 2; // 每個法術給 2MP ，一環法術可用 2 次，二環法術可用 1 次
             });
 
             // 添加同伴資料並設定初始的HP和MaxHP

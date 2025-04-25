@@ -774,3 +774,6 @@ downloadCSV(csvData, 'enemy.csv');
 前進、後退的按鈕改到Avatar的上方、下方
 隊形只有一排時，Avatar會比較靠中間，但不完全在中間
 武器圖示加框
+
+02
+支援聯手攻擊、一起逃跑
