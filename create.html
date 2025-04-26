@@ -192,7 +192,7 @@
         }
 
         // 屬性
-        let attributeData = {
+        let attributes = {
             con: { name: "🫀 體質", value: 8, note: "影響 HP 上限" },
             str: { name: "⚔️ 力量", value: 8, note: "攻擊的基礎傷害" },
             dex: { name: "🏃 敏捷", value: 8, note: "命中、閃避、潛行" },
@@ -217,7 +217,7 @@
                 </p>
             `;
 
-            for (const [id, attr] of Object.entries(attributeData)) {
+            for (const [id, attr] of Object.entries(attributes)) {
                 let attributeDiv = document.createElement("div");
                 attributeDiv.innerHTML = `
                     <div class="item">
@@ -242,7 +242,7 @@
         // 調整屬性
         function adjustAttribute(attrId, delta) {
             // 計算新值
-            let attr = attributeData[attrId];
+            let attr = attributes[attrId];
             const newValue = attr.value + delta;
 
             // 檢查新值是否在範圍內，且剩餘點數不為負
@@ -258,7 +258,7 @@
         // 重置屬性
         function resetAttribute(point){
             remainingPoints = point;
-            Object.values(attributeData).forEach(attr => {
+            Object.values(attributes).forEach(attr => {
                 attr.value = 8;
             });
         }
@@ -304,15 +304,15 @@
                 id: "player",
                 type: "冒險者",
                 classId: plClass.id,
-                con: { basic: attributeData.con.value + (plBackground.con || 0) },
-                str: { basic: attributeData.str.value + (plBackground.str || 0) },
-                dex: { basic: attributeData.dex.value + (plBackground.dex || 0) },
-                int: { basic: attributeData.int.value + (plBackground.int || 0) },
-                wis: { basic: attributeData.wis.value + (plBackground.wis || 0) },
-                cha: { basic: attributeData.cha.value + (plBackground.cha || 0) },
+                con: { basic: attributes.con.value + (plBackground.con || 0) },
+                str: { basic: attributes.str.value + (plBackground.str || 0) },
+                dex: { basic: attributes.dex.value + (plBackground.dex || 0) },
+                int: { basic: attributes.int.value + (plBackground.int || 0) },
+                wis: { basic: attributes.wis.value + (plBackground.wis || 0) },
+                cha: { basic: attributes.cha.value + (plBackground.cha || 0) },
                 arm: { basic: 0 },
-                MaxHP: (attributeData.con.value + (plBackground.con || 0)) * 3,
-                HP: (attributeData.con.value + (plBackground.con || 0)) * 3,
+                MaxHP: (attributes.con.value + (plBackground.con || 0)) * 3,
+                HP: (attributes.con.value + (plBackground.con || 0)) * 3,
                 MaxMP: totalMP,
                 MP: totalMP,
                 critRate: 5, // 爆擊率 5%

@@ -10,7 +10,7 @@
     background-attachment: fixed; /* 背景不捲動 */
     -webkit-background-attachment: fixed; /* iOS 專用 */
     /*background-blend-mode: overlay; /* 混合模式 */
-    /*background-color: rgba(128, 128, 128, 0.8); /* 黑色遮罩 */
+    background-color: rgba(0, 0, 0, 1); /* 黑底
 }
 
 /* 三種尺寸 */
