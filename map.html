@@ -22,7 +22,7 @@
                 font-size: 2em;
                 padding: 0 5px;
                 color: rgba(255, 255, 255, 0.5);
-                border-radius: 15px;
+                border: none;
             }
             .controls button:hover {
                 background: #666;
@@ -69,7 +69,6 @@
             left: 50%;
             width: 100%;
         }
-
 
         /* 森林 */
             .forest-tree1 {
@@ -170,37 +169,35 @@
         <table id="map"></table>
 
         <div class="column-container bottomborder">
-            <div class="column">
-                <!-- 天氣 -->
-                <p id="weather">
-                    <span id="weather-name"></span>
-                    <span id="weather-description" class="note small"></span>
-                </p>
-                <br>
-                <div class="menu">
-                    <!-- 潛行開關 -->
-                    <button class="small-button background" style="padding: 5px;" onclick="stealth()">
-                        <input type="checkbox" id="stealthToggle">
-                        <span class="small">潛行模式</span>
-                        <span id="stealth-chance" class="note small"></span>
-                    </button>
-                </div>
-            </div>
+            <!-- 天氣 -->
+            <p id="weather" class="column center">
+                <span id="weather-name"></span>
+                <span id="weather-description" class="note small"></span>
+            </p>
 
             <!-- 方向按鈕 -->
-            <div class="controls column">
+            <div class="controls">
                 <div class="column" style="text-align: right;">
                     <button onclick="move(-1, 0)">◀</button>
                 </div>
                 <div class="">
                     <button onclick="move(0, -1)">▲</button><br>
-                    <button></button><br>
+                    <div></div><br>
                     <button onclick="move(0, 1)">▼</button>
                 </div>
                 <div class="column" style="text-align: left;">
                     <button onclick="move(1, 0)">▶</button>
                 </div>
             </div>
+
+            <!-- 潛行開關 -->
+            <p id="weather" class="column center">
+                <label onclick="stealth()">
+                    <input type="checkbox" id="stealthToggle"><br>
+                    <span class="small">潛行模式</span><br>
+                    <span id="stealth-chance" class="note small"></span>
+                </label>
+            </p>
         </div>
 
         <div class="column-container bottomborder">
@@ -1450,11 +1447,14 @@
         // 顯示天氣
         function showWeather() {
             const weather = JSON.parse(localStorage.getItem("weather")) || [];
-            document.getElementById("weather-name").textContent = weather.icon + " " + weather.name;
+            document.getElementById("weather-name").innerHTML = `
+                ${weather.icon}<br>
+                <span class="small">${weather.name}</span><br>
+            `;
 
             // 如果有天氣敘述
             if (weather.description) {
-                const note = "[說明]";
+                const note = "[?]";
                 document.getElementById("weather-description").textContent = note;
 
                 // 點擊時，顯示或收起敘述

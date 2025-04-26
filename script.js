@@ -23,30 +23,33 @@
 
     // 顯示按鈕列
     function showButtonBar() {
-        buttonBar.classList.add("button-bar");
+        const buttons = [
+            { icon: "🎭" , text: "角色", function: () => goTo('menu/character') },
+            { icon: "📜" , text: "任務", function: () => goTo('menu/mission') },
+            { icon: "💰" , text: "物品", function: () => goTo('menu/inventory') },
+            { icon: "⚙️" , text: "選項", function: () => goTo('menu/option') },
+            //{ icon: "⛶" , text: "", function: "toggleFullScreen()" }, // 全螢幕（ios不支援）
+        ];
 
         const pageName = window.location.pathname.split('/').pop();
-        if (pageName !== "battle.html") {
-            // 一般頁面
-            buttonBar.innerHTML =`
-                <!-- 按鈕列 -->
-                <a onclick="goTo('menu/character')">🎭<span>角色</span></a>
-                <a onclick="goTo('menu/mission')">📜<span>任務</span></a>
-                <a onclick="goTo('menu/inventory')">💰<span>物品</span></a>
-                <a onclick="goTo('menu/option')">⚙️<span>選項</span></a>
-                <!-- <a style="flex: 0 0 40px;" onclick="toggleFullScreen()">⛶</a> -->
-            `;
-        } else {
-            // 戰鬥頁面禁用物品按鈕
-            buttonBar.innerHTML =`
-                <!-- 按鈕列 -->
-                <a onclick="goTo('menu/character')">🎭<span>角色</span></a>
-                <a onclick="goTo('menu/mission')">📜<span>任務</span></a>
-                <a>🚫<span class="warn">物品</span></a>
-                <a onclick="goTo('menu/option')">⚙️<span>選項</span></a>
-                <!-- <a style="flex: 0 0 40px;" onclick="toggleFullScreen()">⛶</a> -->
-            `;
-        }
+
+        // 創建按鈕
+        buttonBar.classList.add("button-bar");
+        buttons.forEach(button => {
+            const btn = document.createElement("a");
+
+            // 檢查是否禁用
+            if (pageName === "battle.html" && button.icon === "💰") { // 戰鬥中禁用物品
+                btn.classList.add("note");
+                btn.innerHTML = `${button.icon}&#xFE0E; <span class="small">${button.text}</span>`;
+                btn.style.pointerEvents = "none"; // 禁用點擊
+            } else {
+                btn.innerHTML = `${button.icon} <span class="small">${button.text}</span>`;
+                btn.addEventListener("click", button.function);
+            }
+
+            buttonBar.appendChild(btn);
+        });
 
         // 等一個 event loop 後再加動畫 class
         setTimeout(() => {
@@ -81,7 +84,10 @@
         }
 
         // 顯示背景圖
-        document.body.style.backgroundImage = imagePath;
+        document.body.style.background = `
+            linear-gradient(rgba(25, 25, 25, 0.8), rgba(25, 25, 25, 0.8)),
+            ${imagePath} center/cover no-repeat fixed
+        `;
     }
 
     // 顯示對話
@@ -628,6 +634,17 @@
         return level;
     }
 
+    // 屬性
+    const attributeData = {
+        con: { name: "🫀 體質" },
+        str: { name: "⚔️ 力量" },
+        dex: { name: "🏃 敏捷" },
+        int: { name: "🧠 智力" },
+        wis: { name: "👁️ 感知" },
+        cha: { name: "✨ 魅力" },
+        arm: { name: "🛡️ 護甲" },
+    };
+
 // 隊伍相關
 
     // 傭兵資料庫
@@ -762,7 +779,7 @@
             const skillIds = classData.find(cla => cla.id === companion.classId).skills;
             skillIds.forEach(skillId => {
                 const skill = skillData.find(s => s.id === skillId); // 找到技能資料
-                totalMP += 2; // 每個法術給 2MP ，一環法術可用 2 次，二環法術可用 1 次
+                if (skill.cost > 0) totalMP += 2; // 每個法術給 2MP ，一環法術可用 2 次，二環法術可用 1 次
             });
 
             // 添加同伴資料並設定初始的HP和MaxHP
@@ -1205,7 +1222,7 @@
 
             // 創建物品欄位
             let itemDiv = document.createElement("div");
-            itemDiv.classList.add("item");
+            itemDiv.classList.add("item", "background");
 
             // 顯示物品資料
             itemDiv.innerHTML = showItemHTML(item, count[itemId], usage);
@@ -1430,7 +1447,7 @@
             return `
                 <!-- 物品名稱、數量、價格、小按鈕 -->
                 <div class="column-container" style="cursor: pointer;">
-                    <span class="column">
+                    <span class="column left">
                         ${item.name}${count ? ` × ${count}` : "" }
                     </span>
                     <span class="column-small">${itemPrice}</span>

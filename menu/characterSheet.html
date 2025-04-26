@@ -44,6 +44,7 @@
         window.onload = function() {
             showCharacterSheet(); // 顯示角色詳情
             preferences(); // 偏好設定
+            loadBackground(); // 讀取背景
         };
         
         // 顯示角色詳情
@@ -62,14 +63,6 @@
             const weaponName = (member.weapon && member.weapon.name) ? member.weapon.name : "（無武器）";
             const armorName = (member.armor && member.armor.name) ? member.armor.name : "（無盔甲）";
 
-            // 處理屬性
-            let add = {}, level = {};
-            ["str", "dex", "con", "int", "wis", "cha", "arm"].forEach(attr => {
-                add[attr] = member[attr].total - (member[attr].basic || 0);
-                add[attr] = add[attr] > 0 ? "+" + add[attr] : add[attr]; // 正數加上 "+" 號
-                level[attr] = showAttributeLevel(attr, member[attr].total); // 顯示屬性等級
-            });
-
             // 顯示角色詳情
             const menu = document.getElementById("character-sheet");
             menu.innerHTML = "";
@@ -77,16 +70,16 @@
             let characterDiv = document.createElement("div");
             characterDiv.innerHTML = `
                 <div class="">
-                    <div class="center note">⇢ ${member.type} ⬸</div> 
-                    <div class="item column-container">
+                    <div class="center small note">𓇬 ${member.type} 𓇬</div> 
+                    <div class="item bottomborder column-container">
                         <button class="small-button" style="background: none;" onclick="lastMember('${member.id}')">◀︎</button>
                         <h3 class="column center">${member.name}</h3>
                         <button class="small-button" style="background: none;" onclick="nextMember('${member.id}')">▶︎</button>
                     </div>
                 </div>
 
-                <span class="small note">𒄬生命值</span>
-                <div class="item bottomborder">
+                <span class="small note">𒄬 生命值</span>
+                <div class="item background">
                     <div class="column-container">
                         <span class="column" id="HP-level"></span>
                         <span class="column center">${member.HP} / ${member.MaxHP}</span>
@@ -94,10 +87,10 @@
                     </div>
                 </div>
 
-                <span class="small note">𒄬情緒</span>
-                <div class="item bottomborder">
+                <span class="small note">𒄬 情緒</span>
+                <div class="item background">
                     <div class="column-container">
-                        <div class="column">
+                        <div class="column left">
                             <span id="mood-level"></span>
                             <span class="small note" id="mood-effect"></span>
                         </div>
@@ -108,75 +101,12 @@
                 </div>
                 <br>
 
-                <span class="small note">𒄬屬性</span>
-                <div class="item">
-                    <div class="column-container bottomborder">
-                        <p class="column center">🫀 體質</p>
-                        <div class="column row-buttons">
-                            <span class="column center">${member.con.basic}</span>
-                            <span class="column center note"></span>
-                        </div>
-                        <span class="column center note small">${level.con}</span>
-                    </div>
-                    
-                    <div class="column-container bottomborder">
-                        <span class="column center">⚔️ 力量</span>
-                        <div class="column row-buttons">
-                            <span class="column center">${member.str.total}</span>
-                            <span class="column center note">(${add.str})</span>
-                        </div>
-                        <span class="column center note small">${level.str}</span>
-                    </div>
-                    
-                    <div class="column-container bottomborder">
-                        <span class="column center">🏃 敏捷</span>
-                        <div class="column row-buttons">
-                            <span class="column center">${member.dex.total}</span>
-                            <span class="column center note">(${add.dex})</span>
-                        </div>
-                        <span class="column center note small">${level.dex}</span>
-                    </div>
-
-                    <div class="column-container bottomborder">
-                        <span class="column center">🧠 智力</span>
-                        <div class="column row-buttons">
-                            <span class="column center">${member.int.total}</span>
-                            <span class="column center note">(${add.int})</span>
-                        </div>
-                        <span class="column center note small">${level.int}</span>
-                    </div>
-                    
-                    <div class="column-container bottomborder">
-                        <span class="column center">👁️ 感知</span>
-                        <div class="column row-buttons">
-                            <span class="column center">${member.wis.total}</span>
-                            <span class="column center note">(${add.wis})</span>
-                        </div>
-                        <span class="column center note small">${level.wis}</span>
-                    </div>
-                    
-                    <div class="column-container bottomborder">
-                        <span class="column center">✨ 魅力</span>
-                        <div class="column row-buttons">
-                            <span class="column center">${member.cha.total}</span>
-                            <span class="column center note">(${add.cha})</span>
-                        </div>
-                        <span class="column center note small">${level.cha}</span>
-                    </div>
-
-                    <div class="column-container">
-                        <span class="column center">🛡️ 護甲</span>
-                        <div class="column row-buttons">
-                            <span class="column center">${member.arm.total}</span>
-                            <span class="column center note">(${add.arm})</span>
-                        </div>
-                        <span class="column center note small">${level.arm}</span>
-                    </div>
-                </div>
+                <span class="small note">𒄬 屬性</span>
+                <div id="attribute-list" class="item background"></div>
                 <br>
 
-                <span class="small note">𒄬裝備</span>
-                <div class="item bottomborder">
+                <span class="small note">𒄬 裝備</span>
+                <div class="item background">
                     <div class="row-buttons">
                         <button onclick="chooseEquipment('weapon', member.name)">${weaponName}</button>
                         <button onclick="chooseEquipment('armor', member.name)">${armorName}</button>
@@ -186,13 +116,13 @@
                 </div>
                 <br>
 
-                <span class="small note">𒄬描述</span>
-                <div class="item bottomborder">
+                <span class="small note">𒄬 描述</span>
+                <div class="item background">
                     <p>${member.description}</p>
                 </div>
 
-                <span class="small note">𒄬羈絆</span>
-                <div class="item">
+                <span class="small note">𒄬 羈絆</span>
+                <div class="item background">
                     ${member.name === "雷納德" && isTrue('陪雷納德見夥伴3') ? `
                         <p>你陪雷納德去見他昔日的夥伴，讓他放下心中的大石頭。</p>
                     ` : "" }
@@ -200,12 +130,41 @@
             `;
             menu.appendChild(characterDiv);
 
-            // 顯示情緒
-            showEmotion(memberId);
-
             // 顯示 HP 描述
             document.getElementById("HP-bar").textContent = showHPLevel("HP-bar", `${member.id}`);
             document.getElementById("HP-level").textContent = showHPLevel("HP", `${member.id}`);
+
+            // 顯示情緒
+            showEmotion(memberId);
+
+            // 處理屬性加值
+            let add = {}, level = {};
+            ["str", "dex", "con", "int", "wis", "cha", "arm"].forEach(attr => {
+                add[attr] = member[attr].total - (member[attr].basic || 0);
+                add[attr] = add[attr] > 0 ? "+" + add[attr] : add[attr]; // 正數加上 "+" 號
+                level[attr] = showAttributeLevel(attr, member[attr].total); // 顯示屬性等級
+            });
+
+            // 顯示屬性列表
+            const attrMenu = document.getElementById("attribute-list");
+            for (const [id, attr] of Object.entries(attributeData)) {
+                const attributeDiv = document.createElement("div");
+                attributeDiv.innerHTML = `
+                    ${id !== "arm" ? `
+                        <div class="column-container bottomborder">
+                    ` : `
+                        <div class="column-container">
+                    ` }
+                        <p class="column center">${attr.name}</p>
+                        <div class="column row-buttons">
+                            <span class="column center">${member[id].basic}</span>
+                            <span class="column center note">(${add[id]})</span>
+                        </div>
+                        <span class="column center note small">${level[id]}</span>
+                    </div>
+                `;
+                attrMenu.appendChild(attributeDiv);
+            }
         }
 
         // 顯示情緒
@@ -251,7 +210,7 @@
                         let emotionDiv = document.createElement("div");
                         emotionDiv.innerHTML = `
                             <div class="column-container note small" style="margin-top: 5px;">
-                                <p class="column" style="margin-left: 30px;">
+                                <p class="column left" style="margin-left: 30px;">
                                     ${emotion.name}
                                     ${emotion.note ? `（${emotion.note}）` : "" }
                                 </p>

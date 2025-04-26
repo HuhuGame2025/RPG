@@ -42,6 +42,7 @@
         window.onload = function() {
             showTakenMissions() // 顯示已承接的任務
             preferences(); // 偏好設定
+            loadBackground(); // 讀取背景
         };
 
         // 顯示已承接的任務
@@ -54,7 +55,7 @@
 
             takenMissions.forEach(mission => {
                 let itemDiv = document.createElement("div");
-                itemDiv.classList.add("item");
+                itemDiv.classList.add("item", "background");
 
                 itemDiv.innerHTML = `
                     <div style="cursor: pointer;">

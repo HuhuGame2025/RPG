@@ -236,18 +236,18 @@
                 // 如果只有 1 個，讓玩家確認
                 let input = confirm("確定要賣出嗎？");
 
-                if (input) {
-                    sellAmount = 1;
-                }
+                // 按「取消」結束函式
+                if (!input) return;
+
+                // 賣出 1 個
+                if (input) sellAmount = 1;
 
             } else {
                 // 如果超過 1 個，讓玩家輸入數量
                 let input = prompt("要賣出幾件？", "1");
 
-                // 如果玩家按「取消」，則直接結束函式
-                if (input === null) {
-                    return;
-                }
+                // 按「取消」結束函式
+                if (!input) return;
 
                 sellAmount = parseInt(input);
 
@@ -371,8 +371,8 @@
             // 讓玩家輸入起標價
             let input = prompt("設定起標價", item.price);
 
-            // 如果玩家按「取消」，則直接結束函式
-            if (input === null) return;
+            // 按「取消」結束函式
+            if (!input) return;
 
             startingPrice = parseInt(input);
 

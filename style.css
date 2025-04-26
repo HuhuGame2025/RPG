@@ -5,12 +5,12 @@
     margin: 0;
     padding: 50px 20px;
     min-height: 100vh;
-    background-size: cover;
+    /*background-size: cover;
     background-position: center;
     background-attachment: fixed; /* 背景不捲動 */
     -webkit-background-attachment: fixed; /* iOS 專用 */
-    background-color: rgba(0, 0, 0, 0.8); /* 黑色遮罩 */
-    background-blend-mode: multiply;
+    /*background-blend-mode: overlay; /* 混合模式 */
+    /*background-color: rgba(128, 128, 128, 0.8); /* 黑色遮罩 */
 }
 
 /* 三種尺寸 */
@@ -68,22 +68,9 @@
         width: 90px;
         height: 90px;
         padding: 0;
+        border-radius: 15px;
+        background-color: rgba(0, 0, 0, 0.6);
     }
-
-    /* 三種尺寸 */
-    .font-large .location-menu button {
-        width: 90px;
-        height: 90px;
-    }
-    .font-medium .location-menu button {
-        width: 81px;
-        height: 81px;
-    }
-    .font-small .location-menu button {
-        width: 72px;
-        height: 72px;
-    }
-
 
 /* 兩欄容器 */
     .column-container {
@@ -91,13 +78,14 @@
         flex-wrap: wrap; /* 如果內容過長，允許換行 */
         gap: 10px; /* 設定欄之間的間距 */
         margin: 0;
+        justify-content: center; /* 水平置中，要配合 display: flex */
     }
 
     /* 欄 */
     .column {
         flex: 1; /* 佔滿剩餘空間 */
         margin: auto 0; /* 垂直置中 */
-        text-align: left;
+        text-align: center;
     }
 
     /* 名字欄 */
@@ -146,12 +134,38 @@
         font-size: 1em;
         background: rgba(50, 50, 50, 0);
         border-radius: 0;
+        border: none !important;
     }
     .row-buttons button:not(:last-child) {
-        border-right: 1px solid #333; /* 分隔線 */
+        border: none;
+        border-right: 1px solid rgba(255, 255, 255, 0.1) !important; /* 分隔線 */
     }
 
 /* 元素 */
+
+    /* 所有按鈕 */
+    button {
+        background-color: rgba(0, 0, 0, 0.8);
+        /*box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);*/
+        color: #ccc;
+        font-size: 1em;
+        border: none;
+        border-radius: 30px;
+        padding: 10px 15px;
+        margin: 10px 5px;
+        cursor: pointer;
+        text-align: center;
+    }
+
+    button:hover {
+        background-color: #444;
+        color: #fff;
+    }
+
+    /* 黑底容器中的按鈕 */
+    .background button {
+        border: 1px solid #555; /* 框線 */
+    }
 
     h1{
         font-size: 1.8em;
@@ -182,25 +196,6 @@
         margin-block-end: 0.5em;
     }
 
-    /* 所有按鈕 */
-    button {
-        background-color: #222;
-        /*box-shadow: 0 0 5px rgba(255, 255, 255, 0.2);*/
-        color: #ccc;
-        font-size: 1em;
-        border: none;
-        /*border: 1px solid #333;*/
-        padding: 10px 15px;
-        margin: 10px 5px;
-        cursor: pointer;
-        border-radius: 5px;
-        text-align: center;
-    }
-
-    button:hover {
-        background-color: #444;
-        color: #fff;
-    }
 
     hr {
         border: 1px solid rgba(255, 255, 255, 0.5);
@@ -217,8 +212,7 @@
     .item {
         padding: 10px 15px;
         margin: 1em 0px;
-        background: #111;
-        border-radius: 5px; 
+        border-radius: 5px;
     }
 
     /* 深色背景 */
@@ -242,7 +236,7 @@
 
     /* 灰色字 */
     .note {
-        color: #666;
+        opacity: 40%;
     }
 
     /* 紅字 */
@@ -257,7 +251,12 @@
 
     /* 置右 */
     .right {
-        text-align: right;
+        text-align: right !important;
+    }
+
+    /* 置左 */
+    .left {
+        text-align: left;
     }
 
     /* 靠上方 */
@@ -331,29 +330,17 @@
 
 /* 頭像 */
     .avatar {
+        background: #000;
         border-radius: 50%;
         box-shadow: 0 0 5px rgba(255, 255, 255, 0.3); /* 光暈 */
-        width: 75px;
-        height: 75px;
+        width: 3.75em;
+        height: 3.75em;
         padding: 5px;
         margin: 5px auto;
         display: flex;
         justify-content: center; /* 水平置中，要配合 display: flex */
         align-items: center; /* 垂直置中，要配合 display: flex */
         transition: transform 0.15s ease-in-out; /* 定義過渡效果 */
-    }
-    /* 三種尺寸 */
-    .font-large .avatar {
-        width: 75px;
-        height: 75px;
-    }
-    .font-medium .avatar {
-        width: 68px;
-        height: 68px;
-    }
-    .font-small .avatar {
-        width: 60px;
-        height: 60px;
     }
 
     /* 彈跳 */
@@ -385,7 +372,8 @@
         top: 0;
         left: 50%;
         transform: translateX(-50%); 
-        background-color: rgba(0, 0, 0, 0.9);
+        background-color: rgba(0, 0, 0, 0); /* 背景 */
+        /*border-bottom: 1px solid rgba(255, 255, 255, 0.2); /* 底線 */
         display: flex;
         font-size: 1em;
         z-index: 10;
@@ -397,7 +385,6 @@
     }
 
     .button-bar a {
-        color: #666;
         font-size: 1em;
         cursor: pointer;
         width: 100%;
@@ -450,7 +437,7 @@
         width: 25px;
         height: 25px;
         position: fixed;
-        bottom: 0;
+        bottom: 10px;
         right: 50%; /* 置中 */
         transform: translateX(50%); /* 置中 */
         display: flex;

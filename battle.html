@@ -47,12 +47,10 @@
         }
 
         /* 我方、敵方欄位 */
-        #member-infor, #enemy-infor {
-        }
-
-        .background {
+        .infor {
             background: #000;
             box-shadow: 0 0 5px rgba(255, 255, 255, 0.4); /* 光暈 */
+            /*border: 1px solid rgba(255, 255, 255, 0.5); /* 白框 */
         }
 
         /* 下排按鈕 */
@@ -67,7 +65,7 @@
 
         /* 可行動成員 */
         .availableMembers {
-            border: 1px solid rgba(255, 255, 255, 1); /* 白框 */
+            border: 1px solid rgba(255, 255, 255, 0.8); /* 白框 */
             color: #fff;
         }
 
@@ -122,6 +120,7 @@
             margin: 5px;
             padding: 0;
             text-align: center;
+            border: none;
         }
 
         /* 動作圖示 */
@@ -164,6 +163,7 @@
             margin: auto;
             padding: 0;
             display: block;
+            border: none;
         }
 
     </style>
@@ -190,14 +190,14 @@
                 <p class="small column-container bottomborder">
                     <span class="column"></span>
                     <span class="note center" id="enemy-note">　</span>
-                    <span class="column right">➴ 敵方</span>
+                    <span class="column right">𒀺 敵方</span>
                 </p>
             </div>
 
             <!-- 我方列表 -->
             <div id="member-container">
                 <p class="small column-container">
-                    <span class="column left">我方 ➶</span>
+                    <span class="column left">我方 𒀹</span>
                     <span class="note center" id="team-note">　</span>
                     <span class="column"></span>
                 </p>
@@ -348,7 +348,7 @@
                 const characterDiv = document.createElement("div");
                 characterDiv.style.margin = "auto";
                 characterDiv.innerHTML = `
-                    <button id="${character.id}-avatar" class="avatar background">
+                    <button id="${character.id}-avatar" class="avatar">
                         <span class="small note">
                             ${character.adj ? `${character.adj}<br>` : ""}${character.name}
                         </span>
@@ -435,11 +435,11 @@
 
             // 創建欄位
             characterDiv.innerHTML = `
-                <div id="${character.id}" class="item background">
+                <div id="${character.id}" class="infor item background border">
                     <!-- 名稱、HP、MP -->
                     <div class="column-container bottomborder">
                         <div class="weapon-icon">${weaponIcon}</div>
-                        <h4 class="column">
+                        <h4 class="column left">
                             ${character.adj ? `${character.adj}` : ""}${character.name}
                         </h4>
                         <h4 class="column column-container">
@@ -605,10 +605,10 @@
                             selectAttacker(character.id, skill.id); // 選擇目標
                         }
                     });
-	            } else { // 不可用（灰字）
+	            } else { // 不可用（灰字，emoji 加上 &#xFE0E 變成單色版本）
                     button.innerHTML = `
                         <div class="disable">
-                            <span class="action-icon">${skill.icon}</span>
+                            <span class="action-icon">${skill.icon}&#xFE0E</span>
                             <span class="small">${skill.name}</span>
                         </div>
                     `;
@@ -723,10 +723,8 @@
 
             const isEnemy = user.id.startsWith("enemy"); // 使用者是敵人
 
-            removeAvailableMembers(user.id); // 使用者移出可行動成員
-
             // 如果未指定目標
-            if (!target) {
+            if (!targetId) {
                 if (skill.target.startsWith("最高")) {
                     // 取得最高屬性
                     const attr = skill.target.replace("最高", "");
@@ -753,6 +751,9 @@
                     target = maxCharacters[randomIndex];
                 }
             }
+            
+            if (!target) return; // 如果目標在聯手攻擊中途死亡，就跳出函式（這行要在使用者移出可行動成員之前）
+            removeAvailableMembers(user.id); // 使用者移出可行動成員
             const targetIsEnemy = target.id.startsWith("enemy"); // 目標是敵人
 
             // 技能結果初始化
@@ -762,6 +763,7 @@
 		        damage: 0,
 		        userDamage: 0,
 		        crit: false,
+                kill: false,
 		        targetStatus: [],
 		        userStatus: [],
                 mpAbsorb: 0,
@@ -831,6 +833,11 @@
 		            console.log(`${user.name}治療了${target.name}(${result.damage})！`);
                 }
 	        }
+
+            // 死亡判定
+            if (target.HP === 0) {
+                result.kill = true;
+            }
 
 	        // 自身傷害（如反彈）
 	        if (skill.userDamage) {
@@ -988,11 +995,15 @@
             let allHit = true;
             availableMembers.forEach(member => {
 		        const result = teamActions[skillId].action(member); // 行動
+                if (!result) return; // 如果行動中斷代表目標已死亡，就停止執行
                 console.log(result.hit);
                 //if (teamActions[skillId].skip(result)) return; // 跳過訊息
                 message += `<br>` + member.name + localStorage.getItem(`${member.id}-action-text`); // 讀取結果並合併
                 if (!result.hit) allHit = false; // 檢查是否全員成功
 	        });
+
+            // 清空可行動成員
+            localStorage.setItem("availableMembers", JSON.stringify([]));
 
             // 處理逃跑失敗
             if (skillId === "escape" && !allHit) {
@@ -1082,14 +1093,14 @@
 
             // 顯示命中結果
             if (result.hit) {
-                logBox.innerText = skill.hitMessage // 命中
+                logBox.innerText = skill.hitMessage // 命中的訊息
                 .replace("${target.name}", target.name)
                 .replace("${result.damage}", result.damage > 0 ? result.damage : -result.damage) // 負數（治療）顯示為正數
                 .replace("${result.mpAbsorb}", result.mpAbsorb)
                 .replace("${result.armorBreak}", result.armorBreak)
                 .replace("${result.userDamage}", result.userDamage);
             } else {
-                logBox.innerText = skill.missMessage // 未命中
+                logBox.innerText = skill.missMessage // 未命中的訊息
                 .replace("${target.name}", target.name);
                 localStorage.setItem(`${user.id}-action-text`, logBox.innerText);
             }
@@ -1099,8 +1110,13 @@
                 logBox.innerText += "造成爆擊！";
             }
 
+            // 顯示擊殺
+            if (result.kill) {
+                logBox.innerText += `<br>${target.name}被打敗了！`;
+            }
+
             // 顯示目標狀態
-            if (result.targetStatus.length > 0) {
+            if (!result.kill && result.targetStatus.length > 0) {
                 if (target.id !== user.id) { // 確保目標不是使用者本人
                     // 處理每個有訊息的狀態
                     result.targetStatus.forEach(status => {                        
@@ -1109,7 +1125,7 @@
                             logBox.innerText += target.name + status.getMessage;
 
                             // 儲存獲得狀態的訊息（在目標的欄位，點擊才會看到）
-                            localStorage.setItem(`${target.id}-action-text`, status.getMessage);
+                            localStorage.setItem(`<br>${target.id}-action-text`, status.getMessage);
                         }
                     });
                 }

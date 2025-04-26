@@ -10,6 +10,10 @@
             background-color: #000 !important; /* 背景顏色 */
         }
         
+        .background button {
+            background: none;
+            border: none;
+        }
     </style>
 </head>
 <body>
@@ -42,12 +46,12 @@
     
         // 頁面載入時
         window.onload = function() {
+            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+            console.log(teamMembers);
             loadPartyData(); // 讀取隊伍資料
             showTeamMenu(); // 顯示隊伍選單
             preferences(); // 偏好設定
-
-            const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
-            console.log(teamMembers);
+            loadBackground(); // 讀取背景
         };
         
         // 對話資料庫
@@ -1078,22 +1082,24 @@
                 const characterDiv = document.createElement("div");
 
                 characterDiv.innerHTML = `
-                    <div class="item center">
-                        <div class="center">
-                            <span class="note small">⇢ ${member.type} ⬸</span>
-                            <div class="bottomborder">
+                    <div class="item background">
+                        <div class="column-container">
+                            <div class="column">
+                                <span class="note small">𓇬 ${member.type} 𓇬</span>
                                 <h3>${member.name}</h3>
-                                <h4 class="hp" style="margin:5px 0;">${member.HP} / ${member.MaxHP}</h4>
+                                <h4 class="hp">${member.HP} / ${member.MaxHP}</h4>
                                 ${member.MaxMP > 0 ? `
-                                    <h4 class="mp" style="margin:5px 0;">${member.MP} / ${member.MaxMP}</h4>
+                                    <h4 class="mp">${member.MP} / ${member.MaxMP}</h4>
                                 ` : "" }
                             </div>
-                        </div>
-                        <div class="row-buttons">
-                            <button onclick="characterSheet('${member.id}')">🔎<span class="small">查看</span></button>
-                            ${member.id !== "player" ? `
-                                <button onclick="getDialogueNpc('${member.id}')">💬<span class="small">交談</span></button>
-                            `: "" }
+                            <hr class="light-hr">
+                            <div class="column-name">
+                                <button class="small-button" onclick="characterSheet('${member.id}')">🔎<span class="small">查看</span></button>
+                                ${member.id !== "player" ? `
+                                    <p></p>
+                                    <button class="small-button" onclick="getDialogueNpc('${member.id}')">💬<span class="small">交談</span></button>
+                                `: "" }
+                            </div>
                         </div>
                     </div>
                 `;

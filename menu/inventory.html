@@ -20,10 +20,13 @@
     </div>
 
     <!-- 通知框 -->
-   <div id="toast-container"></div>
+    <div id="toast-container"></div>
 
     <div id="main" class="main-content">
-        <br>
+        <!-- 金幣 -->
+        <p class="right">🪙 $<span id="playerMoney"></span></p>
+        <hr class="light-hr">
+
         <!-- 頁籤 -->
         <div class="row-buttons">
             <button onclick="showPlayerItems('inventory')"><span class="small">全部</span></button>
@@ -34,13 +37,6 @@
             <button onclick="showPlayerItems('inventory', 'specialItem')"><span class="small">📜</span></button>
         </div>
 
-        <!-- 金幣 -->
-        <div class="item">
-            <div class="column-container">
-                <span class="column">🪙 金幣</span>
-                <div class="column-small">$<span id="playerMoney"></span></div>
-            </div>
-        </div>
 
         <!-- 物品列表 -->
         <div id="item-list"></div>
@@ -58,12 +54,13 @@
     
         // 頁面載入時
         window.onload = function() {
+            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
+            console.log("物品", playerItems);
+
             loadPartyData();
             showPlayerItems("inventory"); // 顯示主角物品列表
             preferences(); // 偏好設定
-            
-            let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
-            console.log("物品", playerItems);
+            loadBackground(); // 讀取背景
         };
 
         // 對話資料庫

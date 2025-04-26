@@ -55,6 +55,7 @@
         window.onload = function() {
             localStorage.setItem("npcName", "說明");
             preferences("fontSize"); // 偏好設定（只改字體）
+            loadBackground(); // 讀取背景
         };
 
         // 對話資料庫
@@ -104,16 +105,13 @@
                     text: `
                         <h4>戰鬥規則</h4>
                         <p>遊戲採用回合制戰鬥，敵我雙方輪流行動。</p>
-                        <p>1. 在我方回合中，每個角色能進行一個動作，行動順序可自由決定。</p>
-                        <p>2. 完成後按下「結束回合」，就會顯示敵方行動並進入下一輪。</p>
+                        <p>1. 在我方回合中，每個角色能進行一個動作，順序可自由安排。</p>
+                        <p>2. 角色可隨時移動到前排或後排，敵人會優先攻擊前排成員。</p>
+                        <p>3. 按下「結束回合」，就會輪到敵方行動。</p>
                         <div class="item bottomborder">
                             <p>⚔️ 攻擊</p>
                             <p>擲骰 1D20 + 角色敏捷/2，若能超過 10 + 目標敏捷/2，攻擊就會命中。</p>
                             <p>傷害 = 角色力量 - 目標護甲</p>
-                        </div>
-                        <div class="item bottomborder">
-                            <p>👣 前進／後退</p>
-                            <p>在進行動作前，角色可隨意移動到前排或後排。敵人會優先攻擊前排成員。</p>
                         </div>
                         <div class="item bottomborder">
                             <p>🏃 逃跑</p>
@@ -121,11 +119,11 @@
                         </div>
                         <div class="item bottomborder">
                             <p>⚔️ 聯手攻擊</p>
-                            <p>尚未行動的我方成員同時攻擊，以「成員敏捷總和」計算命中率，命中後造成「成員力量總和」的傷害，比各自攻擊更有優勢。</p>
+                            <p>尚未行動的我方成員同時攻擊，擲骰時會加上所有成員的敏捷，比分開攻擊更容易命中敵人。</p>
                         </div>
                         <div class="item bottomborder">
                             <p>🏃 一起逃跑</p>
-                            <p>尚未行動的我方成員一起逃跑，以成員中「敏捷最低者」計算成功率，該成員失敗就會一起失敗，比各自逃跑更困難。</p>
+                            <p>尚未行動的我方成員一起逃跑，只要有人沒有逃脫，所有成員都會留下來，比分開逃跑更困難。</p>
                         </div>
                         <div class="item bottomborder">
                             <p>💬 交談</p>
@@ -145,23 +143,24 @@
                     text: "",
                     choices: [
                         { text: "獲得金錢 $10000", next: "獲得金錢", action: "getItem('$10000')" },
-                        { text: "恢復隊伍 HP", next: "恢復隊伍", action: "resetHP()" },
+                        { text: "完全恢復", next: "完全恢復", action: "resetHP()" },
                         { text: "傳送到晨曦鎮", action: "fastTravel('town01')" },
                         { text: "傳送到鐵石鎮", action: "fastTravel('town02')" },
                         { text: "和食人妖戰鬥", action: "battle(2, '食人妖')" },
+                        { text: "和哥布林戰鬥", action: "battle(2, '哥布林')" },
                         { text: "返回", next: "", action: "removeDialogue()" },
                     ]
                 },
                 "獲得金錢": {
                     text: "已獲得 $10000",
                     choices: [
-                        { text: "繼續", next: "cheat" },
+                        { text: "返回", next: "", action: "removeDialogue()" },
                     ]
                 },
-                "恢復隊伍": {
-                    text: "已恢復隊伍 HP",
+                "完全恢復": {
+                    text: "已恢復隊伍的 HP 和 MP",
                     choices: [
-                        { text: "繼續", next: "cheat" },
+                        { text: "返回", next: "", action: "removeDialogue()" },
                     ]
                 },
             },
