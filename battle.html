@@ -48,8 +48,9 @@
 
         /* 我方、敵方欄位 */
         .infor {
-            background: #000;
-            box-shadow: 0 0 5px rgba(255, 255, 255, 0.4); /* 光暈 */
+            background: #000 !important;
+            border-radius: 15px !important;
+            box-shadow: 0 0 5px rgba(255, 255, 255, 0.4) !important; /* 光暈 */
             /*border: 1px solid rgba(255, 255, 255, 0.5); /* 白框 */
         }
 
@@ -116,11 +117,12 @@
             flex: none;
             width: 30%;
             height: auto;
-            background: #000;
             margin: 5px;
             padding: 0;
             text-align: center;
+            border-radius: 5px;
             border: none;
+            background: none;
         }
 
         /* 動作圖示 */
@@ -466,12 +468,11 @@
                         <!-- 行動選單 -->
                         <div id="row-1" class="action-buttons"></div>
                         <div id="row-2" class="action-buttons"></div>
-                        <div id="row-3" class="action-buttons hide"></div>
+                        <div id="row-3" class="action-buttons"></div>
 
                         <!-- 目標按鈕 -->
                         <div id="target-menu" class="row-buttons"></div>
                     </div>
-
                 </div>
             `;
 
@@ -497,7 +498,7 @@
             const actions = [
                 // 目標相關
                 { icon: "𖣓", text: "決定目標", type: "target", condition: () => isTargetable, function: () => selectTarget(character.id) },
-                { icon: "×", text: "取消動作", type: "target", condition: () => character.id === selectedUser, function: () => deselectAttacker(character) },
+                { icon: "×", text: "取消動作", type: "target", condition: () => selectedUser, function: () => deselectAttacker(character) },
 
                 // 第一列
                 { icon: "⚔️", text: "攻擊", row: 1, condition: () => isAvailable, function: () => selectAttacker(character.id, 'attack') },

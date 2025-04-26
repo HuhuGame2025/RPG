@@ -162,10 +162,6 @@
         color: #fff;
     }
 
-    /* 黑底容器中的按鈕 */
-    .background button {
-        border: 1px solid #555; /* 框線 */
-    }
 
     h1{
         font-size: 1.8em;
