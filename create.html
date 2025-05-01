@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="style.css">
     <style>
         body {
-            background-color: #000 !important; /* 背景顏色 */
+            background-color: #222 !important; /* 背景顏色 */
             padding: 20px;
         }
 
@@ -78,7 +78,7 @@
             menu.innerHTML = `
                 <h4>𒄬 職業</h4>
 
-                <div class="item">
+                <div class="item background">
                     <div class="item column-container">
                         <button class="small-button" style="background: none;" onclick="showClass(${index} - 1)">◀︎</button>
                         <h3 class="column center">${plClass.name}</h3>
@@ -147,7 +147,7 @@
                 <h4>𒄬 背景</h4>
                 <p>在前往這座森林冒險之前，你原本的身分是：</p>
 
-                <div class="item">
+                <div class="item background">
                     <div class="item column-container">
                         <button class="small-button" style="background: none;" onclick="(showBackground(${index} - 1), resetAttribute(plBackground.point))">◀︎</button>
                         <h3 class="column center">${plBackground.name}</h3>
@@ -193,11 +193,11 @@
 
         // 屬性
         let attributes = {
-            con: { name: "🫀 體質", value: 8, note: "影響 HP 上限" },
-            str: { name: "⚔️ 力量", value: 8, note: "攻擊的基礎傷害" },
+            con: { name: "🫀 體質", value: 8, note: "影響生命值上限" },
+            str: { name: "✊ 力量", value: 8, note: "影響攻擊力和負重" },
             dex: { name: "🏃 敏捷", value: 8, note: "命中、閃避、潛行" },
-            int: { name: "🧠 智力", value: 8, note: "學習與思考的能力" },
-            wis: { name: "👁️ 感知", value: 8, note: "洞察環境的能力" },
+            int: { name: "🧠 智力", value: 8, note: "獲得經驗值的速度" },
+            wis: { name: "👁️ 感知", value: 8, note: "發現敵人的能力" },
             cha: { name: "✨ 魅力", value: 8, note: "社交的能力" }
         };
 
@@ -220,7 +220,7 @@
             for (const [id, attr] of Object.entries(attributes)) {
                 let attributeDiv = document.createElement("div");
                 attributeDiv.innerHTML = `
-                    <div class="item">
+                    <div class="item background">
                         <div class="column-container">
                             <p class="column">${attr.name}</p>
                             <div class="column" style="display: flex;">
@@ -291,30 +291,12 @@
             // 如果沒選角色背景，預設為平民
             if (!plBackground) plBackground = backgroundData[0];
             
-            // 根據技能所需的 MP，決定 MP 上限
-            let totalMP = 0;
-            plClass.skills.forEach(skillId => {
-                const skill = skillData.find(s => s.id === skillId); // 找到技能資料
-                totalMP += 2; // 每個法術給 2MP ，一環法術可用 2 次，二環法術可用 1 次
-            });
-
             // 儲存主角資料
-            const playerData = {
+            let characterData = {
                 name: name,
                 id: "player",
                 type: "冒險者",
                 classId: plClass.id,
-                con: { basic: attributes.con.value + (plBackground.con || 0) },
-                str: { basic: attributes.str.value + (plBackground.str || 0) },
-                dex: { basic: attributes.dex.value + (plBackground.dex || 0) },
-                int: { basic: attributes.int.value + (plBackground.int || 0) },
-                wis: { basic: attributes.wis.value + (plBackground.wis || 0) },
-                cha: { basic: attributes.cha.value + (plBackground.cha || 0) },
-                arm: { basic: 0 },
-                MaxHP: (attributes.con.value + (plBackground.con || 0)) * 3,
-                HP: (attributes.con.value + (plBackground.con || 0)) * 3,
-                MaxMP: totalMP,
-                MP: totalMP,
                 critRate: 5, // 爆擊率 5%
                 status: [],
                 emotion: [],
@@ -324,16 +306,43 @@
                 description: `【${plBackground.name}】${plBackground.description}`,
             };
 
-            // 加總屬性
-            ["str", "dex", "con", "int", "wis", "cha", "arm"].forEach(attr => {
-                playerData[attr].total = Object.entries(playerData[attr])
-                    .filter(([key]) => key !== "total") // 過濾掉 "total"
-                    .reduce((sum, [, val]) => sum + val, 0); // 累加數值
+            // 初始化屬性
+            ["str", "dex", "con", "int", "wis", "cha", "arm", "weight"].forEach(attr => {
+                let basic;    
+                if (attributes[attr]) {
+                    basic = (attributes[attr].value || 0) + (plBackground[attr] || 0);
+                } else {
+                    basic = 0;
+                }
+                characterData[attr] = {
+                    basic: basic,
+                    total: basic,
+                };
             });
+
+            // 初始化 HP 和傷害
+            characterData.MaxHP = characterData.con.total * 3;
+            characterData.HP = characterData.MaxHP;
+            characterData.minDmg = {
+                basic: 1,
+                total: 1,
+            };
+            characterData.maxDmg = {
+                basic: Math.round(characterData.str.total / 2), // 取整數傷害
+                total: Math.round(characterData.str.total / 2), // 取整數傷害
+            };
+
+            // 根據技能所需的 MP，決定 MP 上限
+            characterData.MaxMP = 0;
+            plClass.skills.forEach(skillId => {
+                const skill = skillData.find(s => s.id === skillId); // 找到技能資料
+                if (skill.cost > 0) characterData.MaxMP += 2; // 每個法術給 2MP ，一環法術可用 2 次，二環法術可用 1 次
+            });
+            characterData.MP = characterData.MaxMP;
 
             // 將主角加入隊伍
             teamMembers = [];
-            teamMembers.push(playerData);
+            teamMembers.push(characterData);
             localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
 
             // 穿上初始裝備

@@ -102,7 +102,27 @@
                 <br>
 
                 <span class="small note">𒄬 屬性</span>
-                <div id="attribute-list" class="item background"></div>
+                <div class="item background">
+                    <div id="attribute-list"></div>
+                    <br>
+                    <div class="column-container">
+                        <p class="column">
+                            <span class="small">⚔️傷害</span><br>
+                            ${member.minDmg.total}~${member.maxDmg.total}
+                        </p>
+                        <p class="column">
+                            <span class="small">🛡️護甲</span><br>
+                            ${member.arm.total}
+                        </p>
+                        <p class="column">
+                            <span class="small">⚖️負重</span><br>
+                                ${member.weight.total > member.str.total ? `<span class="warn">${member.weight.total} / ${member.str.total}</span>
+                            ` : `
+                                ${member.weight.total} / ${member.str.total}
+                            ` }
+                        </p>
+                    </div>
+                </div>
                 <br>
 
                 <span class="small note">𒄬 裝備</span>
@@ -137,9 +157,9 @@
             // 顯示情緒
             showEmotion(memberId);
 
-            // 處理屬性加值
+            // 計算屬性加值
             let add = {}, level = {};
-            ["str", "dex", "con", "int", "wis", "cha", "arm"].forEach(attr => {
+            ["str", "dex", "con", "int", "wis", "cha"].forEach(attr => {
                 add[attr] = member[attr].total - (member[attr].basic || 0);
                 add[attr] = add[attr] > 0 ? "+" + add[attr] : add[attr]; // 正數加上 "+" 號
                 level[attr] = showAttributeLevel(attr, member[attr].total); // 顯示屬性等級
@@ -150,14 +170,10 @@
             for (const [id, attr] of Object.entries(attributeData)) {
                 const attributeDiv = document.createElement("div");
                 attributeDiv.innerHTML = `
-                    ${id !== "arm" ? `
-                        <div class="column-container bottomborder">
-                    ` : `
-                        <div class="column-container">
-                    ` }
+                    <div class="column-container bottomborder">
                         <p class="column center">${attr.name}</p>
                         <div class="column row-buttons">
-                            <span class="column center">${member[id].basic}</span>
+                            <span class="column center">${member[id].total}</span>
                             <span class="column center note">(${add[id]})</span>
                         </div>
                         <span class="column center note small">${level[id]}</span>

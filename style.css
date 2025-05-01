@@ -338,15 +338,10 @@
         align-items: center; /* 垂直置中，要配合 display: flex */
         transition: transform 0.15s ease-in-out; /* 定義過渡效果 */
     }
-
-    /* 彈跳 */
-    .jump {
-        transform: translateY(-50px); /* 物件向上跳動 */
-    }
-
     .avatar span {
         text-align: center;
     }
+
 
 /* 對話 */
 .dialogue-text {
