@@ -591,9 +591,9 @@
         { id: "petrified", icon: "🗿", name: "石化", description: "無法行動和閃避，但護甲 +15。", getMessage: "身體變成了石頭！", duration: 1, noAction: true, arm: 15 },
         { id: "paralyzed", icon: "⚡", name: "麻痺", description: "無法行動和閃避。", getMessage: "受到電擊，全身麻痺了！", duration: 1, noAction: true },
         { id: "pinned", icon: "🤚", name: "被壓制", description: "無法行動和閃避。", getMessage: "被壓制了，無法掙脫！", duration: 1, noAction: true },
-        { id: "pinning", icon: "🤚", name: "壓制", description: "正在壓制對方，無法閃避。可自行解除。", duration: 1, noAction: true, cancelable : true },
+        { id: "pinning", icon: "🤚", name: "壓制", description: "正在壓制對方，無法閃避。可自行解除。", duration: 1, noAction: true },
         { id: "sealed", icon: "🔒", name: "封印", description: "無法使用法術。", getMessage: "魔力被封印，無法施放法術了！", duration: 1, noMagic: true },
-        { id: "disarmed", icon: "🫴", name: "武器掉落", description: "只能空手戰鬥，或花費一回合撿回武器。", getMessage: "武器掉在手搆不到的地方了！", noWeapon: true, removable: true },
+        { id: "disarmed", icon: "🫴", name: "武器掉落", description: "只能空手戰鬥，或花費一回合撿回武器。", getMessage: "武器掉在手搆不到的地方了！", noWeapon: true, resistible: true, resistVerb: "撿起武器" },
         // 目標限制,
         { id: "hidden", icon: "🐈‍⬛", name: "隱身", description: "對手看不到此角色。", untargetable: true, cancelable : true },
         { id: "flying", icon: "🪽", name: "飛行", description: "飛上天，迴避所有近戰攻擊。", duration: 1, flying: true, cancelable : true },
@@ -601,14 +601,14 @@
         { id: "berserk", icon: "🌋", name: "狂暴", description: "攻擊獲得命中優勢，HP 每損失 1 點，爆擊率就提高 1%。", duration: 3, critRate: "user.crit + user.MaxHP - user.HP", hitGain: true },
         { id: "guarded", icon: "🛡️", name: "被守護", description: "不會受到來自外部的傷害。", duration: 1, invincible: true },
         // 減益,
-        { id: "prone", icon: "💫", name: "倒地", description: "敏捷 -5，可花費一回合站起來。", getMessage: "摔倒在地了！", dex: -5, removable: true },
+        { id: "prone", icon: "💫", name: "倒地", description: "敏捷 -5，可花費一回合站起來。", getMessage: "摔倒在地了！", dex: -5, resistible: true, resistVerb: "站起來" },
         { id: "marked", icon: "👁️", name: "被盯上", description: "所有針對此角色的攻擊獲得命中優勢。", dodgeSuffer: true },
         { id: "guarding", icon: "🛡️", name: "守護", description: "代替被守護者承受傷害，且承受閃避劣勢。", duration: 1, dodgeSuffer: true, substitute: true },
         { id: "blinded", icon: "🕶", name: "目盲", description: "感知 -5，敏捷 -5", getMessage: "眼前一片黑暗！", duration: 1, dex: -5, wis: -5 },
         // 持續傷害,
-        { id: "bleeding", icon: "🩸", name: "流血", description: "每回合受到 3 傷害，可用繃帶止血。", getMessage: "傷口流血了！", duration: 3, damage: 3 },
-        { id: "burning", icon: "🔥", name: "燃燒", description: "每回合受到 6 傷害，可用水澆熄。", getMessage: "身上著火了！", duration: 2, damage: 6 },
-        { id: "poisoned", icon: "🤢", name: "中毒", description: "力量 -1，敏捷 -1，此外每回合受到 1 傷害，可用解毒劑解除。", getMessage: "中毒了！身體感到虛弱……", duration: 10, damage: 1, str: -1, dex: -1 }
+        { id: "bleeding", icon: "🩸", name: "流血", description: "每回合受到 3 傷害，可用繃帶止血。", getMessage: "傷口流血了！", duration: 3, stackable: true, damage: 3 },
+        { id: "burning", icon: "🔥", name: "燃燒", description: "每回合受到 6 傷害，可用水澆熄。", getMessage: "身上著火了！", duration: 2, stackable: true, damage: 6 },
+        { id: "poisoned", icon: "🤢", name: "中毒", description: "力量 -1，敏捷 -1，此外每回合受到 1 傷害，可用解毒劑解除。", getMessage: "中毒了！身體感到虛弱……", duration: 10, stackable: true, damage: 1, str: -1, dex: -1 }
     ];
 
     // 顯示屬性等級
@@ -779,7 +779,7 @@
                 id: companionId,  // 自動產生 id
                 type: companionType || companion.type,
                 classId: companion.classId,
-                critRate: 5, // 爆擊率 5%
+                critRate: { basic: 5, total: 5 }, // 爆擊率 5%
                 status: [],
                 emotion: [],
                 mood: 0,

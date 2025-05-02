@@ -812,3 +812,13 @@ downloadCSV(csvData, 'enemy.csv');
 武器附加狀態、敵人種族附加狀態
 普通攻擊根據武器顯示動作描述
 狀態邏輯製作到「cancelable 」屬性
+
+
+
+20250502
+
+01
+狀態邏輯製作到「untargetable 」屬性的「選擇目標時排除」
+
+02
+狀態邏輯製作到「substitute 」屬性的「計算傷害時換對象」
