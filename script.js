@@ -404,7 +404,7 @@
         // 骰主角屬性：roll("dex");
         // 骰指定數值：roll("5");
         // 攻擊：roll(attaker.dex, target.dex);
-    function roll(attribute1, attribute2 = 10, successKey, failKey) {
+    function roll(attribute1, attribute2 = 10, successKey, failKey, Advantage) {
         // 讀取主角屬性
         const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
         member = teamMembers.find(m => m.id === "player");
@@ -426,8 +426,17 @@
         // 計算成功率
         let chance = (10 + (attribute1 - attribute2) / 2 ) / 20;
 
+        // 擲骰
+        let success = Math.random() <= chance;
+
+        // 優勢或劣勢
+        if ((Advantage === "gain" && !success) || (Advantage === "suffer" && success)) {
+            success = Math.random() <= chance; // 重骰
+            console.log("重骰");
+        }
+
         // 顯示對話(如有指定)、回傳結果
-        if (Math.random() <= chance) {
+        if (success) {
             if (successKey) showDialogue(successKey);
             return { success: true, chance: chance };
         } else {
@@ -553,36 +562,37 @@
 
     // 技能資料庫
     const skillData = [
-        { id: "attack", icon: "⚔️", name: "攻擊", description: "以武器攻擊一個目標，造成等同角色力量的物理傷害。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "擊中了${target.name}(${result.damage})！", missMessage: "試圖攻擊，但${target.name}躲過了", damage: "user.dmg - target.arm" },
-        { id: "escape", icon: "🏃", name: "逃跑", description: "通過一次敏捷檢定，逃離戰鬥。", target: "最高dex", hitCheck: "dex-vs-dex", hitMessage: "逃走了！", missMessage: "逃跑時被敵人阻擋了", escape: true },
+        { id: "attack", icon: "⚔️", name: "攻擊", description: "以武器攻擊一個目標，造成等同角色力量的物理傷害。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "擊中了${target.name}(${result.damage})！", missMessage: "但${target.name}躲過了攻擊", damage: "Math.max(user.dmg - target.arm, 0)", userStatus: "-hidden" },
+        { id: "escape", icon: "🏃", name: "逃跑", description: "通過一次敏捷檢定，逃離戰鬥。", target: "最高dex", hitCheck: "dex-vs-dex", hitMessage: "迅速逃走了！", missMessage: "想逃跑，卻被${target.name}攔下來了", escape: true },
         // 戰士,
-        { id: "armorBreak", icon: "💥", name: "破甲", description: "攻擊一個近距離目標，削減目標的護甲值，削減量等於此次傷害的1/5，但戰士會受到等同目標護甲值的反彈傷害。", target: "前排單體", hitCheck: "dex-vs-dex", hitMessage: "擊中了${target.name}(${result.damage})！驚人的力量擊破了對方護甲(${result.damage}/5)，但也傷到了自己(${target.arm.total} + ${result.damage}/5)", missMessage: "試圖攻擊，但${target.name}躲過了", damage: "user.dmg - target.arm", userDamage: "target.arm", targetStatus: "armorBroken", armorBreak: "(user.dmg - target.arm) / 5" },
-        { id: "pin", icon: "🤚", name: "壓制", description: "通過一次力量檢定，將一個近距離目標壓在地上，使其無法行動也無法閃避，但壓制期間戰士無法閃避其他敵人的攻擊。", target: "前排單體", hitCheck: "str-vs-str", hitMessage: "朝${target.name}猛撲過去，把他壓制在地上！", missMessage: "朝${target.name}猛撲過去，但撲了個空", targetStatus: "pinned", userStatus: "pinning" },
-        { id: "berserk", icon: "🌋", name: "狂暴", description: "戰士 HP 低於 50% 時可發動，獲得 3 回合狂暴和流血。狂暴狀態下，攻擊獲得命中優勢，HP 每損失 1 點，爆擊率就提高 1%。", condition: "user.HP <= user.MaxHP / 2 && !user.status.includes(\"berserk\")", target: "自己", hitMessage: "發出令人膽顫心驚的怒吼！他無所畏懼，傷得越重，打人越痛！", userStatus: ["berserk","bleeding"] },
-        //【魯莽攻擊】此次攻擊獲得優勢，但本回合敵人對戰士的攻擊也獲得優勢。,
+        { id: "armorBreak", icon: "💥", name: "破甲", description: "攻擊一個近距離目標，削減目標的護甲值，削減量等於此次傷害的1/5，但角色會受到等同目標護甲值的反彈傷害。", target: "前排單體", hitCheck: "dex-vs-dex", hitMessage: "擊中了${target.name}(${result.damage})！驚人的力量擊破了對方護甲(${result.armorBreak})，但也傷到了自己(${result.userDamage})", missMessage: "試圖攻擊，但${target.name}躲過了", damage: "user.dmg - target.arm", userDamage: "target.arm", armorBreak: "(user.str - target.arm) / 5" },
+        { id: "pin", icon: "🤚", name: "壓制", description: "通過一次力量檢定，將一個近距離目標壓在地上，使其無法行動也無法閃避，但壓制期間角色無法閃避其他敵人的攻擊。", target: "前排單體", hitCheck: "str-vs-str", hitMessage: "朝${target.name}猛撲過去，把他壓制在地上！", missMessage: "朝${target.name}猛撲過去，但撲了個空", targetStatus: "pinned", userStatus: "pinning" },
+        { id: "berserk", icon: "🌋", name: "狂暴", description: "HP 低於 50% 時可發動，獲得 3 回合狂暴和流血。狂暴狀態下，攻擊獲得命中優勢，HP 每損失 1 點，爆擊率就提高 1%。", condition: "user.HP <= user.MaxHP / 2 && !user.status.includes(\"berserk\")", target: "自己", hitMessage: "發出令人膽顫心驚的怒吼！他無所畏懼，傷得越重，打人越痛！", userStatus: ["berserk","bleeding"] },
+        //【魯莽攻擊】此次攻擊獲得優勢，但本回合敵人對角色的攻擊也獲得優勢。,
         // 聖騎士,
-        { id: "disarm", icon: "🫴", name: "繳械", description: "通過一次敏捷檢定，去除目標的武器。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "準確地把${target.name}手中的武器擊飛，現在他赤手空拳了！", missMessage: "沒能讓${target.name}放開武器", targetStatus: "disarmed" },
+        { id: "disarm", icon: "🫴", name: "繳械", description: "通過一次敏捷檢定，去除目標的武器。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "準確地把${target.name}手中的武器擊落！", missMessage: "沒能讓${target.name}放開武器", targetStatus: "disarmed" },
         { id: "guard", icon: "🛡️", name: "守護", description: "選擇一個同排的同伴，代替同伴承受本回合所有攻擊，且承受閃避劣勢。", target: "同排單體", hitMessage: "將不顧一切地保護${target.name}的安全", targetStatus: "guarded", userStatus: "guarding" },
-        { id: "divineSanction", icon: "🌟", name: "神聖制裁", description: "攻擊一個目標，造成物理傷害，加上等同聖騎士魅力的魔法傷害。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "發出一道聖光，對${target.name}執行制裁，懲罰了他的罪((${result.damage})！", missMessage: "發出一道聖光，但${target.name}僥倖躲過了制裁", damage: ["Math.max(user.dmg - target.arm","0) + user.cha"], cost: 1 },
+        { id: "divineSanction", icon: "🌟", name: "神聖制裁", description: "攻擊一個目標，造成物理傷害，加上等同角色魅力的魔法傷害。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "發出一道聖光，對${target.name}執行制裁，懲罰了他的罪((${result.damage})！", missMessage: "發出一道聖光，但${target.name}僥倖躲過了制裁", damage: "Math.max(user.dmg - target.arm, 0) + user.cha", cost: 1 },
         // 刺客,
-        { id: "stealth", icon: "🐈‍⬛", name: "隱身", description: "通過一次潛行檢定，敵人將無法看見刺客（範圍攻擊仍會命中），直到刺客發動攻擊。如果此次攻擊殺死目標，刺客將繼續保持隱身。（逃跑必成功）", target: "最高wis", hitCheck: "dex-vs-wis", hitMessage: "隱藏自己的氣息，消失了蹤跡……", missMessage: "試圖躲藏起來，但仍然暴露了", userStatus: "hidden" },
-        { id: "sneakAttack", icon: "🗡️", name: "偷襲", description: "在隱身或敵人無防備時，攻擊一個目標，必定命中，爆擊率加倍，前後排皆可。", condition: "user.status.includes(\"hidden\") || situation === 4", target: "任一單體", hitMessage: "無聲無息地偷襲，擊中了${target.name}(${result.damage})！", critRate: "user.crit * 2", damage: "user.dmg - target.arm" },
-        { id: "lure", icon: "🪤", name: "誘捕", description: "通過一次魅力檢定，將一個後排的目標引到前排，進行偷襲。", target: "後排單體", hitCheck: "cha-vs-int", hitMessage: "使手段吸引${target.name}的注意，趁機擊中了他(${result.damage})！", missMessage: "嘗試吸引${target.name}的注意，但他無動於衷", critRate: "user.crit * 2", damage: "user.dmg - target.arm", targetMove: "往前" },
+        { id: "sneakAttack", icon: "🗡️", name: "偷襲", description: "在隱身狀態下攻擊一個目標，傷害、爆擊率加倍。若目標死亡，角色可繼續保持隱身。", condition: "hasStatus(user, 'hidden')", target: "依武器", hitMessage: "無聲無息地偷襲，擊中了${target.name}(${result.damage})！", critRate: "*2", damage: "user.dmg * 2 - target.arm" },
+        { id: "stealth", icon: "🐈‍⬛", name: "隱身", description: "通過一次潛行檢定進入隱身狀態，攻擊或逃跑都自動成功，但攻擊後會暴露自身。", target: "最高wis", hitCheck: "dex-vs-wis", hitMessage: "隱藏自己的氣息，消失了蹤跡……", missMessage: "試圖躲藏起來，但仍然暴露了", userStatus: "hidden" },
+        { id: "lure", icon: "🪤", name: "誘捕", description: "通過一次魅力檢定，將一個目標引過來偷襲，前後排皆可，傷害、爆擊率加倍。", target: "任一單體", hitCheck: "cha-vs-int", hitMessage: "使手段吸引${target.name}的注意，趁機擊中了他(${result.damage})！", missMessage: "嘗試吸引${target.name}的注意，但他無動於衷", critRate: "*2", damage: "user.dmg * 2 - target.arm", userStatus: "-hidden", targetMove: "往前" },
         // 獵人,
-        { id: "mark", icon: "👁️", name: "鷹眼", description: "看穿一個目標的動作，使我方對目標的所有攻擊獲得命中優勢，直到換一個目標。", target: "任一單體", hitCheck: "wis-vs-dex", hitMessage: "以敏銳目光看穿了${target.name}的動向！", missMessage: "眼睛跟不上${target.name}的速度", targetStatus: "marked" },
-        { id: "reveal", icon: "🔍", name: "搜索", description: "通過一次偵查檢定，讓隱身的敵人現形。", target: "敵方隱身者", hitCheck: "wis-vs-dex", hitMessage: "搜索隱藏的跡象，發現了${target.name}！", missMessage: "搜索了一番，什麼也沒發現……", targetStatus: "-invisible" },
-        { id: "criticalBlast", icon: "🎯", name: "弱點爆破", description: "攻擊一個目標，如果目標已被標記，通過一次偵查檢定，即可造成爆擊。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "瞄準${target.name}的弱點，擊中了他(${result.damage})！", missMessage: "瞄準${target.name}，但對方警覺地保護起弱點", critRate: "wis-vs-dex", damage: "user.dmg - target.arm" },
+        { id: "mark", icon: "👁️", name: "鷹眼", description: "通過一次偵查檢定，鎖定一個目標，使全體同伴對目標獲得命中優勢，直到換一個目標。", target: "任一單體", hitCheck: "wis-vs-dex", hitMessage: "以敏銳目光鎖定了${target.name}的動向！", missMessage: "眼睛跟不上${target.name}的速度", targetStatus: "marked" },
+        { id: "reveal", icon: "🔍", name: "搜索", description: "通過一次偵查檢定，發現隱身的敵人。", target: "敵方隱身者", hitCheck: "wis-vs-dex", hitMessage: "搜索隱藏的跡象，發現了${target.name}！", missMessage: "搜索了一番，什麼也沒發現……", targetStatus: "-invisible" },
+        { id: "criticalBlast", icon: "🎯", name: "命中要害", description: "攻擊一個目標，只要通過一次偵查檢定，即可造成爆擊。", target: "依武器", hitCheck: "dex-vs-dex", hitMessage: "瞄準${target.name}的要害，擊中了他(${result.damage})！", missMessage: "瞄準${target.name}，但對方警覺地護住要害", critRate: "wis-vs-dex", damage: "user.dmg - target.arm" },
         // 法師,
-        { id: "lightning", icon: "⚡", name: "閃電術", description: "攻擊一個目標，造成等同法師智力的魔法傷害，無法被閃避。目標必須通過一次體質豁免，否則會受到麻痺。", target: "任一單體", hitMessage: "發射一道閃電，瞬間擊中了${target.name}(${result.damage})！", damage: "user.int", statusCheck: "int-vs-con", targetStatus: "paralyzed", cost: 1 },
-        { id: "earthquake", icon: "🪨", name: "地震術", description: "與目標同排的生物必須通過一次敏捷豁免，否則會倒地。", target: "任一排", hitMessage: "使${target.name}腳下的地面震動起來！", statusCheck: "int-vs-dex", targetStatus: "prone", cost: 2 },
-        { id: "fireball", icon: "☄️", name: "火球術", description: "攻擊與目標同排的生物，造成等同法師智力的魔法傷害，無法被閃避，並附加燃燒。", target: "任一排", hitMessage: "降下一顆巨大而熾熱的火球，落在了${target.name}頭上(${result.damage})！", damage: "user.int", targetStatus: "burning", cost: 2 },
+        { id: "lightning", icon: "⚡", name: "閃電術", description: "攻擊一個目標，造成等同角色智力的魔法傷害，無法被閃避。目標必須通過一次體質豁免，否則會受到麻痺。", target: "任一單體", hitMessage: "發射一道閃電，瞬間擊中了${target.name}(${result.damage})！", damage: "user.int", statusCheck: "int-vs-con", targetStatus: "paralyzed", cost: 1 },
+        { id: "storm", icon: "🌪️", name: "狂風術", description: "與目標同排的生物必須通過一次體質豁免，否則會倒地，後排生物會被吹到前排，飛行中的生物會摔落。", target: "任一排", hitMessage: "召喚了一陣劇烈的強風！", statusCheck: "int-vs-con", targetStatus: ["prone","-flying"], targetMove: "往前", cost: 2 },
+        { id: "fireball", icon: "☄️", name: "火球術", description: "攻擊與目標同排的生物，造成等同角色智力的魔法傷害，無法被閃避，並附加燃燒。", target: "任一排", hitMessage: "降下一顆巨大而熾熱的火球，落在了${target.name}頭上(${result.damage})！", damage: "user.int", targetStatus: "burning", cost: 2 },
         //【黑暗術】使所有敵人的攻擊承受劣勢。,
-        //【狂風術】後排所有敵人必須通過一個體質檢定，否則會被吹到前排，檢定難度取決於法師的智力。,
+        //earthquake🪨地震術 與目標同排的生物必須通過一次敏捷豁免，否則會倒地。,
+        // 使地面震動起來！,
         // 牧師,
-        { id: "heal", icon: "❤️‍🩹", name: "治癒術", description: "治療一個生物，治療量等同牧師的感知，並解除中毒、燃燒、麻痺。", target: "任一單體", hitMessage: "為${target.name}治療了傷勢(${result.damage})", damage: "-user.wis", targetStatus: ["-poisoned","-burning","-paralyzed"], cost: 1 },
-        { id: "magicShield", icon: "🛡️", name: "防護術", description: "為一個我方角色創造防護罩，能吸收物理、魔法傷害，防護罩的 HP 等同牧師的感知。", target: "任一單體", hitMessage: "在${target.name}周圍創造了一層防護罩", tempHP: "user.wis", cost: 1 },
-        { id: "seal", icon: "🔒", name: "魔力封印", description: "通過一次感知檢定，讓一個施法者一回合無法施法，並吸取 2MP。", target: "任一施法者", hitCheck: "wis-vs-wis", hitMessage: "封印了${target.name}的法術，並從中吸取了魔力(${result.mpAbsorb})！", missMessage: "試圖封印${target.name}的法師，但他的精神太堅定了", mpAbsorb: 2, targetStatus: "sealed" },
-        //【聖光術】敵方所有的不死生物受到等同牧師感知的傷害。
+        { id: "heal", icon: "❤️‍🩹", name: "治癒術", description: "治療一個目標，治療量等同角色的感知，並解除中毒、燃燒、麻痺。", target: "任一單體", hitMessage: "為${target.name}治療了傷勢(${result.damage})", damage: "-user.wis", targetStatus: ["-poisoned","-burning","-paralyzed"], cost: 1 },
+        { id: "magicShield", icon: "🛡️", name: "防護術", description: "為一個目標創造防護罩，能吸收物理、魔法傷害，防護罩的 HP 等同牧師的感知。", target: "任一單體", hitMessage: "在${target.name}周圍創造了一層防護罩", tempHP: "user.wis", cost: 1 },
+        { id: "seal", icon: "🔒", name: "魔力封印", description: "通過一次感知檢定，讓一個擁有MP的目標一回合內無法施法，並吸取 2MP。", target: "任一施法者", hitCheck: "wis-vs-wis", hitMessage: "封印了${target.name}的法術，並從中吸取了魔力(${result.mpAbsorb})！", missMessage: "試圖封印${target.name}的法師，但他的精神太堅定了", mpAbsorb: 2, targetStatus: "sealed" },
+        //【聖光術】敵方所有的不死生物受到等同角色感知的傷害。
     ];
 
     // 狀態資料庫
@@ -590,20 +600,20 @@
         // 行動限制,
         { id: "petrified", icon: "🗿", name: "石化", description: "無法行動和閃避，但護甲 +15。", getMessage: "身體變成了石頭！", duration: 1, noAction: true, arm: 15 },
         { id: "paralyzed", icon: "⚡", name: "麻痺", description: "無法行動和閃避。", getMessage: "受到電擊，全身麻痺了！", duration: 1, noAction: true },
-        { id: "pinned", icon: "🤚", name: "被壓制", description: "無法行動和閃避。", getMessage: "被壓制了，無法掙脫！", duration: 1, noAction: true },
-        { id: "pinning", icon: "🤚", name: "壓制", description: "正在壓制對方，無法閃避。可自行解除。", duration: 1, noAction: true },
+        { id: "pinned", icon: "🤚", name: "被壓制", description: "無法行動和閃避。", getMessage: "被壓制了，無法掙脫！", duration: 1, noAction: true, relatedId: "user.id" },
+        { id: "pinning", icon: "🤚", name: "壓制", description: "正在壓制對方，無法閃避。可自行解除。", duration: 1, durationPlus: true, noAction: true, relatedId: "target.id" },
         { id: "sealed", icon: "🔒", name: "封印", description: "無法使用法術。", getMessage: "魔力被封印，無法施放法術了！", duration: 1, noMagic: true },
-        { id: "disarmed", icon: "🫴", name: "武器掉落", description: "只能空手戰鬥，或花費一回合撿回武器。", getMessage: "武器掉在手搆不到的地方了！", noWeapon: true, resistible: true, resistVerb: "撿起武器" },
+        { id: "disarmed", icon: "🫴", name: "武器掉落", description: "只能空手戰鬥，或花費一回合撿回武器。", getMessage: "的武器掉在手碰不到的地方了！", noWeapon: true, resistible: true, resistVerb: "撿起武器" },
         // 目標限制,
-        { id: "hidden", icon: "🐈‍⬛", name: "隱身", description: "對手看不到此角色。", untargetable: true, cancelable : true },
-        { id: "flying", icon: "🪽", name: "飛行", description: "飛上天，迴避所有近戰攻擊。", duration: 1, flying: true, cancelable : true },
+        { id: "hidden", icon: "🐈‍⬛", name: "隱身", description: "對手看不到此角色，攻擊或逃跑都自動成功，但攻擊後會暴露自身。", durationPlus: true, untargetable: true, cancelable : true },
+        { id: "flying", icon: "🪽", name: "飛行", description: "飛上天，迴避所有近戰攻擊。", duration: 1, durationPlus: true, flying: true, cancelable : true },
         // 增益,
-        { id: "berserk", icon: "🌋", name: "狂暴", description: "攻擊獲得命中優勢，HP 每損失 1 點，爆擊率就提高 1%。", duration: 3, critRate: "user.crit + user.MaxHP - user.HP", hitGain: true },
-        { id: "guarded", icon: "🛡️", name: "被守護", description: "不會受到來自外部的傷害。", duration: 1, invincible: true },
+        { id: "berserk", icon: "🌋", name: "狂暴", description: "攻擊獲得命中優勢，HP 每損失 1 點，爆擊率就提高 1%。", duration: 3, durationPlus: true, hitGain: true, critRate: "user.MaxHP - user.HP" },
+        { id: "guarded", icon: "🛡️", name: "被守護", description: "不會受到來自外部的傷害。", duration: 1, durationPlus: true, invincible: true, relatedId: "user.id" },
         // 減益,
         { id: "prone", icon: "💫", name: "倒地", description: "敏捷 -5，可花費一回合站起來。", getMessage: "摔倒在地了！", dex: -5, resistible: true, resistVerb: "站起來" },
         { id: "marked", icon: "👁️", name: "被盯上", description: "所有針對此角色的攻擊獲得命中優勢。", dodgeSuffer: true },
-        { id: "guarding", icon: "🛡️", name: "守護", description: "代替被守護者承受傷害，且承受閃避劣勢。", duration: 1, dodgeSuffer: true, substitute: true },
+        { id: "guarding", icon: "🛡️", name: "守護", description: "代替被守護者承受傷害，且承受閃避劣勢。", duration: 1, durationPlus: true, dodgeSuffer: true, substitute: true, relatedId: "target.id" },
         { id: "blinded", icon: "🕶", name: "目盲", description: "感知 -5，敏捷 -5", getMessage: "眼前一片黑暗！", duration: 1, dex: -5, wis: -5 },
         // 持續傷害,
         { id: "bleeding", icon: "🩸", name: "流血", description: "每回合受到 3 傷害，可用繃帶止血。", getMessage: "傷口流血了！", duration: 3, stackable: true, damage: 3 },
@@ -651,8 +661,8 @@
         { name: "雷納德", type: "傭兵", classId: "paladin", description: "老練的冒險者，穿著全套盔甲，飽經風霜的臉龐洋溢著溫暖的微笑。", cost: 0, con: 16, str: 15, dex: 13, int: 10, wis: 12, cha: 14, weaponId: "npcWeapon01", armorId: "npcArmor01" },
         { name: "塔爾穆克", type: "傭兵", classId: "warrior", description: "身材魁武的獸人狂戰士，背著一把巨大的戰斧，眼神充滿怒火。", cost: 150, con: 18, str: 18, dex: 12, int: 8, wis: 10, cha: 8, weaponId: "npcWeapon02", armorId: "npcArmor02" },
         { name: "賽恩", type: "傭兵", classId: "rogue", description: "蒙面的刺客，整張臉隱藏在面罩下，沉默寡言，散發著一絲危險氣息。", cost: 120, con: 12, str: 13, dex: 17, int: 10, wis: 14, cha: 10, weaponId: "npcWeapon03", armorId: "npcArmor03" },
-        { name: "艾德蒙", type: "傭兵", classId: "hunter", description: "看起來像個小混混，不太正經，喜歡自吹自擂，給人感覺不怎麼可靠。", cost: 100, con: 8, str: 14, dex: 14, int: 10, wis: 16, cha: 12, weaponId: "", armorId: "npcArmor04" },
-        { name: "諾伊爾", type: "傭兵", classId: "wizard", description: "初出茅廬的高等精靈少年，一臉純真，比起協助你，他看起來更需要協助。", cost: 90, con: 8, str: 8, dex: 12, int: 16, wis: 12, cha: 16, weaponId: "", armorId: "npcArmor05" }
+        { name: "艾德蒙", type: "傭兵", classId: "hunter", description: "看起來像個小混混，不太正經，喜歡自吹自擂，給人感覺不怎麼可靠。", cost: 100, con: 8, str: 14, dex: 14, int: 10, wis: 16, cha: 12, weaponId: "npcWeapon04", armorId: "npcArmor04" },
+        { name: "諾伊爾", type: "傭兵", classId: "wizard", description: "初出茅廬的高等精靈少年，一臉純真，比起協助你，他看起來更需要協助。", cost: 90, con: 8, str: 8, dex: 12, int: 16, wis: 12, cha: 16, weaponId: "npcWeapon05", armorId: "npcArmor05" }
     ];
 
     // 讀取隊伍資料
@@ -1066,51 +1076,54 @@
 
     // 物品資料庫
     const itemDatabase = [
+        // 商店定價,
         // 武器,
         // 商店貨,
-        { name: "🗡️ 匕首", id: "dagger01", type: "weapon", price: 13, category: "穿刺", minDmg: 4, dmg: 4, maxDmg: 4, weight: 2, addStatus: "bleeding", addChance: 0.1, shop: "blacksmith", description: "適合隨身攜帶的短劍。" },
-        { name: "🗡️ 長槍", id: "spear01", type: "weapon", price: 97, category: "穿刺", minDmg: 10, dmg: 10, maxDmg: 10, weight: 8, addStatus: "bleeding", addChance: 0.4, shop: "blacksmith", description: "用來刺擊的長柄武器。" },
-        { name: "🗡️ 單手劍", id: "sword01", type: "weapon", price: 57, category: "揮砍", minDmg: 6, dmg: 8, maxDmg: 10, weight: 6, shop: "blacksmith", description: "戰士的標準配備。" },
-        { name: "🗡️ 巨劍", id: "sword02", type: "weapon", price: 105, category: "揮砍", minDmg: 9, dmg: 12, maxDmg: 15, weight: 10, shop: "blacksmith", description: "雙手持握的大型劍。" },
-        { name: "🔨 釘頭錘", id: "mace01", type: "weapon", price: 39, category: "鈍擊", minDmg: 3, dmg: 6, maxDmg: 9, weight: 6, addStatus: "prone", addChance: 0.3, shop: "blacksmith", description: "單手捶打用的鈍器。" },
-        { name: "🪓 戰斧", id: "axe01", type: "weapon", price: 69, category: "揮砍", minDmg: 6, dmg: 8, maxDmg: 10, weight: 6, addStatus: "prone", addChance: 0.3, shop: "blacksmith", description: "能揮砍也能推倒敵人的兩用武器。" },
-        { name: "🔨 戰錘", id: "mace02", type: "weapon", price: 95, category: "鈍擊", minDmg: 5, dmg: 10, maxDmg: 15, weight: 10, addStatus: "prone", addChance: 0.5, shop: "blacksmith", description: "沉重的錘頭有著強大的破壞力。" },
-        { name: "🏹 手弩", id: "bow01", type: "weapon", price: 18, category: "遠程", minDmg: 5, dmg: 5, maxDmg: 5, weight: 4, shop: "blacksmith", description: "能瞄準地面與空中的敵人。" },
-        { name: "🏹 長弓", id: "bow01", type: "weapon", price: 54, category: "遠程", minDmg: 8, dmg: 8, maxDmg: 8, weight: 7, shop: "blacksmith", description: "能瞄準地面與空中的敵人。" },
-        { name: "🛡️ 圓木盾", id: "sheild01", type: "weapon", price: 51, category: "鈍擊", minDmg: 2, dmg: 4, maxDmg: 6, arm: 2, weight: 4, addStatus: "prone", addChance: 0.2, shop: "blacksmith", description: "輕型盾牌，能保護自身也能當鈍器使用。" },
+        { name: "🗡️ 匕首", id: "dagger01", type: "weapon", price: 13, weight: 2, category: "穿刺", minDmg: 4, dmg: 4, maxDmg: 4, addStatus: "bleeding", addChance: 0.1, shop: "blacksmith", description: "適合隨身攜帶的短劍。" },
+        { name: "🗡️ 長槍", id: "spear01", type: "weapon", price: 97, weight: 8, category: "穿刺", minDmg: 10, dmg: 10, maxDmg: 10, addStatus: "bleeding", addChance: 0.4, shop: "blacksmith", description: "用來刺擊的長柄武器。" },
+        { name: "🗡️ 單手劍", id: "sword01", type: "weapon", price: 57, weight: 6, category: "揮砍", minDmg: 6, dmg: 8, maxDmg: 10, shop: "blacksmith", description: "戰士的標準配備。" },
+        { name: "🗡️ 巨劍", id: "sword02", type: "weapon", price: 105, weight: 10, category: "揮砍", minDmg: 9, dmg: 12, maxDmg: 15, shop: "blacksmith", description: "雙手持握的大型劍。" },
+        { name: "🔨 釘頭錘", id: "mace01", type: "weapon", price: 39, weight: 6, category: "鈍擊", minDmg: 3, dmg: 6, maxDmg: 9, addStatus: "prone", addChance: 0.30000000000000004, shop: "blacksmith", description: "單手捶打用的鈍器。" },
+        { name: "🪓 戰斧", id: "axe01", type: "weapon", price: 69, weight: 6, category: "揮砍", minDmg: 6, dmg: 8, maxDmg: 10, addStatus: "prone", addChance: 0.30000000000000004, shop: "blacksmith", description: "能揮砍也能推倒敵人的兩用武器。" },
+        { name: "🔨 戰錘", id: "mace02", type: "weapon", price: 95, weight: 10, category: "鈍擊", minDmg: 5, dmg: 10, maxDmg: 15, addStatus: "prone", addChance: 0.5, shop: "blacksmith", description: "沉重的錘頭有著強大的破壞力。" },
+        { name: "🏹 手弩", id: "bow01", type: "weapon", price: 18, weight: 4, category: "遠程", minDmg: 5, dmg: 5, maxDmg: 5, shop: "blacksmith", description: "能瞄準地面與空中的敵人。" },
+        { name: "🏹 長弓", id: "bow02", type: "weapon", price: 54, weight: 7, category: "遠程", minDmg: 8, dmg: 8, maxDmg: 8, shop: "blacksmith", description: "能瞄準地面與空中的敵人。" },
+        { name: "🛡️ 圓木盾", id: "sheild01", type: "weapon", price: 51, weight: 4, category: "鈍擊", minDmg: 2, dmg: 4, maxDmg: 6, arm: 2, addStatus: "prone", addChance: 0.2, shop: "blacksmith", description: "輕型盾牌，能保護自身也能當鈍器使用。" },
+        { name: "🪄 魔杖", id: "wand01", type: "weapon", price: 24, weight: 2, category: "鈍擊", minDmg: 1, dmg: 2, maxDmg: 3, int: 1, shop: "blacksmith", description: "蘊含魔法的短木杖。" },
+        { name: "🪄 法杖", id: "wand02", type: "weapon", price: 63, weight: 4, category: "鈍擊", minDmg: 2, dmg: 4, maxDmg: 6, int: 2, shop: "blacksmith", description: "蘊含魔法的長木杖。" },
         //{ type: "weapon", category: "穿刺", id: "arrow01", name: "➶ 箭矢", str: 1, dex: 0, description: "射擊用的箭矢，緊急時可以拿來防身。", price: 1, shop: "blacksmith" },,
         // 戰利品,
-        { name: "🔨 小棍棒", id: "stick01", type: "weapon", price: 0, category: "鈍擊", minDmg: 1, dmg: 2, maxDmg: 3, weight: 2, description: "只是一根普通的樹枝。" },
-        { name: "🔨 巨大的狼牙棒", id: "stick02", type: "weapon", price: 0, category: "鈍擊", minDmg: 10, dmg: 20, maxDmg: 30, weight: 20, addStatus: "prone", addChance: 1, description: "將樹幹和獸骨綁起來。" },
-        { name: "🗡️ 迷你刺劍", id: "sword03", type: "weapon", price: 0, category: "穿刺", minDmg: 2, dmg: 2, maxDmg: 2, weight: 0, description: "看起來像玩具，但真的能傷人。" },
-        { name: "🪨 尖銳的石頭", id: "stone", type: "weapon", price: 0, category: "鈍擊", minDmg: 1, dmg: 2, maxDmg: 3, weight: 2, description: "可以藏在衣服裡。" },
+        { name: "🔨 小棍棒", id: "stick01", type: "weapon", price: 0, weight: 2, category: "鈍擊", minDmg: 1, dmg: 2, maxDmg: 3, description: "只是一根普通的樹枝。" },
+        { name: "🔨 巨大的狼牙棒", id: "stick02", type: "weapon", price: 0, weight: 20, category: "鈍擊", minDmg: 10, dmg: 20, maxDmg: 30, addStatus: "prone", addChance: 1, description: "將樹幹和獸骨綁起來。" },
+        { name: "🗡️ 迷你刺劍", id: "sword03", type: "weapon", price: 0, weight: 0, category: "穿刺", minDmg: 2, dmg: 2, maxDmg: 2, description: "看起來像玩具，但真的能傷人。" },
+        { name: "🪨 尖銳的石頭", id: "stone", type: "weapon", price: 0, weight: 2, category: "鈍擊", minDmg: 1, dmg: 2, maxDmg: 3, description: "可以藏在衣服裡。" },
         // NPC專屬,
-        { name: "🗡️ 雷納德的巨劍", id: "npcWeapon01", type: "weapon", price: 117, category: "揮砍", minDmg: 10, dmg: 13, maxDmg: 16, weight: 11, owner: "雷納德", description: "沉重的雙手持握的大型長劍。" },
-        { name: "🪓 塔爾穆克的戰斧", id: "npcWeapon02", type: "weapon", price: 125, category: "揮砍", minDmg: 9, dmg: 12, maxDmg: 15, weight: 10, addStatus: "prone", addChance: 0.5, owner: "塔爾穆克", description: "一把巨大的長柄斧，殺傷力驚人。" },
-        { name: "🗡️ 賽恩的匕首", id: "npcWeapon03", type: "weapon", price: 29, category: "穿刺", minDmg: 4, dmg: 4, maxDmg: 4, weight: 2, addStatus: "bleeding", addChance: 0.5, owner: "賽恩", description: "特別鋒利的匕首，能輕易讓敵人流血。" },
-        { name: "🗡️ 艾德蒙的劍", id: "npcWeapon04", type: "weapon", price: 81, category: "揮砍", minDmg: 7.5, dmg: 10, maxDmg: 12.5, weight: 8, owner: "艾德蒙", description: "戰士的標準配備。" },
-        { name: "🏹 諾伊爾的短弓", id: "npcWeapon05", type: "weapon", price: 78, category: "遠程", minDmg: 10, dmg: 10, maxDmg: 10, weight: 9, owner: "諾伊爾", description: "能瞄準地面與空中的敵人。" },
+        { name: "🗡️ 雷納德的巨劍", id: "npcWeapon01", type: "weapon", price: 117, weight: 11, category: "揮砍", minDmg: 10, dmg: 13, maxDmg: 16, owner: "雷納德", description: "沉重的雙手持握的大型長劍。" },
+        { name: "🪓 塔爾穆克的戰斧", id: "npcWeapon02", type: "weapon", price: 125, weight: 10, category: "揮砍", minDmg: 9, dmg: 12, maxDmg: 15, addStatus: "prone", addChance: 0.5, owner: "塔爾穆克", description: "一把巨大的長柄斧，殺傷力驚人。" },
+        { name: "🗡️ 賽恩的匕首", id: "npcWeapon03", type: "weapon", price: 29, weight: 2, category: "穿刺", minDmg: 4, dmg: 4, maxDmg: 4, addStatus: "bleeding", addChance: 0.5, owner: "賽恩", description: "特別鋒利的匕首，能輕易讓敵人流血。" },
+        { name: "🏹 艾德蒙的手弩", id: "npcWeapon04", type: "weapon", price: 30, weight: 5, category: "遠程", minDmg: 6, dmg: 6, maxDmg: 6, owner: "艾德蒙", description: "能瞄準地面與空中的敵人。" },
+        { name: "🪄 諾伊爾的魔杖", id: "npcWeapon05", type: "weapon", price: 54, weight: 2, category: "鈍擊", minDmg: 1, dmg: 2, maxDmg: 3, int: 2, shop: "blacksmith", description: "蘊含魔法的短木杖，鑲了美麗的寶石。" },
         // 盔甲,
         // 商店貨,
-        { name: "🛡️ 皮甲", id: "armor01", type: "armor", price: 17, arm: 1, weight: 1, shop: "blacksmith", description: "活動性佳的輕型盔甲。" },
-        { name: "🛡️ 鱗甲", id: "armor02", type: "armor", price: 34, arm: 2, weight: 2, shop: "blacksmith", description: "以皮革和鐵片製成的鎧甲。" },
-        { name: "🛡️ 鐵製胸甲", id: "armor03", type: "armor", price: 51, arm: 3, weight: 3, shop: "blacksmith", description: "包覆軀幹的堅固胸甲。" },
-        { name: "🛡️ 鎖子甲", id: "armor04", type: "armor", price: 68, arm: 4, weight: 4, shop: "blacksmith", description: "以鐵環相扣製成的鎧甲。" },
-        { name: "🛡️ 全身板甲", id: "armor05", type: "armor", price: 85, arm: 5, weight: 5, shop: "blacksmith", description: "完整保護全身的重型盔甲。" },
+        { name: "🛡️ 皮甲", id: "armor01", type: "armor", price: 17, weight: 1, arm: 1, shop: "blacksmith", description: "活動性佳的輕型盔甲。" },
+        { name: "🛡️ 鱗甲", id: "armor02", type: "armor", price: 34, weight: 2, arm: 2, shop: "blacksmith", description: "以皮革和鐵片製成的鎧甲。" },
+        { name: "🛡️ 鐵製胸甲", id: "armor03", type: "armor", price: 51, weight: 3, arm: 3, shop: "blacksmith", description: "包覆軀幹的堅固胸甲。" },
+        { name: "🛡️ 鎖子甲", id: "armor04", type: "armor", price: 68, weight: 4, arm: 4, shop: "blacksmith", description: "以鐵環相扣製成的鎧甲。" },
+        { name: "🛡️ 全身板甲", id: "armor05", type: "armor", price: 85, weight: 5, arm: 5, shop: "blacksmith", description: "完整保護全身的重型盔甲。" },
         // NPC專屬,
-        { name: "🛡️ 雷納德的胸甲", id: "npcArmor01", type: "armor", arm: 3, weight: 3, owner: "雷納德", description: "包覆軀幹的堅固胸甲。" },
-        { name: "🛡️ 塔爾穆克的胸甲", id: "npcArmor02", type: "armor", arm: 3, weight: 3, owner: "塔爾穆克", description: "包覆軀幹的堅固胸甲。" },
-        { name: "🛡️ 賽恩的皮甲", id: "npcArmor03", type: "armor", arm: 1, weight: 1, owner: "賽恩", description: "活動性佳的輕型盔甲。" },
-        { name: "🛡️ 艾德蒙的鱗甲", id: "npcArmor04", type: "armor", arm: 2, weight: 2, owner: "艾德蒙", description: "以皮革和鐵片製成的鎧甲。" },
-        { name: "🛡️ 諾伊爾的皮甲", id: "npcArmor05", type: "armor", arm: 1, weight: 1, owner: "諾伊爾", description: "活動性佳的輕型盔甲。" },
+        { name: "🛡️ 雷納德的胸甲", id: "npcArmor01", type: "armor", weight: 3, arm: 3, owner: "雷納德", description: "包覆軀幹的堅固胸甲。" },
+        { name: "🛡️ 塔爾穆克的胸甲", id: "npcArmor02", type: "armor", weight: 3, arm: 3, owner: "塔爾穆克", description: "包覆軀幹的堅固胸甲。" },
+        { name: "🛡️ 賽恩的皮甲", id: "npcArmor03", type: "armor", weight: 1, arm: 1, owner: "賽恩", description: "活動性佳的輕型盔甲。" },
+        { name: "🛡️ 艾德蒙的鱗甲", id: "npcArmor04", type: "armor", weight: 2, arm: 2, owner: "艾德蒙", description: "以皮革和鐵片製成的鎧甲。" },
+        { name: "🛡️ 諾伊爾的皮甲", id: "npcArmor05", type: "armor", weight: 1, arm: 1, owner: "諾伊爾", description: "活動性佳的輕型盔甲。" },
         // 服裝（也算盔甲，只是在服飾店販售）,
         // 商店貨,
         { name: "🧥 別緻休閒服", id: "fineClothes01", type: "armor", price: 30, cha: 1, shop: "clothes", description: "經典的白襯衫與皮革背心，給人一種富家子弟或知識份子的印象。" },
-        { name: "🧥 月影斗篷", id: "fineClothes02", type: "armor", price: 47, arm: 1, cha: 1, weight: 1, shop: "clothes", description: "漆黑的斗篷，就像被詛咒者的心，據說是用狼人毛皮做成的，不論是真是假，這毛皮厚到能在你受到攻擊時作為緩衝。" },
-        { name: "🧥 致命誘惑長袍", id: "fineClothes03", type: "armor", price: 60, cha: 2, weight: 0, shop: "clothes", description: "大膽將人體脆弱的部位暴露在外，是完全不考慮防禦力，只為展現魅力而生的服裝，適合那些即使陣亡也要當個美麗骷髏的法師們。" },
-        { name: "🧥 傳說英雄盔甲", id: "fineClothes04", type: "armor", price: 77, arm: 1, cha: 2, weight: 1, shop: "clothes", description: "閃亮的盔甲、飄揚的披風，只要穿上這身裝扮，你不需要真的打贏怪物，也能讓人相信英雄降臨了，你的敵人也會自動畏懼三分。" },
-        { name: "🧥 優雅貴族正裝", id: "fineClothes05", type: "armor", price: 90, cha: 3, dex: -1, weight: 0, shop: "clothes", description: "奢華天鵝絨大衣搭配蕾絲內襯，彷彿尊爵不凡的領主大人，你的發言將會具有令人無法抗拒的說服力。但太合身了，會比較難以活動。" },
-        { name: "🧥 皇家儀式禮服", id: "fineClothes06", type: "armor", price: 120, cha: 4, dex: -2, weight: 0, shop: "clothes", description: "由上等絲綢與金線刺繡製成，以璀璨珠寶點綴，無論在哪個場合都能成為萬眾矚目的焦點。穿上後必須保持儀態端莊，呼吸可能有點困難。" },
+        { name: "🧥 月影斗篷", id: "fineClothes02", type: "armor", price: 47, weight: 1, arm: 1, cha: 1, shop: "clothes", description: "漆黑的斗篷，就像被詛咒者的心，據說是用狼人毛皮做成的，不論是真是假，這毛皮厚到能在你受到攻擊時作為緩衝。" },
+        { name: "🧥 致命誘惑長袍", id: "fineClothes03", type: "armor", price: 60, weight: 0, cha: 2, shop: "clothes", description: "大膽將人體脆弱的部位暴露在外，是完全不考慮防禦力，只為展現魅力而生的服裝，適合那些即使陣亡也要當個美麗骷髏的法師們。" },
+        { name: "🧥 傳說英雄盔甲", id: "fineClothes04", type: "armor", price: 77, weight: 1, arm: 1, cha: 2, shop: "clothes", description: "閃亮的盔甲、飄揚的披風，只要穿上這身裝扮，你不需要真的打贏怪物，也能讓人相信英雄降臨了，你的敵人也會自動畏懼三分。" },
+        { name: "🧥 優雅貴族正裝", id: "fineClothes05", type: "armor", price: 90, weight: 0, cha: 3, dex: -1, shop: "clothes", description: "奢華天鵝絨大衣搭配蕾絲內襯，彷彿尊爵不凡的領主大人，你的發言將會具有令人無法抗拒的說服力。但太合身了，會比較難以活動。" },
+        { name: "🧥 皇家儀式禮服", id: "fineClothes06", type: "armor", price: 120, weight: 0, cha: 4, dex: -2, shop: "clothes", description: "由上等絲綢與金線刺繡製成，以璀璨珠寶點綴，無論在哪個場合都能成為萬眾矚目的焦點。穿上後必須保持儀態端莊，呼吸可能有點困難。" },
         // 戰利品,
         { name: "🧥 布衣", id: "clothes01", type: "armor", price: 1, description: "以廉價布料製成的衣服，從一般平民到奴隸都會穿。" },
         { name: "🧥 工作服", id: "clothes02", type: "armor", price: 2, description: "有很多口袋的吊帶褲與襯衫。" },
@@ -1635,16 +1648,19 @@
         }
     }
 
-    // 穿上或脫下裝備
+    // 穿上或脫下裝備（可以輸入 memberId，也可以輸入 member 物件）
         // 脫下武器 equip("player", "noWeapon")
         // 脫下盔甲 equip("player", "noArmor")
     function equip(memberId, itemId) {
-        // 讀取所有成員的資料
+        // 讀取所有角色的資料
         const teamMembers = JSON.parse(localStorage.getItem("teamMembers")) || [];
+        const enemies = JSON.parse(localStorage.getItem("enemies")) || [];
         
-        // 取得該成員的資料
-        let member = teamMembers.find(m => m.id === memberId);
-
+        // 取得角色資料
+        let member = (typeof memberId === 'object' && memberId !== null)
+            ? memberId // 如果輸入的是物件，就直接用
+            : teamMembers.find(m => m.id === memberId) || enemies.find(m => m.id === memberId); // 如果輸入的是 id，就找到角色資料（從同伴或敵人中）
+        
         // 讀取玩家的物品
         let playerItems = JSON.parse(localStorage.getItem("playerItems")) || [];
         let itemType;
@@ -1652,11 +1668,11 @@
         // 如果脫下裝備
         if (itemId === "noWeapon") {
             if (member.weapon) playerItems.push(member.weapon.id); // 將原本的武器放回主角物品
-            member.weapon = null; // 清空武器
+            member.weapon = {}; // 清空武器
             itemType = "weapon";
         } else if (itemId === "noArmor") {
             if (member.armor) playerItems.push(member.armor.id); // 將原本的盔甲放回主角物品
-            member.armor = null; // 清空盔甲
+            member.armor = {}; // 清空盔甲
             itemType = "armor";
 
         // 如果穿上裝備
@@ -1698,8 +1714,9 @@
         }
 
         // 更新 localStorage
-        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
         localStorage.setItem("playerItems", JSON.stringify(playerItems));
+        localStorage.setItem("teamMembers", JSON.stringify(teamMembers));
+        localStorage.setItem("enemies", JSON.stringify(enemies));
 
         // 同步儲存到上場成員和可行動成員
         let presentMembers = JSON.parse(localStorage.getItem("presentMembers")) || [];
@@ -1727,10 +1744,10 @@
         localStorage.setItem("availableMember", JSON.stringify(availableMember));
 
         // 同步儲存到主角資料
-        if (member.id === "player") {
-            localStorage.setItem("playerWeapon", JSON.stringify(member.weapon));
-            localStorage.setItem("playerArmor", JSON.stringify(member.armor));
-        }
+        //if (member.id === "player") {
+        //    localStorage.setItem("playerWeapon", JSON.stringify(member.weapon));
+        //    localStorage.setItem("playerArmor", JSON.stringify(member.armor));
+        //}
     }
 
     // 沒收物品
